@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafik Transaksi Component</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Instrument Serif & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            /* Using a dark modern background to make the component pop, adjust as needed */
+            background-color: #F8F9FA; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-instrument {
+            font-family: 'Instrument Serif', serif;
+        }
+
+        /* Container specific colors */
+        .card-bg { background-color: #DCDDE0; }
+        .bar-track { background-color: #D9D9DB; }
+        .bar-fill { background-color: #C6BDE8; }
+        .bar-active { background-color: #725FBA; }
+
+        /* Sleek Animations */
+        .chart-container {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .bar-grow {
+            animation: growUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transform-origin: bottom;
+            transform: scaleY(0);
+        }
+
+        @keyframes growUp {
+            to { transform: scaleY(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Tooltip styles */
+        .chart-tooltip {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(25, 25, 25, 0.85);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+            z-index: 20;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .chart-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 4px 4px 0;
+            border-style: solid;
+            border-color: rgba(25, 25, 25, 0.85) transparent transparent transparent;
+        }
+
+        .hover-target:hover .chart-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .svg-point-hover:hover circle {
+            fill: #725FBA;
+            r: 6;
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Component Container -->
+    <div class="card-bg w-full max-w-[320px] rounded-[32px] p-6 flex flex-col gap-6 shadow-sm relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center z-10">
+            <h2 class="font-instrument text-2xl text-[#1a1a1a]">Grafik Transaksi</h2>
+            <!-- Piggy Bank Icon from requested path -->
+            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <img src="assets/icons/piggy_bank.svg" alt="Piggy Bank" class="w-5 h-5 object-contain" onerror="this.outerHTML='<span class=\'text-lg font-bold\'>🐷</span>'">
+            </div>
+        </div>
+
+        <!-- Chart Area Wrapper -->
+        <div class="relative h-[160px] w-full z-10">
+            
+            <!-- 1. Weekly Bar Chart -->
+            <div id="weekly-chart" class="chart-container absolute inset-0 flex items-end justify-between px-1 h-full w-full">
+                <!-- Bars injected via JS -->
+            </div>
+
+            <!-- 2. Monthly Area/Line Chart -->
+            <div id="monthly-chart" class="chart-container absolute inset-0 h-full w-full opacity-0 pointer-events-none flex flex-col justify-end" style="transform: translateY(10px);">
+                <div class="relative h-full w-full" id="svg-chart-container">
+                    <!-- SVG Chart injected via JS -->
+                </div>
+                <!-- X-Axis for Monthly -->
+                <div class="flex justify-between w-full font-instrument text-lg text-gray-700 mt-2 px-1">
+                    <span>M1</span>
+                    <span>M2</span>
+                    <span>M3</span>
+                    <span>M4</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer / Controls -->
+        <div class="flex justify-between items-center mt-2 z-10">
+            <span id="chart-label" class="font-inter font-medium text-[15px] text-[#1a1a1a] tracking-tight transition-all duration-300">
+                Mingguan
+            </span>
+            
+            <!-- Toggle Buttons matching design -->
+            <div class="flex gap-2">
+                <button id="btn-prev" class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors focus:outline-none">
+                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 1L1 5L5 9" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button id="btn-next" class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors focus:outline-none">
+                    <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 1L5 5L1 9" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        // Data Configuration
+        const weeklyData = [
+            { day: 'sen', value: 40, amount: 'Rp 120k' },
+            { day: 'sel', value: 25, amount: 'Rp 75k' },
+            { day: 'rab', value: 65, amount: 'Rp 195k' },
+            { day: 'kam', value: 55, amount: 'Rp 165k' },
+            { day: 'jum', value: 85, amount: 'Rp 255k' },
+            { day: 'sab', value: 95, amount: 'Rp 285k' },
+            { day: 'min', value: 30, amount: 'Rp 90k' }
+        ];
+
+        const monthlyData = [
+            { week: 'M1', value: 50, amount: 'Rp 500k' },
+            { week: 'M2', value: 80, amount: 'Rp 800k' },
+            { week: 'M3', value: 45, amount: 'Rp 450k' },
+            { week: 'M4', value: 90, amount: 'Rp 900k' }
+        ];
+
+        // Determine Today's Day for Weekly Graph
+        const jsDays = ['min', 'sen', 'sel', 'rab', 'kam', 'jum', 'sab'];
+        const currentDayIndex = new Date().getDay(); // 0 is Sunday, 5 is Friday (Sept 11, 2026)
+        const todayStr = jsDays[currentDayIndex]; 
+
+        // DOM Elements
+        const weeklyChartEl = document.getElementById('weekly-chart');
+        const monthlyChartEl = document.getElementById('monthly-chart');
+        const chartLabel = document.getElementById('chart-label');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        
+        let isWeekly = true;
+
+        // Render Weekly Bar Chart
+        function renderWeeklyChart() {
+            weeklyChartEl.innerHTML = '';
+            
+            weeklyData.forEach((item, index) => {
+                const isActive = item.day === todayStr;
+                const fillColor = isActive ? 'bar-active' : 'bar-fill';
+                
+                const col = document.createElement('div');
+                col.className = 'flex flex-col items-center gap-3 h-full justify-end group hover-target relative w-8';
+                
+                // Tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip font-inter';
+                tooltip.innerText = item.amount;
+                
+                // Background Track (The Gray Area)
+                const track = document.createElement('div');
+                track.className = 'bar-track w-5 h-[120px] rounded-full relative overflow-hidden flex items-end cursor-pointer';
+                
+                // Animated Fill
+                const fill = document.createElement('div');
+                fill.className = `${fillColor} w-full rounded-full bar-grow`;
+                fill.style.height = `${item.value}%`;
+                // Staggered animation based on index
+                fill.style.animationDelay = `${index * 0.05}s`; 
+
+                // Label
+                const label = document.createElement('span');
+                label.className = `font-instrument text-lg ${isActive ? 'text-[#1a1a1a] font-bold' : 'text-gray-700'}`;
+                label.innerText = item.day;
+
+                track.appendChild(fill);
+                col.appendChild(tooltip);
+                col.appendChild(track);
+                col.appendChild(label);
+                
+                weeklyChartEl.appendChild(col);
+            });
+        }
+
+        // Render Monthly SVG Line/Area Chart (Modern Approach)
+        function renderMonthlyChart() {
+            const svgContainer = document.getElementById('svg-chart-container');
+            svgContainer.innerHTML = '';
+            
+            const w = svgContainer.clientWidth || 280; // fallback width
+            const h = 120; // fixed height to match bar track area
+
+            // Calculate SVG points
+            const points = monthlyData.map((d, i) => {
+                const x = (w / (monthlyData.length - 1)) * i;
+                const y = h - (d.value / 100) * h;
+                return { x, y, amount: d.amount };
+            });
+
+            // Create Path String
+            const pathData = points.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ');
+            const areaData = `${pathData} L ${w},${h} L 0,${h} Z`;
+
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+            svg.style.overflow = 'visible';
+
+            // Area Gradient
+            const defs = document.createElementNS(svgNS, "defs");
+            const linearGradient = document.createElementNS(svgNS, "linearGradient");
+            linearGradient.setAttribute("id", "area-gradient");
+            linearGradient.setAttribute("x1", "0");
+            linearGradient.setAttribute("y1", "0");
+            linearGradient.setAttribute("x2", "0");
+            linearGradient.setAttribute("y2", "1");
+            
+            const stop1 = document.createElementNS(svgNS, "stop");
+            stop1.setAttribute("offset", "0%");
+            stop1.setAttribute("stop-color", "#725FBA");
+            stop1.setAttribute("stop-opacity", "0.4");
+            
+            const stop2 = document.createElementNS(svgNS, "stop");
+            stop2.setAttribute("offset", "100%");
+            stop2.setAttribute("stop-color", "#C6BDE8");
+            stop2.setAttribute("stop-opacity", "0");
+
+            linearGradient.appendChild(stop1);
+            linearGradient.appendChild(stop2);
+            defs.appendChild(linearGradient);
+            svg.appendChild(defs);
+
+            // Area Path
+            const areaPath = document.createElementNS(svgNS, "path");
+            areaPath.setAttribute("d", areaData);
+            areaPath.setAttribute("fill", "url(#area-gradient)");
+            areaPath.className = "fade-in";
+            svg.appendChild(areaPath);
+
+            // Line Path
+            const linePath = document.createElementNS(svgNS, "path");
+            linePath.setAttribute("d", pathData);
+            linePath.setAttribute("fill", "none");
+            linePath.setAttribute("stroke", "#725FBA");
+            linePath.setAttribute("stroke-width", "3");
+            linePath.setAttribute("stroke-linecap", "round");
+            linePath.setAttribute("stroke-linejoin", "round");
+            
+            // Line Animation Draw
+            const pathLength = 500; // rough estimation for dasharray
+            linePath.setAttribute("stroke-dasharray", pathLength);
+            linePath.setAttribute("stroke-dashoffset", pathLength);
+            linePath.style.transition = "stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)";
+            
+            setTimeout(() => {
+                linePath.setAttribute("stroke-dashoffset", "0");
+            }, 50);
+            
+            svg.appendChild(linePath);
+
+            // Interactive Points & Tooltips
+            points.forEach((p, i) => {
+                const group = document.createElementNS(svgNS, "g");
+                group.setAttribute("class", "hover-target cursor-pointer svg-point-hover");
+                
+                // Point Circle
+                const circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("cx", p.x);
+                circle.setAttribute("cy", p.y);
+                circle.setAttribute("r", "4");
+                circle.setAttribute("fill", "#1a1a1a");
+                circle.setAttribute("stroke", "#ffffff");
+                circle.setAttribute("stroke-width", "2");
+                circle.className = "fade-in";
+                circle.style.animationDelay = `${0.3 + (i * 0.1)}s`;
+
+                // HTML Tooltip embedded in foreignObject for easy styling
+                const foreignObj = document.createElementNS(svgNS, "foreignObject");
+                foreignObj.setAttribute("x", p.x - 40);
+                foreignObj.setAttribute("y", p.y - 45);
+                foreignObj.setAttribute("width", "80");
+                foreignObj.setAttribute("height", "40");
+                foreignObj.style.overflow = "visible";
+                
+                const tooltipHtml = document.createElement("div");
+                tooltipHtml.className = "chart-tooltip mx-auto w-max font-inter";
+                tooltipHtml.innerText = p.amount;
+                // Override static absolute positioning slightly for SVG context
+                tooltipHtml.style.top = "0"; 
+                tooltipHtml.style.position = "relative";
+                tooltipHtml.style.transform = "translateY(5px)";
+                
+                foreignObj.appendChild(tooltipHtml);
+                
+                group.appendChild(circle);
+                group.appendChild(foreignObj);
+                svg.appendChild(group);
+            });
+
+            svgContainer.appendChild(svg);
+        }
+
+        // Toggle Logic
+        function toggleChart() {
+            isWeekly = !isWeekly;
+            
+            if(isWeekly) {
+                // Switch to Weekly
+                chartLabel.innerText = "Mingguan";
+                monthlyChartEl.style.opacity = '0';
+                monthlyChartEl.style.pointerEvents = 'none';
+                monthlyChartEl.style.transform = 'translateY(10px)';
+                
+                setTimeout(() => {
+                    renderWeeklyChart();
+                    weeklyChartEl.style.opacity = '1';
+                    weeklyChartEl.style.pointerEvents = 'auto';
+                    weeklyChartEl.style.transform = 'translateY(0)';
+                }, 300);
+
+            } else {
+                // Switch to Monthly
+                chartLabel.innerText = "Bulanan";
+                weeklyChartEl.style.opacity = '0';
+                weeklyChartEl.style.pointerEvents = 'none';
+                weeklyChartEl.style.transform = 'translateY(-10px)';
+                
+                setTimeout(() => {
+                    renderMonthlyChart();
+                    monthlyChartEl.style.opacity = '1';
+                    monthlyChartEl.style.pointerEvents = 'auto';
+                    monthlyChartEl.style.transform = 'translateY(0)';
+                }, 300);
+            }
+        }
+
+        // Initialization & Event Listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            renderWeeklyChart(); // Render initial state
+        });
+        
+        // Window Resize recalculates SVG width dynamically
+        window.addEventListener('resize', () => {
+            if(!isWeekly) {
+                renderMonthlyChart();
+            }
+        });
+
+        btnPrev.addEventListener('click', toggleChart);
+        btnNext.addEventListener('click', toggleChart);
+
+    </script>
+</body>
+</html>

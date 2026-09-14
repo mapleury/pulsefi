@@ -1,0 +1,2297 @@
+/*
+  app.js
+  ------
+  Shared utilities used across every page: currency formatting, toast
+  notifications, active-nav highlighting, mobile menu toggle, and the
+  first-time-user onboarding flow.
+*/
+
+const PulseUtils = (function () {
+  function formatCurrency(amount) {
+    const n = Math.round(Number(amount) || 0);
+    return "Rp" + n.toLocaleString("id-ID");
+  }
+
+  function formatCurrencyCompact(amount) {
+    const n = Number(amount) || 0;
+    if (Math.abs(n) >= 1000000000) return "Rp" + (n / 1000000000).toFixed(1) + "M";
+    if (Math.abs(n) >= 1000000) return "Rp" + (n / 1000000).toFixed(1) + "jt";
+    if (Math.abs(n) >= 1000) return "Rp" + Math.round(n / 1000) + "rb";
+    return formatCurrency(n);
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const bulan = [
+      "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+      "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
+    ];
+    return d.getDate() + " " + bulan[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  // ---------- toast notifications ----------
+
+  function toast(message, tone) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    const el = document.createElement("div");
+    el.className = "toast toast-" + (tone || "default");
+    el.textContent = message;
+    container.appendChild(el);
+    requestAnimationFrame(() => el.classList.add("toast-visible"));
+    setTimeout(() => {
+      el.classList.remove("toast-visible");
+      setTimeout(() => el.remove(), 300);
+    }, 3200);
+  }
+
+  // ---------- animated number counting ----------
+
+  function animateNumber(el, from, to, opts) {
+    opts = opts || {};
+    const duration = opts.duration || 900;
+    const format = opts.format || ((v) => Math.round(v).toLocaleString("id-ID"));
+    const start = performance.now();
+
+    function step(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const value = from + (to - from) * eased;
+      el.textContent = format(value);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---------- navigation ----------
+
+  function initNav() {
+    const toggle = document.querySelector(".nav-toggle");
+    const menu = document.querySelector(".nav-links");
+    if (toggle && menu) {
+      toggle.addEventListener("click", () => {
+        const isOpen = menu.classList.toggle("nav-links-open");
+        toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
+
+    const path = window.location.pathname.split("/").pop() || "index.html";
+    document.querySelectorAll(".nav-links a").forEach((a) => {
+      const href = a.getAttribute("href");
+      if (href === path) a.classList.add("nav-active");
+    });
+  }
+
+  // ---------- scroll reveal ----------
+
+  function initScrollReveal() {
+    const items = document.querySelectorAll("[data-reveal]");
+    if (!items.length) return;
+    if (!("IntersectionObserver" in window)) {
+      items.forEach((el) => el.classList.add("reveal-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("reveal-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    items.forEach((el) => observer.observe(el));
+  }
+
+  // ---------- onboarding ----------
+
+  function requiresOnboarding() {
+    const state = PulseStorage.getOnboardingState();
+    return !state;
+  }
+
+  function redirectIfNeedsOnboarding() {
+    if (requiresOnboarding()) {
+      window.location.href = "index.html#onboarding";
+      return true;
+    }
+    return false;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initNav();
+    initScrollReveal();
+  });
+
+  return {
+    formatCurrency,
+    formatCurrencyCompact,
+    formatDate,
+    todayISO,
+    escapeHtml,
+    toast,
+    animateNumber,
+    initNav,
+    initScrollReveal,
+    requiresOnboarding,
+    redirectIfNeedsOnboarding,
+  };
+})();
+
+/*
+  calculations.js
+  ---------------
+  PulseCalc is the analytical core of PulseFi. Every number shown on the
+  dashboard, in AI Insight, in the Financial Twin card, and in the
+  goal/simulator pages is derived here from the user's own localStorage
+  data — nothing in this file is hard-coded or randomised.
+*/
+
+const PulseCalc = (function () {
+  const MS_DAY = 1000 * 60 * 60 * 24;
+
+  // ---------------- basic totals ----------------
+
+  function totals(transactions) {
+    let income = 0;
+    let expense = 0;
+    (transactions || []).forEach((t) => {
+      const amt = Number(t.amount) || 0;
+      if (t.type === "income") income += amt;
+      else expense += amt;
+    });
+    return { income, expense, balance: income - expense };
+  }
+
+  function daysBetween(a, b) {
+    return Math.round((b.getTime() - a.getTime()) / MS_DAY);
+  }
+
+  // Splits a list of transactions into "recent" (last N days, anchored on
+  // today) and "previous" (the N days before that). Used to compare
+  // week-over-week / two-week-over-two-week behaviour.
+  function splitByRecency(transactions, windowDays) {
+    const now = new Date();
+    const recent = [];
+    const previous = [];
+    (transactions || []).forEach((t) => {
+      const d = new Date(t.date);
+      if (isNaN(d.getTime())) return;
+      const diff = daysBetween(d, now);
+      if (diff >= 0 && diff < windowDays) recent.push(t);
+      else if (diff >= windowDays && diff < windowDays * 2) previous.push(t);
+    });
+    return { recent, previous };
+  }
+
+  function categoryBreakdown(expenses) {
+    const map = {};
+    expenses.forEach((t) => {
+      map[t.category] = (map[t.category] || 0) + (Number(t.amount) || 0);
+    });
+    return Object.keys(map)
+      .map((category) => ({ category, amount: map[category] }))
+      .sort((a, b) => b.amount - a.amount);
+  }
+
+  // Groups expenses by category + a rounded amount bucket to detect
+  // recurring, subscription-like spending (same category, similar amount,
+  // showing up repeatedly).
+  function countRecurringPatterns(expenses) {
+    const groups = {};
+    expenses.forEach((t) => {
+      const amt = Number(t.amount) || 0;
+      const bucket = Math.round(amt / 5000) * 5000; // group amounts within ~Rp5.000
+      const key = t.category + "|" + bucket;
+      groups[key] = (groups[key] || 0) + 1;
+    });
+    return Object.values(groups).filter((count) => count >= 2).length;
+  }
+
+  function analyzeSpendingPatterns(transactions) {
+    const list = transactions || [];
+    const expenses = list.filter((t) => t.type === "expense");
+    const t = totals(list);
+
+    // Trend: expenses in the last 14 days vs the 14 days before that.
+    const { recent, previous } = splitByRecency(expenses, 14);
+    const recentTotal = recent.reduce((s, t2) => s + Number(t2.amount), 0);
+    const previousTotal = previous.reduce((s, t2) => s + Number(t2.amount), 0);
+    const trendPercent = previousTotal > 0 ? ((recentTotal - previousTotal) / previousTotal) * 100 : 0;
+
+    // Weekday vs weekend average transaction size.
+    let weekendSum = 0, weekendCount = 0, weekdaySum = 0, weekdayCount = 0;
+    expenses.forEach((tx) => {
+      const d = new Date(tx.date);
+      if (isNaN(d.getTime())) return;
+      const day = d.getDay(); // 0 = Sunday, 6 = Saturday
+      if (day === 0 || day === 6) {
+        weekendSum += Number(tx.amount);
+        weekendCount += 1;
+      } else {
+        weekdaySum += Number(tx.amount);
+        weekdayCount += 1;
+      }
+    });
+    const weekendAvg = weekendCount > 0 ? weekendSum / weekendCount : 0;
+    const weekdayAvg = weekdayCount > 0 ? weekdaySum / weekdayCount : 0;
+
+    // Frequency: expense transactions per distinct active day.
+    const activeDays = new Set(expenses.map((tx) => tx.date)).size;
+    const frequency = activeDays > 0 ? expenses.length / activeDays : 0;
+
+    const avgTx = expenses.length > 0 ? t.expense / expenses.length : 0;
+    const savingRate = t.income > 0 ? (t.income - t.expense) / t.income : (t.expense > 0 ? -1 : 0);
+    const breakdown = categoryBreakdown(expenses);
+    const recurringCount = countRecurringPatterns(expenses);
+
+    return {
+      incomeTotal: t.income,
+      expenseTotal: t.expense,
+      balance: t.balance,
+      recentTotal,
+      previousTotal,
+      trendPercent,
+      weekendAvg,
+      weekdayAvg,
+      frequency,
+      avgTx,
+      savingRate,
+      breakdown,
+      recurringCount,
+      activeDays,
+      txCount: expenses.length,
+    };
+  }
+
+  // ---------------- goal projection ----------------
+
+  function calculateGoalProjection(goal) {
+    const target = Number(goal.targetAmount) || 0;
+    const current = Number(goal.currentAmount) || 0;
+    const remaining = Math.max(0, target - current);
+    const percent = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+
+    let months = 12;
+    if (goal.targetDate) {
+      const now = new Date();
+      const target_d = new Date(goal.targetDate);
+      if (!isNaN(target_d.getTime())) {
+        const diffMonths = (target_d.getFullYear() - now.getFullYear()) * 12 + (target_d.getMonth() - now.getMonth());
+        months = Math.max(1, diffMonths);
+      }
+    }
+    const requiredMonthly = months > 0 ? remaining / months : remaining;
+    const onTrack = remaining === 0;
+
+    return { target, current, remaining, percent, months, requiredMonthly, onTrack };
+  }
+
+  // ---------------- financial pulse score ----------------
+
+  // Combines several behavioural signals into a single 0-100 score.
+  // Each sub-score is 0-100; the final score is their weighted average.
+  function calculateFinancialScore(transactions, goals) {
+    const list = transactions || [];
+    if (list.length === 0) {
+      return { score: 0, label: "Belum ada data", components: [] };
+    }
+    const patterns = analyzeSpendingPatterns(list);
+
+    // 1. Saving rate score (0-100): 20% saving rate -> 100, negative -> 0
+    const savingScore = Math.max(0, Math.min(100, (patterns.savingRate / 0.2) * 100));
+
+    // 2. Expense/income ratio score: lower ratio is healthier.
+    const ratio = patterns.incomeTotal > 0 ? patterns.expenseTotal / patterns.incomeTotal : 1.2;
+    const ratioScore = Math.max(0, Math.min(100, (1 - ratio) * 100 + 50));
+
+    // 3. Spending consistency: compare recent vs previous fortnight, smaller
+    // swings score higher.
+    const swing = Math.min(100, Math.abs(patterns.trendPercent));
+    const consistencyScore = Math.max(0, 100 - swing);
+
+    // 4. Spending volatility across categories: a very concentrated top
+    // category (impulsive / single-point spending) scores lower.
+    let volatilityScore = 70;
+    if (patterns.breakdown.length > 0 && patterns.expenseTotal > 0) {
+      const topShare = patterns.breakdown[0].amount / patterns.expenseTotal;
+      volatilityScore = Math.max(0, Math.min(100, (1 - topShare) * 100));
+    }
+
+    // 5. Recurring expense burden: too many recurring/subscription-like
+    // commitments relative to income drags the score down slightly.
+    const recurringScore = Math.max(0, 100 - patterns.recurringCount * 12);
+
+    // 6. Goal progress: average percent complete across active goals.
+    let goalScore = 60; // neutral default when there are no goals yet
+    if (goals && goals.length > 0) {
+      const percents = goals.map((g) => calculateGoalProjection(g).percent);
+      goalScore = percents.reduce((s, p) => s + p, 0) / percents.length;
+    }
+
+    const components = [
+      { key: "saving", label: "Tingkat tabungan", score: savingScore, weight: 0.25 },
+      { key: "ratio", label: "Rasio pengeluaran terhadap pemasukan", score: ratioScore, weight: 0.2 },
+      { key: "consistency", label: "Konsistensi pengeluaran", score: consistencyScore, weight: 0.2 },
+      { key: "volatility", label: "Sebaran kategori pengeluaran", score: volatilityScore, weight: 0.15 },
+      { key: "recurring", label: "Beban pengeluaran rutin", score: recurringScore, weight: 0.1 },
+      { key: "goals", label: "Kemajuan target tabungan", score: goalScore, weight: 0.1 },
+    ];
+
+    const weighted = components.reduce((s, c) => s + c.score * c.weight, 0);
+    const score = Math.round(Math.max(0, Math.min(100, weighted)));
+
+    let label = "Perlu perhatian";
+    if (score >= 80) label = "Sangat stabil";
+    else if (score >= 60) label = "Cukup stabil";
+    else if (score >= 40) label = "Mulai goyah";
+
+    return { score, label, components };
+  }
+
+  // ---------------- financial twin classification ----------------
+
+  // Turns the same behavioural signals into a single, human-readable
+  // "financial personality" — generated from real data, not fixed.
+  function classifyFinancialTwin(transactions) {
+    const list = transactions || [];
+    if (list.length === 0) {
+      return {
+        key: "unknown",
+        title: "Belum Terlihat Polanya",
+        description: "Tambahkan beberapa transaksi supaya PulseFi bisa mulai mengenali kebiasaan finansialmu.",
+      };
+    }
+    const patterns = analyzeSpendingPatterns(list);
+    const weekendGap = patterns.weekdayAvg > 0 ? (patterns.weekendAvg - patterns.weekdayAvg) / patterns.weekdayAvg : 0;
+    const topShare = patterns.breakdown.length > 0 && patterns.expenseTotal > 0
+      ? patterns.breakdown[0].amount / patterns.expenseTotal
+      : 0;
+
+    // Ordered checks: most distinctive pattern wins.
+    if (patterns.savingRate >= 0.25 && patterns.frequency < 1.2) {
+      return {
+        key: "cautious-saver",
+        title: "THE CAUTIOUS SAVER",
+        description: `Kamu menyisihkan sekitar ${Math.round(patterns.savingRate * 100)}% dari pemasukanmu dan jarang melakukan transaksi impulsif. Pola pengeluaranmu tenang dan terkendali.`,
+      };
+    }
+    if (weekendGap >= 0.4) {
+      return {
+        key: "weekend-spender",
+        title: "THE WEEKEND SPENDER",
+        description: `Rata-rata transaksimu di akhir pekan ${Math.round(weekendGap * 100)}% lebih besar dibanding hari kerja. Akhir pekan adalah titik paling aktif dalam ritme finansialmu.`,
+      };
+    }
+    if (patterns.frequency >= 1.8 || (patterns.txCount > 0 && topShare < 0.3 && patterns.savingRate < 0.1)) {
+      return {
+        key: "impulse-explorer",
+        title: "THE IMPULSE EXPLORER",
+        description: `Kamu melakukan sekitar ${patterns.frequency.toFixed(1)} transaksi per hari aktif, tersebar di banyak kategori kecil. Uangmu bergerak cepat dan sering, jadi mudah tidak terasa habisnya.`,
+      };
+    }
+    return {
+      key: "balanced-builder",
+      title: "THE BALANCED BUILDER",
+      description: `Pengeluaranmu tersebar cukup merata dan tingkat tabunganmu berada di kisaran ${Math.round(patterns.savingRate * 100)}%. Pola ini menunjukkan kebiasaan finansial yang seimbang.`,
+    };
+  }
+
+  return {
+    totals,
+    splitByRecency,
+    categoryBreakdown,
+    analyzeSpendingPatterns,
+    calculateGoalProjection,
+    calculateFinancialScore,
+    classifyFinancialTwin,
+  };
+})();
+/*
+  dashboard.js
+  ------------
+  Page controller for dashboard.html. This is the main hub: it reads
+  transactions/goals/habits from PulseStorage, runs them through
+  PulseCalc/PulseInsights/PulseInterventions, and renders:
+
+    1. Greeting + quick financial state
+    2. Financial Pulse (score + heartbeat visualisation)
+    3. Money overview (income / expense / balance)
+    4. Expense behaviour (CSS category bars + weekday/weekend)
+    5. Financial Twin summary card
+    6. Top AI Insights (short preview, full list lives on insights.html)
+    7. Saving Goals preview
+    8. Habit Intervention preview
+    9. Link into the What-If Simulator
+
+  Nothing on this page is randomised — every number is derived from
+  the user's own localStorage data via PulseCalc.
+*/
+(function () {
+  function init() {
+    if (!document.getElementById("dashboard-page")) return;
+    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+
+    const transactions = PulseStorage.getTransactions();
+    const goals = PulseStorage.getGoals();
+
+    renderGreeting(transactions);
+    renderFinancialPulse(transactions, goals);
+    renderMoneyOverview(transactions);
+    renderExpenseBehaviour(transactions);
+    renderFinancialTwin(transactions);
+    renderInsightsPreview(transactions, goals);
+    renderGoalsPreview(goals);
+    renderInterventionsPreview(transactions, goals);
+  }
+
+  // ---------------- 1. greeting ----------------
+
+  function renderGreeting(transactions) {
+    const nameEl = document.getElementById("greeting-state");
+    if (!nameEl) return;
+    const t = PulseCalc.totals(transactions);
+    if (transactions.length === 0) {
+      nameEl.textContent = "Belum ada transaksi. Yuk mulai catat hari ini.";
+      return;
+    }
+    nameEl.textContent =
+      t.balance >= 0
+        ? `Saldo bersihmu saat ini ${PulseUtils.formatCurrency(t.balance)}.`
+        : `Pengeluaranmu melebihi pemasukan sekitar ${PulseUtils.formatCurrency(Math.abs(t.balance))}.`;
+  }
+
+  // ---------------- 2. financial pulse ----------------
+
+  function renderFinancialPulse(transactions, goals) {
+    const scoreEl = document.getElementById("pulse-score");
+    const labelEl = document.getElementById("pulse-label");
+    const sentenceEl = document.getElementById("pulse-sentence");
+    const componentsEl = document.getElementById("pulse-components");
+    const svgHost = document.getElementById("pulse-wave");
+    if (!scoreEl) return;
+
+    const result = PulseCalc.calculateFinancialScore(transactions, goals);
+
+    PulseUtils.animateNumber(scoreEl, 0, result.score, { duration: 1100 });
+    if (labelEl) labelEl.textContent = result.label;
+    if (sentenceEl) {
+      sentenceEl.textContent =
+        transactions.length === 0
+          ? "Tambahkan transaksi pertama untuk mulai melihat detak finansialmu."
+          : `Financial Pulse ${result.score}/100 — ${result.label.toLowerCase()}.`;
+    }
+
+    if (componentsEl) {
+      componentsEl.innerHTML = result.components
+        .map(
+          (c) => `
+          <li class="pulse-component">
+            <span class="pulse-component-label">${PulseUtils.escapeHtml(c.label)}</span>
+            <div class="progress-track progress-track-thin">
+              <div class="progress-fill" style="width:${Math.round(c.score)}%"></div>
+            </div>
+          </li>`
+        )
+        .join("");
+    }
+
+    if (svgHost) renderPulseWave(svgHost, result.score);
+  }
+
+  // Draws a heartbeat-style SVG line. A higher score produces a calmer,
+  // more even rhythm; a lower score produces a sharper, more irregular
+  // rhythm. The line itself loops via CSS (see .pulse-wave-path).
+  function renderPulseWave(host, score) {
+    const width = 600;
+    const height = 120;
+    const midY = height / 2;
+    // Amplitude and jaggedness scale inversely with the score.
+    const amplitude = 10 + (100 - score) * 0.35;
+    const segments = score >= 80 ? 3 : score >= 60 ? 4 : score >= 40 ? 5 : 7;
+    const segWidth = width / segments;
+
+    let d = `M0,${midY}`;
+    for (let i = 0; i < segments; i++) {
+      const x0 = i * segWidth;
+      const peakX = x0 + segWidth * 0.45;
+      const dipX = x0 + segWidth * 0.6;
+      const backX = x0 + segWidth * 0.75;
+      d += ` L${x0 + segWidth * 0.25},${midY}`;
+      d += ` L${peakX},${midY - amplitude}`;
+      d += ` L${dipX},${midY + amplitude * 0.6}`;
+      d += ` L${backX},${midY}`;
+      d += ` L${x0 + segWidth},${midY}`;
+    }
+
+    const tone = score >= 80 ? "healthy" : score >= 60 ? "stable" : score >= 40 ? "watch" : "risk";
+
+    host.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" class="pulse-wave-svg" data-tone="${tone}" role="img" aria-label="Visualisasi detak finansial">
+        <path class="pulse-wave-path" d="${d}" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>`;
+  }
+
+  // ---------------- 3. money overview ----------------
+
+  function renderMoneyOverview(transactions) {
+    const t = PulseCalc.totals(transactions);
+    setText("overview-income", PulseUtils.formatCurrency(t.income));
+    setText("overview-expense", PulseUtils.formatCurrency(t.expense));
+    setText("overview-balance", PulseUtils.formatCurrency(t.balance));
+
+    const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
+    setText("overview-avg-tx", patterns.txCount > 0 ? PulseUtils.formatCurrency(patterns.avgTx) : "\u2013");
+    setText(
+      "overview-largest-category",
+      patterns.breakdown.length > 0 ? patterns.breakdown[0].category : "Belum ada data"
+    );
+
+    const trendEl = document.getElementById("overview-trend");
+    if (trendEl) {
+      if (patterns.previousTotal > 0) {
+        const rising = patterns.trendPercent > 0;
+        trendEl.textContent = `${rising ? "Naik" : "Turun"} ${Math.abs(Math.round(patterns.trendPercent))}% dari 14 hari sebelumnya`;
+        trendEl.className = "overview-trend " + (rising ? "overview-trend-up" : "overview-trend-down");
+      } else {
+        trendEl.textContent = "Belum cukup data untuk tren";
+        trendEl.className = "overview-trend";
+      }
+    }
+  }
+
+  // ---------------- 4. expense behaviour ----------------
+
+  function renderExpenseBehaviour(transactions) {
+    const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
+    const listEl = document.getElementById("category-bars");
+    const emptyEl = document.getElementById("category-bars-empty");
+    if (listEl) {
+      if (patterns.breakdown.length === 0) {
+        listEl.innerHTML = "";
+        if (emptyEl) emptyEl.hidden = false;
+      } else {
+        if (emptyEl) emptyEl.hidden = true;
+        const max = patterns.breakdown[0].amount || 1;
+        listEl.innerHTML = patterns.breakdown
+          .slice(0, 6)
+          .map(
+            (b) => `
+            <li class="category-bar-row" data-reveal>
+              <span class="category-bar-label">${PulseUtils.escapeHtml(b.category)}</span>
+              <div class="category-bar-track">
+                <div class="category-bar-fill" style="width:${Math.round((b.amount / max) * 100)}%"></div>
+              </div>
+              <span class="category-bar-amount">${PulseUtils.formatCurrencyCompact(b.amount)}</span>
+            </li>`
+          )
+          .join("");
+      }
+    }
+
+    // Weekday vs weekend comparison, shown as two simple proportional bars.
+    const weekdayHost = document.getElementById("weekday-weekend-chart");
+    if (weekdayHost) {
+      const max = Math.max(patterns.weekdayAvg, patterns.weekendAvg, 1);
+      weekdayHost.innerHTML = `
+        <div class="ww-bar-row">
+          <span class="ww-bar-label">Hari kerja</span>
+          <div class="category-bar-track">
+            <div class="category-bar-fill" style="width:${Math.round((patterns.weekdayAvg / max) * 100)}%"></div>
+          </div>
+          <span class="category-bar-amount">${PulseUtils.formatCurrencyCompact(patterns.weekdayAvg)}</span>
+        </div>
+        <div class="ww-bar-row">
+          <span class="ww-bar-label">Akhir pekan</span>
+          <div class="category-bar-track">
+            <div class="category-bar-fill category-bar-fill-accent" style="width:${Math.round((patterns.weekendAvg / max) * 100)}%"></div>
+          </div>
+          <span class="category-bar-amount">${PulseUtils.formatCurrencyCompact(patterns.weekendAvg)}</span>
+        </div>`;
+    }
+  }
+
+  // ---------------- 5. financial twin ----------------
+
+  function renderFinancialTwin(transactions) {
+    const el = document.getElementById("twin-summary");
+    if (!el) return;
+    const twin = PulseCalc.classifyFinancialTwin(transactions);
+    el.innerHTML = `
+      <h3 class="twin-title">${PulseUtils.escapeHtml(twin.title)}</h3>
+      <p class="twin-desc">${PulseUtils.escapeHtml(twin.description)}</p>
+    `;
+  }
+
+  // ---------------- 6. AI insight preview ----------------
+
+  function renderInsightsPreview(transactions, goals) {
+    const listEl = document.getElementById("insights-preview-list");
+    const emptyEl = document.getElementById("insights-preview-empty");
+    if (!listEl) return;
+    const insights = PulseInsights.generateInsights(transactions, goals).slice(0, 3);
+    if (insights.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+    listEl.innerHTML = insights
+      .map(
+        (ins) => `
+        <li class="insight-card insight-${ins.tone}" data-reveal>
+          <h3 class="insight-title">${PulseUtils.escapeHtml(ins.title)}</h3>
+          <p class="insight-text">${PulseUtils.escapeHtml(ins.text)}</p>
+        </li>`
+      )
+      .join("");
+  }
+
+  // ---------------- 7. goals preview ----------------
+
+  function renderGoalsPreview(goals) {
+    const listEl = document.getElementById("goals-preview-list");
+    const emptyEl = document.getElementById("goals-preview-empty");
+    if (!listEl) return;
+    if (goals.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+    listEl.innerHTML = goals
+      .slice(0, 3)
+      .map((g) => {
+        const proj = PulseCalc.calculateGoalProjection(g);
+        const pct = Math.round(proj.percent);
+        return `
+        <li class="goal-card goal-card-compact" data-reveal>
+          <div class="goal-card-head">
+            <h3 class="goal-name">${PulseUtils.escapeHtml(g.name)}</h3>
+            <span class="goal-percent">${pct}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="goal-amounts">
+            <span>${PulseUtils.formatCurrency(g.currentAmount)}</span>
+            <span>dari ${PulseUtils.formatCurrency(g.targetAmount)}</span>
+          </div>
+        </li>`;
+      })
+      .join("");
+  }
+
+  // ---------------- 8. habit intervention preview ----------------
+
+  function renderInterventionsPreview(transactions, goals) {
+    const listEl = document.getElementById("interventions-preview-list");
+    const emptyEl = document.getElementById("interventions-preview-empty");
+    if (!listEl) return;
+    const interventions = PulseInterventions.generateInterventions(transactions, goals).slice(0, 2);
+    if (interventions.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+    listEl.innerHTML = interventions
+      .map(
+        (iv) => `
+        <li class="intervention-card" data-reveal>
+          <h3 class="intervention-title">${PulseUtils.escapeHtml(iv.title)}</h3>
+          <p class="intervention-action">${PulseUtils.escapeHtml(iv.action)}</p>
+        </li>`
+      )
+      .join("");
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+/*
+  goals.js
+  --------
+  Page controller for goals.html. Handles creating, editing, deleting
+  goals, adding money towards a goal, and rendering each goal's progress
+  and monthly-saving projection.
+*/
+(function () {
+  let state = { editingId: null };
+
+  function init() {
+    if (!document.getElementById("goals-page")) return;
+    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+    bindForm();
+    render();
+  }
+
+  function bindForm() {
+    const form = document.getElementById("goal-form");
+    if (!form) return;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("goal-name").value.trim();
+      const targetAmount = Number(document.getElementById("goal-target").value);
+      const currentAmount = Number(document.getElementById("goal-current").value) || 0;
+      const targetDate = document.getElementById("goal-date").value || null;
+
+      if (!name) {
+        PulseUtils.toast("Beri nama pada targetmu.", "warning");
+        return;
+      }
+      if (!targetAmount || targetAmount <= 0) {
+        PulseUtils.toast("Masukkan nominal target yang valid.", "warning");
+        return;
+      }
+      if (currentAmount > targetAmount) {
+        PulseUtils.toast("Jumlah terkumpul tidak bisa melebihi target.", "warning");
+        return;
+      }
+
+      if (state.editingId) {
+        PulseStorage.updateGoal(state.editingId, { name, targetAmount, currentAmount, targetDate });
+        PulseUtils.toast("Target diperbarui.", "success");
+        exitEditMode();
+      } else {
+        PulseStorage.addGoal({ name, targetAmount, currentAmount, targetDate });
+        PulseUtils.toast("Target baru ditambahkan.", "success");
+      }
+      form.reset();
+      render();
+    });
+
+    const cancelBtn = document.getElementById("goal-cancel-edit");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        form.reset();
+        exitEditMode();
+      });
+    }
+  }
+
+  function exitEditMode() {
+    state.editingId = null;
+    const form = document.getElementById("goal-form");
+    form.querySelector("button[type=submit]").textContent = "Buat target";
+    document.getElementById("goal-cancel-edit").hidden = true;
+    document.getElementById("goal-form-title").textContent = "Target baru";
+  }
+
+  function enterEditMode(goal) {
+    state.editingId = goal.id;
+    const form = document.getElementById("goal-form");
+    document.getElementById("goal-name").value = goal.name;
+    document.getElementById("goal-target").value = goal.targetAmount;
+    document.getElementById("goal-current").value = goal.currentAmount;
+    document.getElementById("goal-date").value = goal.targetDate || "";
+    form.querySelector("button[type=submit]").textContent = "Simpan perubahan";
+    document.getElementById("goal-cancel-edit").hidden = false;
+    document.getElementById("goal-form-title").textContent = "Edit target";
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function render() {
+    const goals = PulseStorage.getGoals();
+    const listEl = document.getElementById("goals-list");
+    const emptyEl = document.getElementById("goals-empty");
+    if (!listEl) return;
+
+    if (goals.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    listEl.innerHTML = goals
+      .map((g) => {
+        const proj = PulseCalc.calculateGoalProjection(g);
+        const pct = Math.round(proj.percent);
+        const statusText = proj.onTrack
+          ? "Target sudah tercapai."
+          : `Perlu sekitar ${PulseUtils.formatCurrency(proj.requiredMonthly)}/bulan untuk mencapainya${g.targetDate ? " tepat waktu" : " dalam " + proj.months + " bulan"}.`;
+        const dateText = g.targetDate ? PulseUtils.formatDate(g.targetDate) : "Tanpa tenggat waktu";
+        return `
+          <li class="goal-card" data-id="${g.id}" data-reveal>
+            <div class="goal-card-head">
+              <div>
+                <h3 class="goal-name">${PulseUtils.escapeHtml(g.name)}</h3>
+                <p class="goal-meta">${PulseUtils.escapeHtml(dateText)}</p>
+              </div>
+              <span class="goal-percent">${pct}%</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="goal-amounts">
+              <span>${PulseUtils.formatCurrency(g.currentAmount)} terkumpul</span>
+              <span>dari ${PulseUtils.formatCurrency(g.targetAmount)}</span>
+            </div>
+            <p class="goal-status">${statusText}</p>
+            <div class="goal-actions">
+              <button class="btn btn-small btn-outline" data-action="add-money">Tambah dana</button>
+              <button class="btn btn-small btn-ghost" data-action="edit">Edit</button>
+              <button class="btn btn-small btn-ghost btn-danger" data-action="delete">Hapus</button>
+            </div>
+          </li>`;
+      })
+      .join("");
+
+    listEl.querySelectorAll(".goal-card").forEach((card) => {
+      const id = card.dataset.id;
+      card.querySelector('[data-action="add-money"]').addEventListener("click", () => {
+        const raw = prompt("Tambahkan berapa banyak ke target ini? (Rp)");
+        if (raw === null) return;
+        const amount = Number(raw.replace(/[^0-9.-]/g, ""));
+        if (!amount || amount <= 0) {
+          PulseUtils.toast("Masukkan nominal yang valid.", "warning");
+          return;
+        }
+        PulseStorage.addToGoal(id, amount);
+        PulseUtils.toast("Dana ditambahkan ke target.", "success");
+        render();
+      });
+      card.querySelector('[data-action="edit"]').addEventListener("click", () => {
+        const goal = PulseStorage.getGoals().find((g) => g.id === id);
+        if (goal) enterEditMode(goal);
+      });
+      card.querySelector('[data-action="delete"]').addEventListener("click", () => {
+        if (confirm("Hapus target ini?")) {
+          PulseStorage.deleteGoal(id);
+          PulseUtils.toast("Target dihapus.", "default");
+          render();
+        }
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+/*
+  insights.js
+  -----------
+  Two rule-based, scoring-driven engines. There is no external AI API
+  call anywhere here — every sentence is a template filled in with
+  numbers computed from the user's own transactions. If a rule's
+  condition isn't met by the real data, that insight or intervention
+  simply doesn't appear (no fake/placeholder content is ever shown).
+
+  PulseInsights       -> "AI Insight": what happened, described in words.
+  PulseInterventions  -> "Habit Intervention": small, specific next steps.
+*/
+
+const PulseInsights = (function () {
+  function formatPercent(n) {
+    const sign = n > 0 ? "+" : "";
+    return sign + Math.round(n) + "%";
+  }
+
+  function generateInsights(transactions, goals) {
+    const insights = [];
+    if (!transactions || transactions.length === 0) return insights;
+
+    const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
+    const expenses = transactions.filter((t) => t.type === "expense");
+
+    // 1. Trend: recent 14 days vs previous 14 days, overall
+    if (patterns.previousTotal > 0 && Math.abs(patterns.trendPercent) >= 10) {
+      const rising = patterns.trendPercent > 0;
+      insights.push({
+        id: "overall-trend",
+        tone: rising ? "warning" : "positive",
+        title: rising ? "Pengeluaran sedang naik" : "Pengeluaran sedang turun",
+        text: rising
+          ? `Total pengeluaranmu naik ${formatPercent(patterns.trendPercent)} dibanding 14 hari sebelumnya. Ada baiknya ditinjau sebelum menjadi kebiasaan tetap.`
+          : `Total pengeluaranmu turun ${formatPercent(patterns.trendPercent)} dibanding 14 hari sebelumnya. Perubahan kecil ini cukup terasa.`,
+      });
+    }
+
+    // 2. Category-level spikes: compare each category recent vs previous
+    const catRecent = {};
+    const catPrevious = {};
+    const { recent, previous } = PulseCalc.splitByRecency(expenses, 14);
+    recent.forEach((t) => (catRecent[t.category] = (catRecent[t.category] || 0) + Number(t.amount)));
+    previous.forEach((t) => (catPrevious[t.category] = (catPrevious[t.category] || 0) + Number(t.amount)));
+
+    Object.keys(catRecent).forEach((cat) => {
+      const now = catRecent[cat];
+      const before = catPrevious[cat] || 0;
+      if (before > 0) {
+        const change = ((now - before) / before) * 100;
+        if (change >= 20) {
+          insights.push({
+            id: "spike-" + cat,
+            tone: "warning",
+            title: `Pengeluaran ${cat} meningkat`,
+            text: `Pengeluaran ${cat.toLowerCase()}mu meningkat ${formatPercent(change)} dibanding minggu-minggu sebelumnya. Jika pola ini berlanjut, dampaknya bisa terasa pada targetmu bulan ini.`,
+          });
+        } else if (change <= -20) {
+          insights.push({
+            id: "drop-" + cat,
+            tone: "positive",
+            title: `Pengeluaran ${cat} menurun`,
+            text: `Pengeluaran ${cat.toLowerCase()}mu turun ${formatPercent(change)} dibanding minggu-minggu sebelumnya. Perubahan kecil ini berdampak baik.`,
+          });
+        }
+      } else if (now > 0 && before === 0) {
+        insights.push({
+          id: "new-" + cat,
+          tone: "neutral",
+          title: `Kategori baru: ${cat}`,
+          text: `Kamu mulai memiliki pengeluaran di kategori ${cat.toLowerCase()} dalam dua minggu terakhir yang sebelumnya jarang muncul.`,
+        });
+      }
+    });
+
+    // 3. Repeated small purchases (e.g. coffee-like habits)
+    const smallRepeats = {};
+    expenses.forEach((t) => {
+      const key = t.category + "|" + (t.description || "").toLowerCase().trim();
+      if (!smallRepeats[key]) smallRepeats[key] = { count: 0, total: 0, category: t.category, label: t.description };
+      smallRepeats[key].count += 1;
+      smallRepeats[key].total += Number(t.amount);
+    });
+    Object.values(smallRepeats)
+      .filter((r) => r.count >= 4)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 2)
+      .forEach((r, i) => {
+        insights.push({
+          id: "repeat-" + i,
+          tone: "neutral",
+          title: `Kebiasaan "${r.label || r.category}" berulang`,
+          text: `Kamu tercatat melakukan transaksi "${(r.label || r.category)}" sebanyak ${r.count} kali baru-baru ini, dengan total sekitar ${PulseUtils.formatCurrency(r.total)}. Ini pola yang cukup konsisten.`,
+        });
+      });
+
+    // 4. Weekend vs weekday
+    if (patterns.weekendAvg > 0 && patterns.weekdayAvg > 0) {
+      const diff = ((patterns.weekendAvg - patterns.weekdayAvg) / patterns.weekdayAvg) * 100;
+      if (diff >= 30) {
+        insights.push({
+          id: "weekend",
+          tone: "warning",
+          title: "Akhir pekan lebih boros",
+          text: `Rata-rata pengeluaranmu di akhir pekan ${formatPercent(diff)} lebih tinggi dibanding hari kerja. Akhir pekan tampaknya jadi waktu paling aktif dalam pengeluaranmu.`,
+        });
+      }
+    }
+
+    // 5. High-frequency small transactions
+    if (patterns.frequency >= 1.5) {
+      insights.push({
+        id: "frequency",
+        tone: "neutral",
+        title: "Frekuensi transaksi cukup tinggi",
+        text: `Kamu rata-rata melakukan sekitar ${patterns.frequency.toFixed(1)} transaksi pengeluaran per hari aktif. Transaksi kecil yang sering bisa menambah pengeluaran tanpa terasa.`,
+      });
+    }
+
+    // 6. Large single purchases
+    const avg = patterns.avgTx;
+    const largeTx = expenses.filter((t) => avg > 0 && Number(t.amount) >= avg * 3).sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+    if (largeTx) {
+      insights.push({
+        id: "large-purchase",
+        tone: "neutral",
+        title: "Ada pembelian besar baru-baru ini",
+        text: `Transaksi "${largeTx.description || largeTx.category}" senilai ${PulseUtils.formatCurrency(Number(largeTx.amount))} jauh di atas rata-rata transaksimu (${PulseUtils.formatCurrency(avg)}). Wajar sesekali, tapi baik untuk dipantau bila sering terjadi.`,
+      });
+    }
+
+    // 7. Saving rate trend
+    if (patterns.savingRate < 0) {
+      insights.push({
+        id: "saving-negative",
+        tone: "warning",
+        title: "Tabunganmu melambat",
+        text: `Pengeluaranmu saat ini melebihi pemasukan sekitar ${PulseUtils.formatCurrency(Math.abs(patterns.incomeTotal - patterns.expenseTotal))}. Ini saat yang baik untuk meninjau kembali kategori terbesar.`,
+      });
+    } else if (patterns.savingRate >= 0.2) {
+      insights.push({
+        id: "saving-positive",
+        tone: "positive",
+        title: "Tingkat tabunganmu membaik",
+        text: `Kamu berhasil menyisihkan sekitar ${Math.round(patterns.savingRate * 100)}% dari total pemasukanmu periode ini. Pertahankan ritme ini.`,
+      });
+    }
+
+    // 8. Spending concentration (top category share)
+    if (patterns.breakdown.length > 0 && patterns.expenseTotal > 0) {
+      const topShare = (patterns.breakdown[0].amount / patterns.expenseTotal) * 100;
+      if (topShare >= 40) {
+        insights.push({
+          id: "concentration",
+          tone: "neutral",
+          title: "Pengeluaran terpusat pada satu kategori",
+          text: `Kategori ${patterns.breakdown[0].category.toLowerCase()} menyumbang sekitar ${Math.round(topShare)}% dari total pengeluaranmu. Mengurangi sedikit di sini akan terasa dampaknya paling besar.`,
+        });
+      }
+    }
+
+    // 9. Recurring / subscription-like burden
+    if (patterns.recurringCount >= 3) {
+      insights.push({
+        id: "recurring",
+        tone: "neutral",
+        title: "Beberapa pengeluaran bersifat rutin",
+        text: `Ada sekitar ${patterns.recurringCount} pola pengeluaran yang berulang dengan nominal serupa, seperti langganan atau kebiasaan tetap. Ini membentuk beban dasar bulananmu.`,
+      });
+    }
+
+    // 10. Goal progress relevance
+    if (goals && goals.length > 0) {
+      goals.forEach((g) => {
+        const proj = PulseCalc.calculateGoalProjection(g);
+        if (proj.percent >= 80 && proj.percent < 100) {
+          insights.push({
+            id: "goal-near-" + g.id,
+            tone: "positive",
+            title: `Target "${g.name}" hampir tercapai`,
+            text: `Kamu sudah mencapai ${Math.round(proj.percent)}% dari target "${g.name}". Tinggal sedikit lagi untuk mencapainya sepenuhnya.`,
+          });
+        }
+      });
+    }
+
+    // Sort so warnings surface first, then neutral, then positive — this
+    // keeps the most actionable items at the top of the list.
+    const order = { warning: 0, neutral: 1, positive: 2 };
+    insights.sort((a, b) => order[a.tone] - order[b.tone]);
+
+    return insights;
+  }
+
+  return { generateInsights };
+})();
+
+/*
+  PulseInterventions
+  -------------------
+  Reads the same behavioural signals as PulseInsights but turns them into
+  small, concrete, non-judgmental next actions instead of observations.
+  Each intervention can be turned into a tracked habit commitment via
+  PulseStorage.addHabit.
+*/
+const PulseInterventions = (function () {
+  function generateInterventions(transactions, goals) {
+    const interventions = [];
+    if (!transactions || transactions.length === 0) return interventions;
+
+    const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
+    const expenses = transactions.filter((t) => t.type === "expense");
+
+    // Food spending rising
+    const { recent, previous } = PulseCalc.splitByRecency(expenses, 14);
+    const foodRecent = recent.filter((t) => t.category === "Makanan").reduce((s, t) => s + Number(t.amount), 0);
+    const foodPrevious = previous.filter((t) => t.category === "Makanan").reduce((s, t) => s + Number(t.amount), 0);
+    if (foodPrevious > 0 && foodRecent > foodPrevious * 1.15) {
+      interventions.push({
+        id: "food-up",
+        title: "Pengeluaran makanmu sedang naik",
+        action: "Daripada mengubah semuanya, coba kurangi satu pesanan minggu ini.",
+        habitTitle: "Kurangi satu pesanan makan minggu ini",
+        target: 1,
+      });
+    }
+
+    // Savings slowing down
+    if (patterns.savingRate < 0.1) {
+      interventions.push({
+        id: "saving-slow",
+        title: "Tabunganmu melambat",
+        action: "Tambahkan Rp50.000 ke target bulan ini.",
+        habitTitle: "Tambahkan Rp50.000 ke target tabungan",
+        target: 1,
+      });
+    }
+
+    // High weekend spending
+    if (patterns.weekendAvg > 0 && patterns.weekdayAvg > 0) {
+      const diff = ((patterns.weekendAvg - patterns.weekdayAvg) / patterns.weekdayAvg) * 100;
+      if (diff >= 30) {
+        interventions.push({
+          id: "weekend-cap",
+          title: "Akhir pekan menjadi titik paling aktif dalam pengeluaranmu",
+          action: "Coba tetapkan batas akhir pekan sebesar Rp250.000.",
+          habitTitle: "Batasi pengeluaran akhir pekan ke Rp250.000",
+          target: 4,
+        });
+      }
+    }
+
+    // High-frequency small transactions
+    if (patterns.frequency >= 1.8) {
+      interventions.push({
+        id: "frequency-pause",
+        title: "Transaksi kecilmu cukup sering muncul",
+        action: "Coba jeda satu hari tanpa transaksi kecil minggu ini.",
+        habitTitle: "Satu hari tanpa transaksi kecil",
+        target: 1,
+      });
+    }
+
+    // Recurring / subscription burden
+    if (patterns.recurringCount >= 3) {
+      interventions.push({
+        id: "review-subscription",
+        title: "Ada beberapa pengeluaran rutin yang mirip langganan",
+        action: "Tinjau satu langganan yang paling jarang dipakai bulan ini.",
+        habitTitle: "Tinjau satu langganan bulan ini",
+        target: 1,
+      });
+    }
+
+    // Concentrated spending category
+    if (patterns.breakdown.length > 0 && patterns.expenseTotal > 0) {
+      const top = patterns.breakdown[0];
+      const topShare = (top.amount / patterns.expenseTotal) * 100;
+      if (topShare >= 40) {
+        interventions.push({
+          id: "concentration-trim",
+          title: `Kategori ${top.category.toLowerCase()} mendominasi pengeluaranmu`,
+          action: `Coba kurangi pengeluaran ${top.category.toLowerCase()} sebesar 10% minggu ini.`,
+          habitTitle: `Kurangi ${top.category.toLowerCase()} sebesar 10%`,
+          target: 1,
+        });
+      }
+    }
+
+    // Goal behind schedule
+    if (goals && goals.length > 0) {
+      goals.forEach((g) => {
+        const proj = PulseCalc.calculateGoalProjection(g);
+        if (!proj.onTrack && proj.requiredMonthly > 0 && proj.percent < 50) {
+          interventions.push({
+            id: "goal-push-" + g.id,
+            title: `Target "${g.name}" butuh sedikit dorongan`,
+            action: `Sisihkan sekitar ${PulseUtils.formatCurrency(proj.requiredMonthly)} bulan ini untuk tetap di jalur.`,
+            habitTitle: `Sisihkan dana untuk "${g.name}" bulan ini`,
+            target: 1,
+          });
+        }
+      });
+    }
+
+    return interventions;
+  }
+
+  return { generateInterventions };
+})();
+
+/*
+  ------------------------------------------------------------------
+  Page controller for insights.html
+  ------------------------------------------------------------------
+  Renders the Financial Twin card, the full AI Insight list, and the
+  Habit Intervention cards (with "Mulai kebiasaan" -> tracked habit),
+  all read live from PulseStorage/PulseCalc — nothing here is fake.
+*/
+(function () {
+  function init() {
+    if (!document.getElementById("insights-page")) return;
+    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+    render();
+  }
+
+  function render() {
+    const transactions = PulseStorage.getTransactions();
+    const goals = PulseStorage.getGoals();
+
+    renderTwin(transactions);
+    renderInsights(transactions, goals);
+    renderInterventions(transactions, goals);
+    renderHabits();
+  }
+
+  function renderTwin(transactions) {
+    const el = document.getElementById("twin-card");
+    if (!el) return;
+    const twin = PulseCalc.classifyFinancialTwin(transactions);
+    el.innerHTML = `
+      <span class="twin-key">${PulseUtils.escapeHtml(twin.key)}</span>
+      <h3 class="twin-title">${PulseUtils.escapeHtml(twin.title)}</h3>
+      <p class="twin-desc">${PulseUtils.escapeHtml(twin.description)}</p>
+    `;
+  }
+
+  function toneLabel(tone) {
+    if (tone === "warning") return "Perlu perhatian";
+    if (tone === "positive") return "Kabar baik";
+    return "Pengamatan";
+  }
+
+  function renderInsights(transactions, goals) {
+    const listEl = document.getElementById("insights-list");
+    const emptyEl = document.getElementById("insights-empty");
+    if (!listEl) return;
+
+    const insights = PulseInsights.generateInsights(transactions, goals);
+    if (insights.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    listEl.innerHTML = insights
+      .map(
+        (ins) => `
+        <li class="insight-card insight-${ins.tone}" data-reveal>
+          <span class="insight-tag">${toneLabel(ins.tone)}</span>
+          <h3 class="insight-title">${PulseUtils.escapeHtml(ins.title)}</h3>
+          <p class="insight-text">${PulseUtils.escapeHtml(ins.text)}</p>
+        </li>`
+      )
+      .join("");
+  }
+
+  function renderInterventions(transactions, goals) {
+    const listEl = document.getElementById("interventions-list");
+    const emptyEl = document.getElementById("interventions-empty");
+    if (!listEl) return;
+
+    const interventions = PulseInterventions.generateInterventions(transactions, goals);
+    if (interventions.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    const activeHabitTitles = new Set(PulseStorage.getHabits().map((h) => h.title));
+
+    listEl.innerHTML = interventions
+      .map((iv) => {
+        const alreadyTracked = activeHabitTitles.has(iv.habitTitle);
+        return `
+        <li class="intervention-card" data-reveal data-habit-title="${PulseUtils.escapeHtml(iv.habitTitle)}" data-target="${iv.target}">
+          <h3 class="intervention-title">${PulseUtils.escapeHtml(iv.title)}</h3>
+          <p class="intervention-action">${PulseUtils.escapeHtml(iv.action)}</p>
+          <button class="btn btn-small btn-primary" data-action="start-habit" ${alreadyTracked ? "disabled" : ""}>
+            ${alreadyTracked ? "Sudah dilacak" : "Mulai kebiasaan"}
+          </button>
+        </li>`;
+      })
+      .join("");
+
+    listEl.querySelectorAll('[data-action="start-habit"]').forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const card = btn.closest(".intervention-card");
+        PulseStorage.addHabit({
+          title: card.dataset.habitTitle,
+          target: Number(card.dataset.target) || 1,
+        });
+        PulseUtils.toast("Kebiasaan baru mulai dilacak.", "success");
+        render();
+      });
+    });
+  }
+
+  function renderHabits() {
+    const listEl = document.getElementById("habits-list");
+    const emptyEl = document.getElementById("habits-empty");
+    if (!listEl) return;
+
+    const habits = PulseStorage.getHabits();
+    if (habits.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    listEl.innerHTML = habits
+      .map((h) => {
+        const pct = h.target > 0 ? Math.round((h.progress / h.target) * 100) : 0;
+        const done = h.status === "completed";
+        return `
+        <li class="habit-card ${done ? "habit-done" : ""}" data-id="${h.id}">
+          <div class="habit-head">
+            <h4 class="habit-title">${PulseUtils.escapeHtml(h.title)}</h4>
+            <span class="habit-streak">${h.streak} hari</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" style="width:${Math.min(100, pct)}%"></div>
+          </div>
+          <div class="habit-actions">
+            <span class="habit-progress">${h.progress}/${h.target}</span>
+            ${done
+              ? '<span class="tag tag-success">Selesai</span>'
+              : '<button class="btn btn-small btn-outline" data-action="check-in">Tandai hari ini</button>'}
+            <button class="icon-btn icon-btn-danger" data-action="remove">Hapus</button>
+          </div>
+        </li>`;
+      })
+      .join("");
+
+    listEl.querySelectorAll(".habit-card").forEach((card) => {
+      const id = card.dataset.id;
+      const checkBtn = card.querySelector('[data-action="check-in"]');
+      if (checkBtn) {
+        checkBtn.addEventListener("click", () => {
+          PulseStorage.checkInHabit(id);
+          PulseUtils.toast("Progres kebiasaan diperbarui.", "success");
+          renderHabits();
+        });
+      }
+      card.querySelector('[data-action="remove"]').addEventListener("click", () => {
+        PulseStorage.deleteHabit(id);
+        PulseUtils.toast("Kebiasaan dihapus.", "default");
+        render();
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+/*
+  onboarding.js
+  -------------
+  Page controller for index.html. This is the first-time-user flow:
+
+    - If onboarding is already done, redirect straight to dashboard.html.
+    - Otherwise show a short profile form (income, current savings, main
+      goal name/target/timeframe).
+    - The user finishes with either "Gunakan data contoh" (generates a
+      realistic Indonesian demo dataset, clearly tagged isDemo:true) or
+      "Mulai dari kosong" (saves only the profile + goal, no transactions).
+
+  Demo transactions are generated here, entirely client-side, from the
+  profile numbers the user just entered so the starter data is at least
+  in the right ballpark for their situation.
+*/
+(function () {
+  function init() {
+    const page = document.getElementById("onboarding-page");
+    if (!page) return;
+
+    // Already onboarded -> go straight to the dashboard.
+    if (!PulseUtils.requiresOnboarding()) {
+      window.location.href = "dashboard.html";
+      return;
+    }
+
+    bindForm();
+  }
+
+  function bindForm() {
+    const form = document.getElementById("onboarding-form");
+    if (!form) return;
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const mode = e.submitter && e.submitter.dataset.mode ? e.submitter.dataset.mode : "own";
+      finishOnboarding(mode);
+    });
+  }
+
+  function readProfile() {
+    return {
+      monthlyIncome: Number(document.getElementById("ob-income").value) || 0,
+      currentSavings: Number(document.getElementById("ob-savings").value) || 0,
+      goalName: document.getElementById("ob-goal-name").value.trim() || "Dana Darurat",
+      goalTarget: Number(document.getElementById("ob-goal-target").value) || 0,
+      goalMonths: Number(document.getElementById("ob-goal-months").value) || 12,
+    };
+  }
+
+  function finishOnboarding(mode) {
+    const profile = readProfile();
+
+    if (!profile.monthlyIncome || profile.monthlyIncome <= 0) {
+      PulseUtils.toast("Masukkan estimasi pemasukan bulananmu.", "warning");
+      return;
+    }
+
+    PulseStorage.saveProfile(profile);
+
+    // Always create the user's stated goal, whichever path they choose.
+    if (profile.goalTarget > 0) {
+      const targetDate = new Date();
+      targetDate.setMonth(targetDate.getMonth() + Math.max(1, profile.goalMonths));
+      PulseStorage.addGoal({
+        name: profile.goalName,
+        targetAmount: profile.goalTarget,
+        currentAmount: profile.currentSavings,
+        targetDate: targetDate.toISOString().slice(0, 10),
+      });
+    }
+
+    if (mode === "demo") {
+      const demoTx = buildDemoTransactions(profile);
+      PulseStorage.addTransactionsBulk(demoTx);
+      PulseStorage.setOnboardingState("demo");
+      PulseUtils.toast("Data contoh siap. Selamat datang di PulseFi.", "success");
+    } else {
+      PulseStorage.setOnboardingState("own");
+      PulseUtils.toast("Profil tersimpan. Yuk mulai catat transaksimu.", "success");
+    }
+
+    window.location.href = "dashboard.html";
+  }
+
+  // Builds ~45 days of realistic Indonesian transactions scaled loosely
+  // to the user's stated monthly income, so the dashboard/insights pages
+  // have enough signal to be interesting during the first visit.
+  function buildDemoTransactions(profile) {
+    const income = profile.monthlyIncome;
+    const tx = [];
+    const today = new Date();
+    let seed = Math.max(1, Math.round(income) % 2147483647);
+
+    function sample() {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    }
+
+    function addDaysAgo(daysAgo) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - daysAgo);
+      return d.toISOString().slice(0, 10);
+    }
+
+    // Salary on the 1st of this month and last month.
+    tx.push({ type: "income", category: "Lainnya", amount: income, date: addDaysAgo(today.getDate() - 1), description: "Gaji", isDemo: true });
+    tx.push({ type: "income", category: "Lainnya", amount: income, date: addDaysAgo(today.getDate() + 29), description: "Gaji", isDemo: true });
+
+    // Recurring subscriptions (same amount, same category, repeated).
+    tx.push({ type: "expense", category: "Langganan", amount: 54990, date: addDaysAgo(40), description: "Langganan musik", isDemo: true });
+    tx.push({ type: "expense", category: "Langganan", amount: 54990, date: addDaysAgo(10), description: "Langganan musik", isDemo: true });
+    tx.push({ type: "expense", category: "Langganan", amount: 120000, date: addDaysAgo(38), description: "Langganan streaming", isDemo: true });
+    tx.push({ type: "expense", category: "Langganan", amount: 120000, date: addDaysAgo(8), description: "Langganan streaming", isDemo: true });
+
+    // Coffee, roughly every couple of days — a classic recurring habit.
+    for (let i = 1; i <= 44; i += 3) {
+      tx.push({ type: "expense", category: "Makanan", amount: 24000 + Math.round(sample() * 8000), date: addDaysAgo(i), description: "Kopi", isDemo: true });
+    }
+
+    // Daily-ish lunches on weekdays.
+    for (let i = 0; i <= 44; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6 && sample() > 0.25) {
+        tx.push({ type: "expense", category: "Makanan", amount: 28000 + Math.round(sample() * 15000), date: addDaysAgo(i), description: "Makan siang", isDemo: true });
+      }
+    }
+
+    // Transport, mostly on weekdays.
+    for (let i = 0; i <= 44; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6 && sample() > 0.3) {
+        tx.push({ type: "expense", category: "Transportasi", amount: 12000 + Math.round(sample() * 10000), date: addDaysAgo(i), description: "Transportasi", isDemo: true });
+      }
+    }
+
+    // Weekend entertainment/shopping spikes — deliberately larger than
+    // weekday spending so the Financial Twin / insights engines have a
+    // clear pattern to detect.
+    for (let i = 0; i <= 44; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const day = d.getDay();
+      if (day === 0 || day === 6) {
+        if (sample() > 0.3) {
+          tx.push({ type: "expense", category: "Hiburan", amount: 90000 + Math.round(sample() * 120000), date: addDaysAgo(i), description: "Nonton & nongkrong", isDemo: true });
+        }
+        if (sample() > 0.5) {
+          tx.push({ type: "expense", category: "Belanja", amount: 100000 + Math.round(sample() * 200000), date: addDaysAgo(i), description: "Belanja akhir pekan", isDemo: true });
+        }
+      }
+    }
+
+    // A couple of bills and one larger, less frequent purchase.
+    tx.push({ type: "expense", category: "Tagihan", amount: 250000, date: addDaysAgo(35), description: "Listrik & air", isDemo: true });
+    tx.push({ type: "expense", category: "Tagihan", amount: 250000, date: addDaysAgo(5), description: "Listrik & air", isDemo: true });
+    tx.push({ type: "expense", category: "Belanja", amount: 450000, date: addDaysAgo(20), description: "Sepatu baru", isDemo: true });
+    tx.push({ type: "expense", category: "Kesehatan", amount: 150000, date: addDaysAgo(27), description: "Vitamin & obat", isDemo: true });
+
+    return tx;
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+/*
+  simulator.js
+  ------------
+  PulseSimulator powers the What-If Simulator. It takes the user's
+  current lifestyle spending (coffee, eating out, entertainment,
+  shopping, income, other expenses) and a hypothetical "scenario"
+  version of the same numbers, then computes the difference over one
+  month, one year, and three years — plus how much sooner an active
+  goal could be reached if the difference were saved instead.
+*/
+ 
+const PulseSimulator = (function () {
+  function simulateScenario(current, scenario) {
+    const currentTotal =
+      Number(current.coffee || 0) + Number(current.eatingOut || 0) +
+      Number(current.entertainment || 0) + Number(current.shopping || 0);
+    const scenarioTotal =
+      Number(scenario.coffee || 0) + Number(scenario.eatingOut || 0) +
+      Number(scenario.entertainment || 0) + Number(scenario.shopping || 0);
+ 
+    const monthlyDiff = currentTotal - scenarioTotal;
+    const yearlyDiff = monthlyDiff * 12;
+    const threeYearDiff = monthlyDiff * 36;
+ 
+    const newMonthlySavings = Number(scenario.income || 0) - scenarioTotal - Number(scenario.otherExpenses || 0);
+    const currentMonthlySavings = Number(current.income || 0) - currentTotal - Number(current.otherExpenses || 0);
+ 
+    return {
+      currentTotal,
+      scenarioTotal,
+      monthlyDiff,
+      yearlyDiff,
+      threeYearDiff,
+      newMonthlySavings,
+      currentMonthlySavings,
+    };
+  }
+ 
+  // Estimates how many fewer months a goal would take if `monthlyDiff`
+  // extra were saved every month, starting from a baseline saving pace
+  // inferred from the goal's own required-monthly figure.
+  function estimateGoalAcceleration(goal, monthlyDiff) {
+    if (!goal || monthlyDiff <= 0) return null;
+    const proj = PulseCalc.calculateGoalProjection(goal);
+    if (proj.remaining <= 0) return null;
+ 
+    const assumedBaseline = Math.max(proj.requiredMonthly * 0.6, 1);
+    const newRate = assumedBaseline + monthlyDiff;
+    const originalMonthsNeeded = proj.remaining / assumedBaseline;
+    const newMonthsNeeded = proj.remaining / newRate;
+    const monthsSaved = Math.max(0, originalMonthsNeeded - newMonthsNeeded);
+ 
+    return {
+      monthsSaved: Math.round(monthsSaved),
+      newMonthsNeeded: Math.round(newMonthsNeeded),
+    };
+  }
+ 
+  return { simulateScenario, estimateGoalAcceleration };
+})();
+ 
+/*
+  ------------------------------------------------------------------
+  Page controller for simulator.html
+  ------------------------------------------------------------------
+  Reads "current lifestyle" defaults from the user's own transaction
+  history where possible (average monthly Makanan/Hiburan/Belanja
+  spend, average income), lets the user tweak a "scenario" version of
+  the same numbers, and shows the animated projected difference plus
+  goal acceleration for whichever goal the user selects.
+*/
+(function () {
+  const FIELD_IDS = ["coffee", "eatingOut", "entertainment", "shopping", "income", "otherExpenses"];
+  let lastResult = null;
+ 
+  function init() {
+    if (!document.getElementById("simulator-page")) return;
+    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+    prefillFromHistory();
+    populateGoalSelect();
+    bindForm();
+    runSimulation();
+  }
+ 
+  // Estimate sensible starting numbers from the user's real transactions
+  // so the simulator opens already reflecting their actual lifestyle,
+  // instead of blank/zero inputs.
+  function prefillFromHistory() {
+    const transactions = PulseStorage.getTransactions();
+    const expenses = transactions.filter((t) => t.type === "expense");
+    const income = transactions.filter((t) => t.type === "income");
+ 
+    // Roughly one month of history: use the most recent 30 days if there
+    // is enough data, otherwise fall back to averaging everything.
+    const { recent } = PulseCalc.splitByRecency(expenses, 30);
+    const base = recent.length > 0 ? recent : expenses;
+ 
+    const sumFor = (matcher) => base.filter(matcher).reduce((s, t) => s + Number(t.amount), 0);
+ 
+    const coffee = sumFor((t) => /kopi|coffee/i.test(t.description || ""));
+    const eatingOut = sumFor((t) => t.category === "Makanan") - coffee;
+    const entertainment = sumFor((t) => t.category === "Hiburan");
+    const shopping = sumFor((t) => t.category === "Belanja");
+    const otherExpenses = base.reduce((s, t) => s + Number(t.amount), 0) - coffee - Math.max(0, eatingOut) - entertainment - shopping;
+    const avgIncome = income.length > 0 ? income.reduce((s, t) => s + Number(t.amount), 0) / Math.max(1, new Set(income.map((t) => t.date.slice(0, 7))).size) : 0;
+ 
+    setValue("current-coffee", Math.max(0, Math.round(coffee)) || 300000);
+    setValue("current-eatingOut", Math.max(0, Math.round(eatingOut)) || 400000);
+    setValue("current-entertainment", Math.max(0, Math.round(entertainment)) || 200000);
+    setValue("current-shopping", Math.max(0, Math.round(shopping)) || 250000);
+    setValue("current-income", Math.round(avgIncome) || 5000000);
+    setValue("current-otherExpenses", Math.max(0, Math.round(otherExpenses)) || 1500000);
+ 
+    // Scenario starts identical to current; the user adjusts from here.
+    FIELD_IDS.forEach((id) => {
+      const currentInput = document.getElementById("current-" + id);
+      const scenarioInput = document.getElementById("scenario-" + id);
+      if (currentInput && scenarioInput) scenarioInput.value = currentInput.value;
+    });
+  }
+ 
+  function setValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  }
+ 
+  function populateGoalSelect() {
+    const select = document.getElementById("sim-goal");
+    if (!select) return;
+    const goals = PulseStorage.getGoals();
+    if (goals.length === 0) {
+      select.innerHTML = '<option value="">Belum ada target tabungan</option>';
+      select.disabled = true;
+      return;
+    }
+    select.disabled = false;
+    select.innerHTML = goals
+      .map((g) => `<option value="${g.id}">${PulseUtils.escapeHtml(g.name)}</option>`)
+      .join("");
+  }
+ 
+  function bindForm() {
+    const form = document.getElementById("simulator-form");
+    if (!form) return;
+    form.addEventListener("input", () => runSimulation());
+ 
+    const resetBtn = document.getElementById("sim-reset");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        FIELD_IDS.forEach((id) => {
+          const currentInput = document.getElementById("current-" + id);
+          const scenarioInput = document.getElementById("scenario-" + id);
+          if (currentInput && scenarioInput) scenarioInput.value = currentInput.value;
+        });
+        PulseUtils.toast("Skenario dikembalikan ke kondisi saat ini.", "default");
+        runSimulation();
+      });
+    }
+  }
+ 
+  function readFields(prefix) {
+    const values = {};
+    FIELD_IDS.forEach((id) => {
+      const el = document.getElementById(prefix + "-" + id);
+      values[id] = el ? Number(el.value) || 0 : 0;
+    });
+    return values;
+  }
+ 
+  function runSimulation() {
+    const current = readFields("current");
+    const scenario = readFields("scenario");
+    const result = PulseSimulator.simulateScenario(current, scenario);
+ 
+    animateResult("sim-monthly-diff", result.monthlyDiff);
+    animateResult("sim-yearly-diff", result.yearlyDiff);
+    animateResult("sim-three-year-diff", result.threeYearDiff);
+    animateResult("sim-new-savings", result.newMonthlySavings);
+ 
+    const sentenceEl = document.getElementById("sim-sentence");
+    if (sentenceEl) {
+      if (result.monthlyDiff > 0) {
+        sentenceEl.textContent = `${PulseUtils.formatCurrency(result.monthlyDiff)} lebih banyak dapat ditabung setiap bulan dengan skenario ini.`;
+        sentenceEl.className = "sim-sentence sim-sentence-positive";
+      } else if (result.monthlyDiff < 0) {
+        sentenceEl.textContent = `Skenario ini justru menambah pengeluaran sekitar ${PulseUtils.formatCurrency(Math.abs(result.monthlyDiff))} per bulan.`;
+        sentenceEl.className = "sim-sentence sim-sentence-negative";
+      } else {
+        sentenceEl.textContent = "Skenario ini sama persis dengan kondisi saat ini. Coba ubah salah satu nominal di atas.";
+        sentenceEl.className = "sim-sentence";
+      }
+    }
+ 
+    // Goal acceleration
+    const goalSelect = document.getElementById("sim-goal");
+    const goalResultEl = document.getElementById("sim-goal-result");
+    if (goalSelect && goalResultEl) {
+      const goal = PulseStorage.getGoals().find((g) => g.id === goalSelect.value);
+      const acceleration = PulseSimulator.estimateGoalAcceleration(goal, result.monthlyDiff);
+      if (goal && acceleration && acceleration.monthsSaved > 0) {
+        goalResultEl.hidden = false;
+        goalResultEl.textContent = `Target "${goal.name}" bisa tercapai sekitar ${acceleration.monthsSaved} bulan lebih cepat jika selisih ini ditabung.`;
+      } else if (goal) {
+        goalResultEl.hidden = false;
+        goalResultEl.textContent = `Ubah skenario di atas untuk melihat dampaknya pada target "${goal.name}".`;
+      } else {
+        goalResultEl.hidden = true;
+        goalResultEl.textContent = "";
+      }
+    }
+ 
+    lastResult = result;
+  }
+ 
+  function animateResult(elId, value) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const from = Number(el.dataset.lastValue) || 0;
+    PulseUtils.animateNumber(el, from, value, {
+      duration: 700,
+      format: (v) => PulseUtils.formatCurrency(v),
+    });
+    el.dataset.lastValue = value;
+  }
+ 
+  document.addEventListener("DOMContentLoaded", init);
+})();
+/*
+  storage.js
+  ----------
+  The single place that touches localStorage. Every other file reads and
+  writes app data through these functions instead of calling
+  localStorage directly, so the storage format can change in one spot.
+
+  Keys used:
+    pulsefi_transactions   -> array of transaction objects
+    pulsefi_goals          -> array of goal objects
+    pulsefi_profile        -> object, answers given during onboarding
+    pulsefi_habits         -> array of habit commitment objects
+    pulsefi_onboarding     -> "demo" | "own" | null (has the user finished onboarding?)
+*/
+
+const PulseStorage = (function () {
+  const KEYS = {
+    transactions: "pulsefi_transactions",
+    goals: "pulsefi_goals",
+    profile: "pulsefi_profile",
+    habits: "pulsefi_habits",
+    onboarding: "pulsefi_onboarding",
+  };
+
+  function read(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return fallback;
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error("PulseStorage read error for " + key, e);
+      return fallback;
+    }
+  }
+
+  function write(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.error("PulseStorage write error for " + key, e);
+      return false;
+    }
+  }
+
+  function uid(prefix) {
+    return (prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ---------------- onboarding state ----------------
+
+  function getOnboardingState() {
+    return read(KEYS.onboarding, null);
+  }
+
+  function setOnboardingState(state) {
+    return write(KEYS.onboarding, state);
+  }
+
+  function resetAllData() {
+    Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+  }
+
+  // ---------------- profile ----------------
+
+  function getProfile() {
+    return read(KEYS.profile, null);
+  }
+
+  function saveProfile(profile) {
+    return write(KEYS.profile, profile);
+  }
+
+  // ---------------- transactions ----------------
+
+  function getTransactions() {
+    return read(KEYS.transactions, []);
+  }
+
+  function saveTransactions(list) {
+    return write(KEYS.transactions, list);
+  }
+
+  function addTransaction(tx) {
+    const list = getTransactions();
+    const record = {
+      id: uid("tx"),
+      type: tx.type === "income" ? "income" : "expense",
+      category: tx.category,
+      amount: Number(tx.amount) || 0,
+      date: tx.date,
+      description: tx.description || "",
+      isDemo: !!tx.isDemo,
+      createdAt: new Date().toISOString(),
+    };
+    list.push(record);
+    saveTransactions(list);
+    return record;
+  }
+
+  function updateTransaction(id, patch) {
+    const list = getTransactions();
+    const idx = list.findIndex((t) => t.id === id);
+    if (idx === -1) return null;
+    list[idx] = Object.assign({}, list[idx], patch, {
+      amount: patch.amount !== undefined ? Number(patch.amount) || 0 : list[idx].amount,
+    });
+    saveTransactions(list);
+    return list[idx];
+  }
+
+  function deleteTransaction(id) {
+    const list = getTransactions().filter((t) => t.id !== id);
+    saveTransactions(list);
+  }
+
+  function addTransactionsBulk(txs) {
+    const list = getTransactions();
+    const records = txs.map((tx) =>
+      Object.assign(
+        {
+          id: uid("tx"),
+          createdAt: new Date().toISOString(),
+          description: "",
+          isDemo: false,
+        },
+        tx,
+        { amount: Number(tx.amount) || 0 }
+      )
+    );
+    saveTransactions(list.concat(records));
+    return records;
+  }
+
+  function clearDemoTransactions() {
+    const list = getTransactions().filter((t) => !t.isDemo);
+    saveTransactions(list);
+  }
+
+  // ---------------- goals ----------------
+
+  function getGoals() {
+    return read(KEYS.goals, []);
+  }
+
+  function saveGoals(list) {
+    return write(KEYS.goals, list);
+  }
+
+  function addGoal(goal) {
+    const list = getGoals();
+    const record = {
+      id: uid("goal"),
+      name: goal.name,
+      targetAmount: Number(goal.targetAmount) || 0,
+      currentAmount: Number(goal.currentAmount) || 0,
+      targetDate: goal.targetDate || null,
+      createdAt: new Date().toISOString(),
+    };
+    list.push(record);
+    saveGoals(list);
+    return record;
+  }
+
+  function updateGoal(id, patch) {
+    const list = getGoals();
+    const idx = list.findIndex((g) => g.id === id);
+    if (idx === -1) return null;
+    list[idx] = Object.assign({}, list[idx], patch);
+    saveGoals(list);
+    return list[idx];
+  }
+
+  function deleteGoal(id) {
+    const list = getGoals().filter((g) => g.id !== id);
+    saveGoals(list);
+  }
+
+  function addToGoal(id, amount) {
+    const list = getGoals();
+    const idx = list.findIndex((g) => g.id === id);
+    if (idx === -1) return null;
+    const target = Math.max(0, Number(list[idx].targetAmount) || 0);
+    list[idx].currentAmount = Math.min(
+      target,
+      Math.max(0, Number(list[idx].currentAmount || 0) + Number(amount || 0))
+    );
+    saveGoals(list);
+    return list[idx];
+  }
+
+  // ---------------- habits ----------------
+
+  function getHabits() {
+    return read(KEYS.habits, []);
+  }
+
+  function saveHabits(list) {
+    return write(KEYS.habits, list);
+  }
+
+  function addHabit(habit) {
+    const list = getHabits();
+    const record = {
+      id: uid("habit"),
+      title: habit.title,
+      detail: habit.detail || "",
+      target: Number(habit.target) || 1,
+      progress: 0,
+      streak: 0,
+      completedDates: [],
+      createdAt: new Date().toISOString(),
+      status: "active",
+    };
+    list.push(record);
+    saveHabits(list);
+    return record;
+  }
+
+  function checkInHabit(id) {
+    const list = getHabits();
+    const idx = list.findIndex((h) => h.id === id);
+    if (idx === -1) return null;
+    const habit = list[idx];
+    const today = PulseUtils.todayISO();
+    if (habit.completedDates.includes(today)) return habit; // already checked in today
+    habit.completedDates.push(today);
+    habit.progress = Math.min(habit.target, habit.progress + 1);
+    habit.streak += 1;
+    if (habit.progress >= habit.target) habit.status = "completed";
+    saveHabits(list);
+    return habit;
+  }
+
+  function deleteHabit(id) {
+    const list = getHabits().filter((h) => h.id !== id);
+    saveHabits(list);
+  }
+
+  return {
+    KEYS,
+    uid,
+    getOnboardingState,
+    setOnboardingState,
+    resetAllData,
+    getProfile,
+    saveProfile,
+    getTransactions,
+    saveTransactions,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addTransactionsBulk,
+    clearDemoTransactions,
+    getGoals,
+    saveGoals,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    addToGoal,
+    getHabits,
+    saveHabits,
+    addHabit,
+    checkInHabit,
+    deleteHabit,
+  };
+})();/*
+  transactions.js
+  ---------------
+  Page controller for transaction.html. Handles the add/edit form,
+  the filterable + searchable + sortable list, and the summary totals.
+*/
+
+(function () {
+  const CATEGORIES = [
+    "Makanan", "Transportasi", "Belanja", "Hiburan",
+    "Kesehatan", "Pendidikan", "Tagihan", "Langganan", "Lainnya",
+  ];
+
+  let state = {
+    search: "",
+    typeFilter: "all",
+    categoryFilter: "all",
+    sort: "date-desc",
+    editingId: null,
+  };
+
+  function init() {
+    if (!document.getElementById("tx-page")) return;
+    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+
+    populateCategorySelects();
+    bindForm();
+    bindFilters();
+    render();
+  }
+
+  function populateCategorySelects() {
+    const selects = document.querySelectorAll(".category-select");
+    selects.forEach((sel) => {
+      const includeAll = sel.dataset.includeAll === "true";
+      let html = includeAll ? '<option value="all">Semua kategori</option>' : "";
+      CATEGORIES.forEach((c) => {
+        html += `<option value="${c}">${c}</option>`;
+      });
+      sel.innerHTML = html;
+    });
+  }
+
+  function bindForm() {
+    const form = document.getElementById("tx-form");
+    if (!form) return;
+
+    const dateInput = document.getElementById("tx-date");
+    if (dateInput && !dateInput.value) dateInput.value = PulseUtils.todayISO();
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const type = form.querySelector('input[name="tx-type"]:checked').value;
+      const category = document.getElementById("tx-category").value;
+      const amountRaw = document.getElementById("tx-amount").value;
+      const amount = Number(amountRaw);
+      const date = document.getElementById("tx-date").value;
+      const description = document.getElementById("tx-description").value.trim();
+
+      if (!amount || amount <= 0) {
+        PulseUtils.toast("Masukkan nominal yang valid.", "warning");
+        return;
+      }
+      if (!date) {
+        PulseUtils.toast("Pilih tanggal transaksi.", "warning");
+        return;
+      }
+
+      if (state.editingId) {
+        PulseStorage.updateTransaction(state.editingId, { type, category, amount, date, description });
+        PulseUtils.toast("Transaksi diperbarui.", "success");
+        exitEditMode();
+      } else {
+        PulseStorage.addTransaction({ type, category, amount, date, description });
+        PulseUtils.toast("Transaksi ditambahkan.", "success");
+      }
+
+      form.reset();
+      dateInput.value = PulseUtils.todayISO();
+      document.querySelector('input[name="tx-type"][value="expense"]').checked = true;
+      render();
+    });
+
+    const cancelBtn = document.getElementById("tx-cancel-edit");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        form.reset();
+        dateInput.value = PulseUtils.todayISO();
+        exitEditMode();
+      });
+    }
+  }
+
+  function exitEditMode() {
+    state.editingId = null;
+    const form = document.getElementById("tx-form");
+    form.querySelector("button[type=submit]").textContent = "Tambah transaksi";
+    document.getElementById("tx-cancel-edit").hidden = true;
+    document.getElementById("tx-form-title").textContent = "Tambah transaksi";
+  }
+
+  function enterEditMode(tx) {
+    state.editingId = tx.id;
+    const form = document.getElementById("tx-form");
+    document.querySelector(`input[name="tx-type"][value="${tx.type}"]`).checked = true;
+    document.getElementById("tx-category").value = tx.category;
+    document.getElementById("tx-amount").value = tx.amount;
+    document.getElementById("tx-date").value = tx.date;
+    document.getElementById("tx-description").value = tx.description || "";
+    form.querySelector("button[type=submit]").textContent = "Simpan perubahan";
+    document.getElementById("tx-cancel-edit").hidden = false;
+    document.getElementById("tx-form-title").textContent = "Edit transaksi";
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function bindFilters() {
+    const searchInput = document.getElementById("tx-search");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        state.search = e.target.value.toLowerCase();
+        render();
+      });
+    }
+    const typeFilter = document.getElementById("tx-filter-type");
+    if (typeFilter) {
+      typeFilter.addEventListener("change", (e) => {
+        state.typeFilter = e.target.value;
+        render();
+      });
+    }
+    const categoryFilter = document.getElementById("tx-filter-category");
+    if (categoryFilter) {
+      categoryFilter.addEventListener("change", (e) => {
+        state.categoryFilter = e.target.value;
+        render();
+      });
+    }
+    const sortSelect = document.getElementById("tx-sort");
+    if (sortSelect) {
+      sortSelect.addEventListener("change", (e) => {
+        state.sort = e.target.value;
+        render();
+      });
+    }
+  }
+
+  function getFilteredSorted() {
+    let list = PulseStorage.getTransactions();
+
+    if (state.typeFilter !== "all") {
+      list = list.filter((t) => t.type === state.typeFilter);
+    }
+    if (state.categoryFilter !== "all") {
+      list = list.filter((t) => t.category === state.categoryFilter);
+    }
+    if (state.search) {
+      list = list.filter(
+        (t) =>
+          (t.description || "").toLowerCase().includes(state.search) ||
+          t.category.toLowerCase().includes(state.search)
+      );
+    }
+
+    list = list.slice();
+    switch (state.sort) {
+      case "date-asc":
+        list.sort((a, b) => new Date(a.date) - new Date(b.date));
+        break;
+      case "amount-desc":
+        list.sort((a, b) => Number(b.amount) - Number(a.amount));
+        break;
+      case "amount-asc":
+        list.sort((a, b) => Number(a.amount) - Number(b.amount));
+        break;
+      case "date-desc":
+      default:
+        list.sort((a, b) => new Date(b.date) - new Date(a.date));
+        break;
+    }
+    return list;
+  }
+
+  function render() {
+    const all = PulseStorage.getTransactions();
+    const t = PulseCalc.totals(all);
+
+    setText("tx-total-income", PulseUtils.formatCurrency(t.income));
+    setText("tx-total-expense", PulseUtils.formatCurrency(t.expense));
+    setText("tx-total-balance", PulseUtils.formatCurrency(t.balance));
+
+    const list = getFilteredSorted();
+    const listEl = document.getElementById("tx-list");
+    const emptyEl = document.getElementById("tx-empty");
+    if (!listEl) return;
+
+    if (list.length === 0) {
+      listEl.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    listEl.innerHTML = list
+      .map((tx) => {
+        const sign = tx.type === "income" ? "+" : "\u2212";
+        const toneClass = tx.type === "income" ? "tx-amount-income" : "tx-amount-expense";
+        const demoTag = tx.isDemo ? '<span class="tag tag-demo">Data contoh</span>' : "";
+        return `
+          <li class="tx-row" data-id="${tx.id}">
+            <div class="tx-row-main">
+              <div class="tx-row-cat">
+                <span class="tx-dot" data-category="${PulseUtils.escapeHtml(tx.category)}"></span>
+                <div>
+                  <p class="tx-desc">${PulseUtils.escapeHtml(tx.description || tx.category)} ${demoTag}</p>
+                  <p class="tx-meta">${PulseUtils.escapeHtml(tx.category)} \u00b7 ${PulseUtils.formatDate(tx.date)}</p>
+                </div>
+              </div>
+            </div>
+            <div class="tx-row-side">
+              <span class="tx-amount ${toneClass}">${sign} ${PulseUtils.formatCurrency(tx.amount)}</span>
+              <div class="tx-row-actions">
+                <button class="icon-btn" data-action="edit" aria-label="Edit transaksi">Edit</button>
+                <button class="icon-btn icon-btn-danger" data-action="delete" aria-label="Hapus transaksi">Hapus</button>
+              </div>
+            </div>
+          </li>`;
+      })
+      .join("");
+
+    listEl.querySelectorAll(".tx-row").forEach((row) => {
+      const id = row.dataset.id;
+      row.querySelector('[data-action="edit"]').addEventListener("click", () => {
+        const tx = PulseStorage.getTransactions().find((t2) => t2.id === id);
+        if (tx) enterEditMode(tx);
+      });
+      row.querySelector('[data-action="delete"]').addEventListener("click", () => {
+        if (confirm("Hapus transaksi ini?")) {
+          PulseStorage.deleteTransaction(id);
+          PulseUtils.toast("Transaksi dihapus.", "default");
+          render();
+        }
+      });
+    });
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dashboard — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="dashboard-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="dashboard-top"><div><span class="eyebrow">Your financial mirror</span><h1>Ritme uangmu.</h1><p id="greeting-state" class="lede">Membaca pola finansialmu...</p></div><a class="btn btn-primary" href="transactions.html">+ Catat transaksi</a></section><section class="pulse-section" data-reveal><div class="pulse-layout"><div><span class="eyebrow">Financial Pulse</span><div class="pulse-score"><span id="pulse-score">0</span><small> / 100</small></div><p id="pulse-label" class="pulse-label">Belum ada data</p><p id="pulse-sentence" class="pulse-sentence">Tambahkan transaksi untuk mulai melihat detak finansialmu.</p></div><div><div id="pulse-wave" aria-live="polite"></div><ul id="pulse-components" class="pulse-components"></ul></div></div></section><section class="section"><div class="section-head"><div><span class="eyebrow">Gambaran singkat</span><h2>Angka yang punya konteks.</h2></div></div><div class="metrics-grid"><div class="metric"><span class="metric-label">Pemasukan</span><div id="overview-income" class="metric-value">Rp0</div></div><div class="metric"><span class="metric-label">Pengeluaran</span><div id="overview-expense" class="metric-value">Rp0</div></div><div class="metric"><span class="metric-label">Saldo bersih</span><div id="overview-balance" class="metric-value">Rp0</div></div><div class="metric"><span class="metric-label">Tren</span><div id="overview-trend" class="overview-trend">Belum cukup data untuk tren</div></div></div></section><section class="section two-col"><div><div class="section-head"><div><span class="eyebrow">Expense behaviour</span><h2>Ke mana paling sering pergi?</h2></div></div><ul id="category-bars" class="content-list"></ul><p id="category-bars-empty" class="empty-state">Belum ada pengeluaran untuk dibaca.</p><div id="weekday-weekend-chart" class="subtle-panel"></div></div><div><div class="section-head"><div><span class="eyebrow">Financial Twin</span><h2>Versi dirimu.</h2></div></div><div id="twin-summary" class="twin-panel"></div><div class="subtle-panel" style="margin-top:28px"><p class="muted">Rata-rata transaksi</p><strong id="overview-avg-tx" class="metric-value">–</strong><p class="muted" style="margin-top:18px">Kategori terbesar</p><strong id="overview-largest-category">Belum ada data</strong></div></div></section><section class="section preview-grid"><div><div class="section-head"><div><span class="eyebrow">AI Insight</span><h2>Yang sedang terjadi.</h2></div><a class="btn btn-small" href="insights.html">Lihat semua</a></div><ul id="insights-preview-list" class="content-list"></ul><p id="insights-preview-empty" class="empty-state">Catat beberapa transaksi untuk menemukan pola.</p></div><div><div class="section-head"><div><span class="eyebrow">Saving goals</span><h2>Yang kamu tuju.</h2></div><a class="btn btn-small" href="goals.html">Kelola target</a></div><ul id="goals-preview-list" class="content-list"></ul><p id="goals-preview-empty" class="empty-state">Belum ada target tabungan.</p></div></section><section class="section"><div class="section-head"><div><span class="eyebrow">Habit Intervention</span><h2>Satu langkah kecil berikutnya.</h2></div><a class="btn btn-small" href="insights.html">Buka intervensi</a></div><ul id="interventions-preview-list" class="content-list"></ul><p id="interventions-preview-empty" class="empty-state">Insight akan memberi saran setelah ada cukup data.</p></section><section class="section" style="padding-top:10px"><div class="twin-panel"><span class="eyebrow">Lihat kemungkinan</span><h2>Satu kebiasaan kecil. Dampak yang berbeda.</h2><p class="lede">Uji skenario pengeluaranmu sebelum mengubahnya sungguhan.</p><a class="btn btn-primary" href="simulator.html">Buka What-If Simulator</a></div></section></main><footer class="site-footer"><strong>PULSEFI</strong><span>Financial behavior mirror · Data tersimpan lokal</span></footer><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/insights.js"></script><script src="js/dashboard.js"></script></body></html>
+
+<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Target — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="goals-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">Saving goals</span><h1>Yang kamu tuju.</h1><p class="lede">Buat target yang terasa nyata, lalu lihat ritme kecil yang membawamu mendekat.</p></section><section class="page-layout"><div class="form-panel sticky-panel"><h2 id="goal-form-title">Target baru</h2><form id="goal-form"><div class="field"><label for="goal-name">Nama target</label><input id="goal-name" type="text" placeholder="Dana darurat" required></div><div class="field"><label for="goal-target">Nominal target (Rp)</label><input id="goal-target" type="number" min="1" required></div><div class="field"><label for="goal-current">Sudah terkumpul (Rp)</label><input id="goal-current" type="number" min="0" value="0"></div><div class="field"><label for="goal-date">Tenggat waktu</label><input id="goal-date" type="date"></div><div class="form-actions"><button class="btn btn-primary" type="submit">Buat target</button><button id="goal-cancel-edit" class="btn btn-ghost" type="button" hidden>Batal</button></div></form></div><div><ul id="goals-list" class="content-list"></ul><p id="goals-empty" class="empty-state">Belum ada target. Mulai dari satu hal yang ingin kamu wujudkan.</p></div></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/goals.js"></script></body></html>
+<!doctype html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PulseFi — Kenali cara uangmu bergerak</title><link rel="stylesheet" href="css/style.css"></head>
+<body id="onboarding-page"><header class="site-header"><nav class="nav" aria-label="Navigasi utama"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="#cara-kerja">Cara kerja</a><a href="dashboard.html">Masuk ke dashboard</a></div></nav></header>
+<main><section class="hero" data-reveal><div class="hero-copy"><span class="eyebrow">Financial behavior mirror</span><h1>Kenali cara uangmu bergerak.</h1><p class="lede">PulseFi membantumu melihat pola di balik setiap transaksi, memahami kebiasaan finansial, dan melihat bagaimana keputusan kecil hari ini membentuk masa depanmu.</p><div class="hero-actions"><a class="btn btn-primary" href="#onboarding">Mulai mengenali uangmu</a><a class="btn" href="#cara-kerja">Lihat cara kerjanya</a></div></div><div class="hero-art" aria-label="Ilustrasi pulse finansial"><div class="pulse-orbit"><span class="orbit-label">MONEY HAS A RHYTHM</span><strong class="orbit-number">∞</strong><span class="orbit-note">Bukan sekadar angka. Sebuah pola yang bisa kamu pahami.</span><svg class="wave-line" viewBox="0 0 400 90" aria-hidden="true"><path d="M0 46h55l15-34 17 60 17-30h50l18-25 18 36 20-7h190"></path></svg></div></div></section>
+<section class="story-band" id="cara-kerja"><div class="wide-shell story-grid"><div><span class="eyebrow">Satu alur yang utuh</span><h2>Dari transaksi menuju pemahaman.</h2></div><div class="feature-list"><article class="feature-item"><span class="kicker">01 / Kenali dirimu</span><h3>Financial Twin</h3><p>Financial Twin mempelajari pola dari transaksi dan kebiasaanmu untuk membentuk gambaran sederhana tentang bagaimana kamu berhubungan dengan uang. Bukan sekadar berapa yang kamu habiskan, tetapi kapan, untuk apa, dan pola apa yang terus berulang.</p></article><article class="feature-item"><span class="kicker">02 / Lebih dari sekadar angka</span><h3>AI Insight</h3><p>AI Insight mengubah data finansial menjadi cerita yang mudah dipahami. Temukan kebiasaan yang mungkin selama ini tidak kamu sadari, mulai dari pengeluaran impulsif hingga waktu tertentu ketika kamu cenderung lebih boros.</p></article><article class="feature-item"><span class="kicker">03 / Lihat kemungkinan</span><h3>What-If Simulator</h3><p>Coba ubah kebiasaanmu tanpa harus benar-benar mengubahnya terlebih dahulu. Lihat bagaimana keputusan kecil hari ini dapat memengaruhi kondisi finansialmu beberapa bulan ke depan.</p></article><article class="feature-item"><span class="kicker">04 / Saatnya bertindak</span><h3>Habit Intervention</h3><p>PulseFi mengenali ketika pola pengeluaranmu mulai berubah dan memberikan dorongan kecil pada saat yang tepat. Bukan menghakimi, hanya membantu membuat keputusan yang lebih sadar.</p></article><article class="feature-item"><span class="kicker">05 / Semua tercatat</span><h3>Transaction Tracker</h3><p>Catat dan pahami setiap pemasukan serta pengeluaranmu dalam satu tampilan yang sederhana. Angka-angka berubah menjadi konteks yang membantu kamu memahami kebiasaan sehari-hari.</p></article></div></div></section>
+<section id="onboarding" class="onboarding-wrap"><div class="onboarding-copy"><span class="eyebrow">Mulai dari sini</span><h1>Bangun cermin finansialmu.</h1><p class="lede">Isi sedikit konteks. PulseFi akan menyiapkan ruang pertama untuk membaca ritme uangmu.</p></div><div class="form-panel" data-reveal><h2>Profil awal</h2><p class="muted">Pilih data contoh untuk langsung menjelajah, atau mulai dengan data milikmu sendiri.</p><form id="onboarding-form"><div class="form-grid"><div class="field"><label for="ob-income">Pemasukan bulanan</label><input id="ob-income" type="number" min="0" placeholder="5000000" required></div><div class="field"><label for="ob-savings">Tabungan saat ini</label><input id="ob-savings" type="number" min="0" placeholder="3000000"></div><div class="field"><label for="ob-goal-name">Target utama</label><input id="ob-goal-name" type="text" placeholder="Dana darurat"></div><div class="field"><label for="ob-goal-target">Nominal target</label><input id="ob-goal-target" type="number" min="0" placeholder="10000000"></div><div class="field field-full"><label for="ob-goal-months">Target tercapai dalam (bulan)</label><input id="ob-goal-months" type="number" min="1" value="12"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit" data-mode="demo">Gunakan data contoh</button><button class="btn" type="submit" data-mode="own">Mulai dari kosong</button></div><p class="helper">Data disimpan hanya di browser ini melalui localStorage. Tidak ada akun atau server.</p></form></div></section></main><footer class="site-footer"><strong>PULSEFI</strong><span>Financial behavior mirror · Client-side by design</span></footer><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/onboarding.js"></script></body></html>
+<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Insight — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="insights-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">Financial behavior mirror</span><h1>Bukan cuma tahu ke mana uangmu pergi.</h1><p class="lede">Insight berbasis aturan membaca data lokalmu menjadi cerita yang mudah dipahami, lalu mengubahnya menjadi langkah kecil yang bisa dicoba.</p></section><section class="section two-col"><div><div class="section-head"><div><span class="eyebrow">Financial Twin</span><h2>Gambaran dirimu.</h2></div></div><div id="twin-card" class="twin-panel"></div></div><div class="subtle-panel"><span class="eyebrow">Cara membaca</span><p class="lede">PulseFi mengamati frekuensi, kategori, waktu, pengeluaran berulang, dan perubahannya dari waktu ke waktu. Tidak ada API eksternal di balik insight ini.</p></div></section><section class="section two-col"><div><div class="section-head"><div><span class="eyebrow">AI Insight</span><h2>Pola yang terlihat.</h2></div></div><ul id="insights-list" class="content-list"></ul><p id="insights-empty" class="empty-state">Belum cukup data untuk membentuk insight.</p></div><div><div class="section-head"><div><span class="eyebrow">Habit Intervention</span><h2>Saatnya bertindak.</h2></div></div><ul id="interventions-list" class="content-list"></ul><p id="interventions-empty" class="empty-state">Saran akan muncul saat ada pola yang bisa ditindaklanjuti.</p></div></section><section class="section"><div class="section-head"><div><span class="eyebrow">Tracked habits</span><h2>Kebiasaan yang sedang dibangun.</h2></div></div><ul id="habits-list" class="content-list"></ul><p id="habits-empty" class="empty-state">Belum ada kebiasaan yang dilacak.</p></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/insights.js"></script></body></html>
+<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Simulator — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="simulator-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">What-if simulator</span><h1>Satu kebiasaan kecil. Dampak yang berbeda.</h1><p class="lede">Ubah skenario tanpa harus mengubah hidupmu dulu. Angka awal diambil dari transaksi lokalmu saat tersedia.</p></section><section class="sim-layout"><form id="simulator-form" class="sim-fields"><div class="sim-group"><h3>Kondisi saat ini</h3><div class="sim-row"><label>Kopi<input id="current-coffee" type="number" min="0"></label><label>Makan di luar<input id="current-eatingOut" type="number" min="0"></label></div><div class="sim-row"><label>Hiburan<input id="current-entertainment" type="number" min="0"></label><label>Belanja<input id="current-shopping" type="number" min="0"></label></div><div class="sim-row"><label>Pemasukan<input id="current-income" type="number" min="0"></label><label>Pengeluaran lain<input id="current-otherExpenses" type="number" min="0"></label></div></div><div class="sim-group"><h3>Skenario pilihanmu</h3><div class="sim-row"><label>Kopi<input id="scenario-coffee" type="number" min="0"></label><label>Makan di luar<input id="scenario-eatingOut" type="number" min="0"></label></div><div class="sim-row"><label>Hiburan<input id="scenario-entertainment" type="number" min="0"></label><label>Belanja<input id="scenario-shopping" type="number" min="0"></label></div><div class="sim-row"><label>Pemasukan<input id="scenario-income" type="number" min="0"></label><label>Pengeluaran lain<input id="scenario-otherExpenses" type="number" min="0"></label></div></div><div class="field"><label for="sim-goal">Target yang ingin dipercepat</label><select id="sim-goal"></select></div><button id="sim-reset" class="btn" type="button">Reset skenario</button></form><div class="sim-result"><span class="eyebrow">Projection</span><h2>Ruang untuk masa depan.</h2><p id="sim-sentence" class="sim-sentence">Ubah salah satu angka untuk melihat dampaknya.</p><div class="sim-results-grid"><div><span class="sim-label">Lebih banyak / bulan</span><div id="sim-monthly-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Dalam 1 tahun</span><div id="sim-yearly-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Dalam 3 tahun</span><div id="sim-three-year-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Tabungan bulanan baru</span><div id="sim-new-savings" class="sim-value">Rp0</div></div></div><div id="sim-goal-result" class="sim-goal-result" hidden></div></div></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/simulator.js"></script></body></html>
+<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Transaksi — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="tx-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">Transaction tracker</span><h1>Semua tercatat.</h1><p class="lede">Satu tempat untuk melihat ke mana uangmu pergi. Catat pemasukan dan pengeluaran, lalu biarkan konteksnya terbentuk.</p></section><div class="summary-strip"><div class="metric"><span class="metric-label">Pemasukan</span><div id="tx-total-income" class="metric-value">Rp0</div></div><div class="metric"><span class="metric-label">Pengeluaran</span><div id="tx-total-expense" class="metric-value">Rp0</div></div><div class="metric"><span class="metric-label">Saldo</span><div id="tx-total-balance" class="metric-value">Rp0</div></div></div><section class="page-layout"><div class="form-panel sticky-panel"><h2 id="tx-form-title">Tambah transaksi</h2><form id="tx-form"><div class="type-toggle"><label><input type="radio" name="tx-type" value="expense" checked><span>Pengeluaran</span></label><label><input type="radio" name="tx-type" value="income"><span>Pemasukan</span></label></div><div class="field"><label for="tx-category">Kategori</label><select id="tx-category" class="category-select"></select></div><div class="field"><label for="tx-amount">Nominal (Rp)</label><input id="tx-amount" type="number" min="1" required></div><div class="field"><label for="tx-date">Tanggal</label><input id="tx-date" type="date" required></div><div class="field"><label for="tx-description">Keterangan</label><input id="tx-description" type="text" placeholder="Makan siang"></div><div class="form-actions"><button class="btn btn-primary" type="submit">Tambah transaksi</button><button id="tx-cancel-edit" class="btn btn-ghost" type="button" hidden>Batal</button></div></form></div><div><div class="filters"><input id="tx-search" type="search" placeholder="Cari transaksi..." aria-label="Cari transaksi"><select id="tx-filter-type"><option value="all">Semua arus</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select><select id="tx-filter-category" class="category-select" data-include-all="true"></select><select id="tx-sort"><option value="date-desc">Terbaru</option><option value="date-asc">Terlama</option><option value="amount-desc">Nominal terbesar</option><option value="amount-asc">Nominal terkecil</option></select></div><ul id="tx-list" class="tx-list"></ul><p id="tx-empty" class="empty-state">Belum ada transaksi yang cocok.</p></div></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/transaction.js"></script></body></html>
