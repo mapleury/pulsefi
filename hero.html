@@ -7,6 +7,7 @@
 
 <!-- Tailwind CSS (CDN) -->
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script>
   tailwind.config = {
     theme: {
@@ -26,9 +27,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
 <!-- Custom styles (keyframes, glassmorphism, precise hero layout) -->
 <link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/stats.css">
+<link rel="stylesheet" href="css/features.css">
+<link rel="stylesheet" href="css/quote.css">
 </head>
 <body class="bg-white antialiased font-sans">
 
@@ -119,8 +124,165 @@
   </div>
   </div>
 
-  <section class="post-hero-space"></section>
+  <section class="stats-section" id="tentang">
+    <div class="stats-inner">
+      <div class="stats-heading">
+        <p class="stats-label">STATISTIK</p>
+        <h2 class="stats-title">Bukti Nyata</h2>
+      </div>
+
+              <div class="stats-cards">
+        <div class="stats-card stats-card-1">
+          <img src="assets/statistik-1.svg" alt="15.000 pengguna aktif — ribuan pengguna telah mulai membangun kebiasaan finansial yang lebih baik bersama PulseFi.">
+        </div>
+        <div class="stats-card stats-card-2">
+          <img src="assets/statistik-2.svg" alt="89% mayoritas pengguna terbantu">
+        </div>
+        <div class="stats-card stats-card-3">
+          <img src="assets/statistik-3.svg" alt="2,4 juta akumulasi penghematan yang pengguna capai">
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <section class="features-section" id="tujuan">
+    <div class="features-inner">
+
+      <div class="features-top">
+        <h2 class="features-title">Mengapa<br>PulseFi?</h2>
+        <p class="features-intro">
+          <span class="features-intro-dark">Tujuan kami adalah meningkatkan literasi finansial,</span>
+          <span class="features-intro-light">mempermudah kalian membangun masa depan.</span>
+        </p>
+      </div>
+
+<div class="features-list">
+
+  <div class="feature-item" data-index="1">
+    <div class="feature-number">01</div>
+    <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+      <span class="feature-eyebrow">Financial Twin</span>
+      <span class="feature-category">Kenali Dirimu</span>
+    </div>
+    <div class="feature-expand">
+      <div class="feature-expand-inner">
+        <div class="feature-image">
+          <img src="assets/feature-1.svg" alt="Ilustrasi Financial Twin">
+        </div>
+        <div class="feature-text">
+          <p class="feature-headline">Uangmu punya pola. Kenali cara kerjanya.</p>
+          <div class="feature-stat">
+            <span class="feature-stat-number">92%</span>
+            <span class="feature-stat-label">pengguna lebih memahami kebiasaan finansialnya</span>
+          </div>
+          <p class="feature-desc">Financial Twin membaca pola transaksi untuk menunjukkan bagaimana, kapan, dan mengapa kamu menggunakan uang.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-item" data-index="2">
+    <div class="feature-number">02</div>
+    <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+      <span class="feature-eyebrow">AI Insight</span>
+      <span class="feature-category">Lebih dari Sekadar Angka</span>
+    </div>
+    <div class="feature-expand">
+      <div class="feature-expand-inner">
+        <div class="feature-image">
+          <img src="assets/feature-2.svg" alt="Ilustrasi AI Insight">
+        </div>
+        <div class="feature-text">
+          <p class="feature-headline">Temukan pola yang sering terlewat.</p>
+          <div class="feature-stat">
+            <span class="feature-stat-number">87%</span>
+            <span class="feature-stat-label">pengguna menemukan pola baru dalam pengeluaran</span>
+          </div>
+          <p class="feature-desc">AI Insight mengubah data menjadi pemahaman tentang kebiasaan, pengeluaran impulsif, dan momen ketika kamu paling boros.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-item" data-index="3">
+    <div class="feature-number">03</div>
+    <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+      <span class="feature-eyebrow">What-If Simulator</span>
+      <span class="feature-category">Lihat Kemungkinan</span>
+    </div>
+    <div class="feature-expand">
+      <div class="feature-expand-inner">
+        <div class="feature-image">
+          <img src="assets/feature-3.svg" alt="Ilustrasi What-If Simulator">
+        </div>
+        <div class="feature-text">
+          <p class="feature-headline">Uji keputusan sebelum menjalaninya.</p>
+          <div class="feature-stat">
+            <span class="feature-stat-number">84%</span>
+            <span class="feature-stat-label">pengguna lebih yakin mengambil keputusan finansial</span>
+          </div>
+          <p class="feature-desc">Simulasikan perubahan kecil seperti mengurangi jajan atau menambah tabungan, lalu lihat dampaknya di masa depan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-item" data-index="4">
+    <div class="feature-number">04</div>
+    <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+      <span class="feature-eyebrow">Habit Intervention</span>
+      <span class="feature-category">Saatnya Bertindak</span>
+    </div>
+    <div class="feature-expand">
+      <div class="feature-expand-inner">
+        <div class="feature-image">
+          <img src="assets/feature-4.svg" alt="Ilustrasi Habit Intervention">
+        </div>
+        <div class="feature-text">
+          <p class="feature-headline">Ubah kebiasaan, satu langkah kecil.</p>
+          <div class="feature-stat">
+            <span class="feature-stat-number">79%</span>
+            <span class="feature-stat-label">pengguna berhasil memperbaiki setidaknya satu kebiasaan</span>
+          </div>
+          <p class="feature-desc">PulseFi mengenali perubahan pola dan memberi dorongan yang relevan agar kamu bisa mengambil keputusan dengan lebih sadar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-item" data-index="5">
+    <div class="feature-number">05</div>
+    <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+      <span class="feature-eyebrow">Transaction Tracker</span>
+      <span class="feature-category">Semua Tercatat</span>
+    </div>
+    <div class="feature-expand">
+      <div class="feature-expand-inner">
+        <div class="feature-image">
+          <img src="assets/feature-5.svg" alt="Ilustrasi Transaction Tracker">
+        </div>
+        <div class="feature-text">
+          <p class="feature-headline">Semua transaksi, satu gambaran utuh.</p>
+          <div class="feature-stat">
+            <span class="feature-stat-number">95%</span>
+            <span class="feature-stat-label">pengguna lebih mudah memantau pengeluaran</span>
+          </div>
+          <p class="feature-desc">Catat pemasukan dan pengeluaran dalam satu tampilan sederhana untuk memahami ke mana uangmu pergi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <section class="quote-section">
+    <h2 class="quote-title">Uangmu sudah bercerita. <br> Mulai membacanya.</h2>
+    <img src="assets/quotes.svg" alt="" class="quote-img" aria-hidden="true">
+  </section>
 
   <script src="js/hero.js"></script>
+  <script src="js/stats.js" defer></script>
+  <script src="js/features.js" defer></script>
+  <script src="js/quote.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,116 @@
+/* =========================================================
+   PulseFi — Stats / "Bukti Nyata" section
+   Plays once, when scrolled into view.
+   ========================================================= */
+
+.stats-section {
+  background: #ffffff;
+  padding: clamp(64px, 10vw, 140px) clamp(32px, 8vw, 120px); /* more horizontal breathing room than the hero's own padding */
+}
+
+.stats-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.stats-label {
+  margin: 0 0 8px;
+  color: rgba(20, 22, 26, 0.55);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400; /* regular */
+  letter-spacing: -0.04em; /* "-4" */
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.stats-title {
+  margin: 0 0 clamp(32px, 5vw, 26px);
+  color: #14161a;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500; /* medium */
+  letter-spacing: -0.05em; /* "-2" */
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.1;
+}
+
+/* --- blur-slide-down entrance for the text --- */
+.stats-label,
+.stats-title {
+  opacity: 0;
+  transform: translateY(-24px);
+  filter: blur(14px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stats-title {
+  transition-delay: 0.12s;
+}
+
+.stats-section.in-view .stats-label,
+.stats-section.in-view .stats-title {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* --- cards --- */
+.stats-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); /* card 1 is visibly wider than 2 & 3 */
+  gap: clamp(16px, 2vw, 28px);
+  align-items: stretch;
+}.stats-card {
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.85);
+  transform-origin: center bottom;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Match each card's box to its own SVG's viewBox ratio (width/height) —
+   open each SVG file, check its viewBox="0 0 W H", and plug W/H in below.
+   This is what stops the crop: the box is never a different shape than the art itself. */
+.stats-card-1 { aspect-ratio: 620 / 370; } /* placeholder — replace with statistik-1.svg's real viewBox ratio */
+.stats-card-2 { aspect-ratio: 380 / 360; } /* placeholder — replace with statistik-2.svg's real viewBox ratio */
+.stats-card-3 { aspect-ratio: 380 / 360; } /* placeholder — replace with statistik-3.svg's real viewBox ratio */
+
+.stats-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* no cropping, ever — was cover */
+  display: block;
+}
+
+/* grow in one-by-one: 1 → 2 → 3 */
+.stats-section.in-view .stats-card-1 { transition-delay: 0.3s; }
+.stats-section.in-view .stats-card-2 { transition-delay: 0.5s; }
+.stats-section.in-view .stats-card-3 { transition-delay: 0.7s; }
+
+.stats-section.in-view .stats-card {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-label,
+  .stats-title,
+  .stats-card {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* --- responsive --- */
+@media (max-width: 900px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+}

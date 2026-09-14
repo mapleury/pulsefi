@@ -607,7 +607,7 @@ img {
 }
 .hero-scroll-wrap {
   position: relative;
-  height: 180vh; /* extra room to scroll through while it shrinks */
+  height: 110vh; /* extra room to scroll through while it shrinks */
 }
 
 .hero-scroll-wrap .page-pad {
