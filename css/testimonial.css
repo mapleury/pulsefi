@@ -1,0 +1,161 @@
+/* =========================================================
+   PulseFi — Testimonial carousel
+   ========================================================= */
+
+.testimonial-section {
+  background: #ffffff;
+  padding: clamp(48px, 8vw, 100px) clamp(32px, 8vw, 120px) clamp(96px, 14vw, 180px); /* extra bottom room before the footer starts */
+}
+
+.testimonial-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.testimonial-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: clamp(20px, 3vw, 36px);
+}
+
+.testimonial-label {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: rgba(20, 22, 26, 0.55);
+}
+
+.testimonial-quote-icon {
+  width: clamp(48px, 5vw, 72px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.testimonial-quote {
+  margin: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1.2;
+  font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+  min-height: 3.6em; /* reserves space so layout doesn't jump between short/long quotes */
+}
+
+/* each word stays intact when wrapping; each letter animates individually */
+.testimonial-quote .word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.testimonial-quote .letter {
+  display: inline-block;
+  color: #6d46d9;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: letterIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: color 0.9s ease;
+}
+
+@keyframes letterIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* once everything has finished animating in, the whole quote settles to dark ink */
+.testimonial-quote.is-settled .letter {
+  color: #191729;
+}
+
+.testimonial-divider {
+  height: 1px;
+  background: rgba(20, 22, 26, 0.12);
+  margin: clamp(28px, 4vw, 44px) 0;
+}
+
+.testimonial-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.testimonial-person {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.testimonial-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background-color: #d9d9d9; /* visible briefly while the photo loads */
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.testimonial-person-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonial-name {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: #14161a;
+}
+
+.testimonial-role {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: rgba(20, 22, 26, 0.55);
+}
+
+.testimonial-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.testimonial-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 22, 26, 0.2);
+  background: #ffffff;
+  color: #14161a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.testimonial-arrow:hover {
+  background: #14161a;
+  border-color: #14161a;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-quote .letter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .testimonial-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

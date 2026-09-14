@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PulseFi — Kebiasaan Baik, Finansial Naik.</title>
-
+<title>Pulsefi</title>
+  <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
 <!-- Tailwind CSS (CDN) -->
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -34,6 +34,8 @@
 <link rel="stylesheet" href="css/stats.css">
 <link rel="stylesheet" href="css/features.css">
 <link rel="stylesheet" href="css/quote.css">
+<link rel="stylesheet" href="css/testimonial.css">
+<link rel="stylesheet" href="css/footer.css">
 </head>
 <body class="bg-white antialiased font-sans">
 
@@ -280,9 +282,65 @@
     <img src="assets/quotes.svg" alt="" class="quote-img" aria-hidden="true">
   </section>
 
+    <section class="testimonial-section" id="testimoni">
+    <div class="testimonial-inner">
+      <div class="testimonial-top">
+        <span class="testimonial-label">Testimoni</span>
+               <img src="assets/apostrophe.svg" alt="" class="testimonial-quote-icon" aria-hidden="true">
+      </div>
+
+      <blockquote class="testimonial-quote" id="testimonialQuote" aria-live="polite"></blockquote>
+
+      <div class="testimonial-divider"></div>
+
+      <div class="testimonial-bottom">
+        <div class="testimonial-person">
+          <div class="testimonial-avatar" id="testimonialAvatar"></div>
+          <div class="testimonial-person-info">
+            <span class="testimonial-name" id="testimonialName"></span>
+            <span class="testimonial-role" id="testimonialRole"></span>
+          </div>
+        </div>
+
+        <div class="testimonial-nav">
+          <button class="testimonial-arrow" id="testimonialPrev" type="button" aria-label="Testimoni sebelumnya">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3.5 5 8l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="testimonial-arrow" id="testimonialNext" type="button" aria-label="Testimoni berikutnya">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5 11 8l-5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="page-pad">
+  <footer class="site-footer">
+    <img src="assets/footer-bg.svg" alt="" class="footer-bg" aria-hidden="true">
+
+    <div class="footer-content">
+      <a href="#home" class="footer-logo" aria-label="PulseFi Home">
+        <img src="assets/pulsefi-logo-icon.svg" alt="PulseFi">
+      </a>
+
+      <nav class="footer-nav" aria-label="Navigasi footer">
+        <a href="#home">Home</a>
+        <a href="#tentang">Tentang</a>
+        <a href="#tujuan">Tujuan</a>
+        <a href="#testimoni">Testimoni</a>
+        <a href="#mulai" class="footer-cta">Mulai Sekarang</a>
+      </nav>
+
+      <div class="footer-bottom-row">
+        <p class="footer-copyright">© 2026 PulseFi. All rights reserved.</p>
+    </div>
+    </div>
+  </footer>
+  </div>
+
   <script src="js/hero.js"></script>
   <script src="js/stats.js" defer></script>
   <script src="js/features.js" defer></script>
   <script src="js/quote.js" defer></script>
+  <script src="js/testimonial.js" defer></script>
 </body>
 </html>
