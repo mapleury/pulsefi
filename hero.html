@@ -39,6 +39,21 @@
 </head>
 <body class="bg-white antialiased font-sans">
 
+  <!-- Floating pill nav — lives outside the hero, fixed, so it can slide
+       independently on top of every section. js/navbar.js toggles
+       .scrolled once past the hero, swapping it to dark-on-light. -->
+  <div class="floating-nav" id="floatingNav">
+    <nav class="navbar-glass" aria-label="Navigasi utama">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#tentang">Tentang</a></li>
+        <li><a href="#tujuan">Tujuan</a></li>
+        <li><a href="#testimoni">Testimoni</a></li>
+        <li><a href="login.html" class="nav-cta">Mulai</a></li>
+      </ul>
+    </nav>
+  </div>
+
   <div class="hero-scroll-wrap">
   <div class="page-pad">
     <div class="hero-shell" id="home">
@@ -48,21 +63,12 @@
 
       <div class="hero-content">
 
-        <!-- ============ NAVBAR ============ -->
+        <!-- ============ NAVBAR (logo + mobile burger only — the desktop
+             pill lives in .floating-nav above) ============ -->
         <header class="hero-nav-row">
           <a href="#home" class="logo" aria-label="PulseFi Home">
             <img src="assets/pulsefi-logo-icon.svg" alt="PulseFi" class="logo-icon">
           </a>
-
-          <nav class="navbar-glass" aria-label="Navigasi utama">
-            <ul>
-              <li><a href="#home">Home</a></li>
-              <li><a href="#tentang">Tentang</a></li>
-              <li><a href="#tujuan">Tujuan</a></li>
-              <li><a href="#testimoni">Testimoni</a></li>
-              <li><a href="#mulai" class="nav-cta">Mulai</a></li>
-            </ul>
-          </nav>
 
           <button class="nav-burger" type="button" aria-label="Buka menu" aria-expanded="false">
             <span></span><span></span><span></span>
@@ -75,7 +81,7 @@
           <a href="#tentang">Tentang</a>
           <a href="#tujuan">Tujuan</a>
           <a href="#testimoni">Testimoni</a>
-          <a href="#mulai" class="nav-cta">Mulai</a>
+          <a href="login.html" class="nav-cta">Mulai</a>
         </nav>
 
         <!-- ============ HERO BODY ============ -->
@@ -336,7 +342,7 @@
     </div>
   </footer>
   </div>
-
+  <script src="js/navbar.js"></script>
   <script src="js/hero.js"></script>
   <script src="js/stats.js" defer></script>
   <script src="js/features.js" defer></script>

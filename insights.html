@@ -1,1 +1,166 @@
-<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Insight — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="insights-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">Financial behavior mirror</span><h1>Bukan cuma tahu ke mana uangmu pergi.</h1><p class="lede">Insight berbasis aturan membaca data lokalmu menjadi cerita yang mudah dipahami, lalu mengubahnya menjadi langkah kecil yang bisa dicoba.</p></section><section class="section two-col"><div><div class="section-head"><div><span class="eyebrow">Financial Twin</span><h2>Gambaran dirimu.</h2></div></div><div id="twin-card" class="twin-panel"></div></div><div class="subtle-panel"><span class="eyebrow">Cara membaca</span><p class="lede">PulseFi mengamati frekuensi, kategori, waktu, pengeluaran berulang, dan perubahannya dari waktu ke waktu. Tidak ada API eksternal di balik insight ini.</p></div></section><section class="section two-col"><div><div class="section-head"><div><span class="eyebrow">AI Insight</span><h2>Pola yang terlihat.</h2></div></div><ul id="insights-list" class="content-list"></ul><p id="insights-empty" class="empty-state">Belum cukup data untuk membentuk insight.</p></div><div><div class="section-head"><div><span class="eyebrow">Habit Intervention</span><h2>Saatnya bertindak.</h2></div></div><ul id="interventions-list" class="content-list"></ul><p id="interventions-empty" class="empty-state">Saran akan muncul saat ada pola yang bisa ditindaklanjuti.</p></div></section><section class="section"><div class="section-head"><div><span class="eyebrow">Tracked habits</span><h2>Kebiasaan yang sedang dibangun.</h2></div></div><ul id="habits-list" class="content-list"></ul><p id="habits-empty" class="empty-state">Belum ada kebiasaan yang dilacak.</p></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/insights.js"></script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pola Finansial — PulseFi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/insights.css">
+<link rel="stylesheet" href="css/toast.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'sans-serif'] },
+        colors: {
+          pulse: { active: '#f4f5f8', inactiveText: '#828282', darkText: '#101010' }
+        },
+        boxShadow: { 'soft-purple': '0 10px 40px -10px rgba(124, 58, 237, 0.08)' }
+      }
+    }
+  };
+</script>
+</head>
+<body id="insights-page" class="bg-[#eef0f5] p-6 antialiased flex items-start gap-6">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+
+    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
+      <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+
+    <div class="mb-12 px-6 flex items-center h-8">
+      <img src="assets/pulsefi-logo.svg" alt="PulseFi Logo" class="ml-2 h-6 w-auto object-contain shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300">
+      <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
+    </div>
+
+    <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
+      <a href="dashboard.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
+      </a>
+
+      <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path>
+          <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+          <path d="M18 12a2 2 0 000 4h4v-4h-4z"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
+      </a>
+
+      <a href="goals.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
+      </a>
+
+      <a href="insights.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+          <path d="M22 4L12 14.01l-3-3"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+      </a>
+
+      <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <path d="M12 3v9h9"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto px-4 w-full">
+      <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
+        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
+          <svg class="w-full h-full text-gray-500 bg-gray-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+          </svg>
+        </div>
+        <span id="sidebar-user-name" class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left">Pengguna</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 min-w-0">
+    <div class="insights-wrap">
+
+      <h1 class="page-heading ls-tight">Pola Finansial</h1>
+
+      <div class="pulse-twin-row">
+
+        <!-- Financial Pulse card -->
+        <div class="pulse-card">
+          <div class="pulse-score">
+            <span id="pulse-score">0</span><small>/100</small>
+          </div>
+          <svg class="pulse-wave-svg" viewBox="0 0 300 90" preserveAspectRatio="none">
+            <path id="pulse-wave-path" class="pulse-wave-path" d=""></path>
+          </svg>
+          <div class="pulse-foot">
+            <span class="pulse-label">Financial Pulse</span>
+            <span class="pulse-status" id="pulse-status">Belum ada data</span>
+          </div>
+        </div>
+
+        <!-- Financial Twin -->
+        <div class="twin-panel">
+          <span class="twin-eyebrow ls-tight">Gambaran dirimu</span>
+          <h2 class="twin-title" id="twin-title">Belum Terlihat Polanya</h2>
+          <p class="twin-desc" id="twin-desc">Tambahkan beberapa transaksi supaya PulseFi bisa mulai mengenali kebiasaan finansialmu.</p>
+
+          <div class="category-bars" id="category-bars"></div>
+        </div>
+
+      </div>
+
+      <div class="two-col-bottom">
+
+        <!-- Pola yang terlihat -->
+        <div>
+          <h2 class="col-title ls-tight">Pola yang terlihat</h2>
+          <ul class="pattern-list" id="patterns-list"></ul>
+          <p class="empty-state" id="patterns-empty" style="display: none;">Belum cukup data untuk membentuk insight.</p>
+        </div>
+
+        <!-- Saatnya Bertindak -->
+        <div>
+          <h2 class="col-title ls-tight">Saatnya Bertindak</h2>
+          <ul class="action-list" id="actions-list"></ul>
+          <p class="empty-state" id="actions-empty" style="display: none;">Saran akan muncul saat ada pola yang bisa ditindaklanjuti.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/calculation.js"></script>
+  <script src="js/insights.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/insights-page.js"></script>
+</body>
+</html>

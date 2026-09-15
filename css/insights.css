@@ -1,0 +1,409 @@
+/* ================= responsive: sidebar collapses via its own arrow button,
+   no separate off-canvas drawer/hamburger needed ================= */
+
+@media (max-width: 900px) {
+  body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+  }
+
+  #sidebar.collapsed {
+    width: 100%; /* the width-collapse trick doesn't make sense stacked full-width — just let content flow normally */
+  }
+}
+/* =========================================================
+   PulseFi — Insights page ("Pola Finansial")
+   Self-contained: includes the sidebar's own styles (same rules as
+   dashboard.html's inline <style> block) plus this page's layout.
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #15131C;
+  --ink-soft: #57545F;
+  --muted: #828282;
+  --bg-page: #eef0f5;
+  --card-soft: #EDEDF0;
+  --pulse-1: #3F3288;
+  --pulse-2: #241C56;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Inter Medium, -7% tracking — used on headings/labels per spec.
+   Left at a gentler -1% on body copy so paragraphs stay readable. */
+.ls-tight {
+  font-weight: 500;
+  letter-spacing: -0.07em;
+}
+
+body {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ================= sidebar (same component as dashboard.html) ================= */
+
+#sidebar {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-text, .logo-text, .user-name {
+  transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#sidebar.collapsed { width: 96px; }
+#sidebar.collapsed .nav-text,
+#sidebar.collapsed .logo-text,
+#sidebar.collapsed .user-name {
+  opacity: 0;
+  max-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+#sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+#sidebar.collapsed .nav-icon {
+  margin-left: 0;
+  margin-right: 0;
+}
+#sidebar.collapsed .nav-dot { left: 8px; }
+#sidebar.collapsed .user-profile-btn {
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+  background: transparent;
+}
+#sidebar.collapsed #collapse-btn svg { transform: rotate(180deg); }
+.nav-dot {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease;
+}
+.nav-icon {
+  stroke: #828282;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease;
+}
+.nav-item.active .nav-icon {
+  transform: scale(1.15);
+  stroke: #101010;
+}
+.nav-item:not(.active):hover .nav-icon {
+  transform: scale(1.08);
+  stroke: #4b5563;
+}
+
+/* ================= page shell ================= */
+
+.insights-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 8px 0 64px;
+}
+
+.page-heading {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  color: var(--ink);
+  margin: 0 0 24px;
+}
+
+/* ================= top section: pulse card + twin ================= */
+
+.pulse-twin-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 48px;
+}
+
+.pulse-card {
+  background: radial-gradient(120% 140% at 15% 0%, var(--pulse-1) 0%, var(--pulse-2) 75%);
+  border-radius: 28px;
+  padding: 28px;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #ffffff;
+}
+
+.pulse-score {
+  font-family: var(--font-serif);
+  font-size: 64px;
+  line-height: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.pulse-score small {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 6px;
+}
+
+.pulse-wave-svg { width: 100%; height: 90px; display: block; margin: 12px 0; overflow: visible; }
+.pulse-wave-path {
+  transform-box: fill-box; /* lets scaleY pulse around the path's own center, not the SVG's corner */
+  transform-origin: center;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: draw-pulse 1.3s ease forwards 0.15s;
+}
+@keyframes draw-pulse { to { stroke-dashoffset: 0; } }
+
+/* Continuous loop, started via JS once draw-pulse finishes. Duration and
+   which keyframe set plays are both driven by the real score — see
+   startPulseLoop() in insights-page.js. */
+@keyframes pulse-loop-steady {
+  0%, 100% { opacity: 0.55; transform: scaleY(1); }
+  50% { opacity: 0.9; transform: scaleY(1.05); }
+}
+
+@keyframes pulse-loop-erratic {
+  0% { opacity: 0.5; transform: scaleY(0.95); }
+  12% { opacity: 0.95; transform: scaleY(1.1); }
+  28% { opacity: 0.6; transform: scaleY(0.97); }
+  40% { opacity: 1; transform: scaleY(1.15); }
+  55% { opacity: 0.5; transform: scaleY(0.93); }
+  70% { opacity: 0.85; transform: scaleY(1.06); }
+  85% { opacity: 0.6; transform: scaleY(0.98); }
+  100% { opacity: 0.5; transform: scaleY(0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-wave-path { animation: none !important; opacity: 0.7; }
+}
+
+.pulse-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pulse-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pulse-status {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.twin-panel {
+  padding-top: 4px;
+}
+
+.twin-eyebrow {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.twin-title {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  letter-spacing: -0.03em;
+  color: #201842;
+  margin: 0 0 14px;
+}
+
+.twin-desc {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 640px;
+  margin: 0 0 28px;
+}
+
+.category-bars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 32px;
+}
+
+.category-bar {
+  width: 200px;
+}
+
+.category-bar-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.category-bar-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(21, 19, 28, 0.1);
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ================= bottom section: insights + interventions ================= */
+
+.two-col-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.col-title {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+
+.pattern-list,
+.action-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.action-list li {
+  width: 100%; /* every <li> takes the full column width, so every pill matches regardless of how long its text is */
+}
+
+/* --- Pola yang terlihat --- */
+
+.pattern-card {
+  position: relative;
+  background: var(--card-soft);
+  border-radius: 24px;
+  padding: 26px 28px;
+}
+
+.pattern-badge {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pattern-title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0 0 14px;
+    letter-spacing: -0.05em;
+  display: inline-block;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 2px;
+}
+
+.pattern-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 480px;
+}
+
+/* --- Saatnya Bertindak --- */
+
+.action-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ink);
+  color: #ffffff;
+  border: none;
+  border-radius: 24px; /* was 999px — a true pill shape stretched to full width looks like a long capsule, not a card; this keeps it looking intentional at any width */
+  padding: 20px 26px;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-align: left;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.action-pill:hover { opacity: 0.88; }
+.action-pill:active { transform: translateY(1px); }
+.action-pill:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.action-pill svg { flex-shrink: 0; }
+
+.empty-state {
+  font-size: 13.5px;
+  color: var(--muted);
+  background: var(--card-soft);
+  border-radius: 18px;
+  padding: 20px 24px;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .pulse-twin-row,
+  .two-col-bottom {
+    grid-template-columns: 1fr;
+  }
+}

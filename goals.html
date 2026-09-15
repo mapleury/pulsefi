@@ -1,1 +1,256 @@
-<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Target — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="goals-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">Saving goals</span><h1>Yang kamu tuju.</h1><p class="lede">Buat target yang terasa nyata, lalu lihat ritme kecil yang membawamu mendekat.</p></section><section class="page-layout"><div class="form-panel sticky-panel"><h2 id="goal-form-title">Target baru</h2><form id="goal-form"><div class="field"><label for="goal-name">Nama target</label><input id="goal-name" type="text" placeholder="Dana darurat" required></div><div class="field"><label for="goal-target">Nominal target (Rp)</label><input id="goal-target" type="number" min="1" required></div><div class="field"><label for="goal-current">Sudah terkumpul (Rp)</label><input id="goal-current" type="number" min="0" value="0"></div><div class="field"><label for="goal-date">Tenggat waktu</label><input id="goal-date" type="date"></div><div class="form-actions"><button class="btn btn-primary" type="submit">Buat target</button><button id="goal-cancel-edit" class="btn btn-ghost" type="button" hidden>Batal</button></div></form></div><div><ul id="goals-list" class="content-list"></ul><p id="goals-empty" class="empty-state">Belum ada target. Mulai dari satu hal yang ingin kamu wujudkan.</p></div></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/goals.js"></script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabungan — PulseFi</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/goals.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            pulse: { active: '#f4f5f8', inactiveText: '#828282', darkText: '#101010' }
+          },
+          boxShadow: { 'soft-purple': '0 10px 40px -10px rgba(124, 58, 237, 0.08)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Sidebar-specific structural rules that only make sense paired with
+       the Tailwind utility classes on aside#sidebar below. */
+    #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease; }
+    .nav-text, .logo-text, .user-name {
+      transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    #sidebar.collapsed { width: 96px; }
+    #sidebar.collapsed .nav-text,
+    #sidebar.collapsed .logo-text,
+    #sidebar.collapsed .user-name { opacity: 0; max-width: 0; margin-left: 0; margin-right: 0; }
+    #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+    #sidebar.collapsed .nav-icon { margin-left: 0; margin-right: 0; }
+    #sidebar.collapsed .nav-dot { left: 8px; }
+    #sidebar.collapsed .user-profile-btn { padding-left: 0; padding-right: 0; justify-content: center; background: transparent; }
+    #sidebar.collapsed #collapse-btn svg { transform: rotate(180deg); }
+    .nav-dot { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease; }
+    .nav-icon { stroke: #828282; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease; }
+    .nav-item.active .nav-icon { transform: scale(1.15); stroke: #101010; }
+    .nav-item:not(.active):hover .nav-icon { transform: scale(1.08); stroke: #4b5563; }
+  </style>
+</head>
+<body id="goals-page">
+
+  <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Buka menu">☰</button>
+  <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+  <div class="app-shell">
+
+    <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0">
+
+      <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10" aria-label="Ciutkan sidebar">
+        <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+
+      <div class="mb-12 px-6 flex items-center h-8">
+        <img src="assets/pulsefi-logo.svg" alt="PulseFi" class="ml-2 h-6 w-auto object-contain shrink-0">
+        <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
+      </div>
+
+      <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
+
+        <a href="dashboard.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+          <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+          <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
+        </a>
+
+        <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+          <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+          <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+            <path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path>
+            <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+            <path d="M18 12a2 2 0 000 4h4v-4h-4z"></path>
+          </svg>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
+        </a>
+
+        <a href="goals.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
+          <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
+          <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+            <path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path>
+          </svg>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
+        </a>
+
+        <a href="insights.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+          <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+          <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+            <path d="M22 4L12 14.01l-3-3"></path>
+          </svg>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+        </a>
+
+        <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+          <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+          <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <path d="M12 3v9h9"></path>
+          </svg>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+        </a>
+
+      </nav>
+
+      <div class="mt-auto px-4 w-full">
+        <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
+          <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
+            <svg class="w-full h-full text-gray-500 bg-gray-200" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+            </svg>
+          </div>
+          <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left" id="sidebar-user-name">Kamu</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="goals-main">
+      <h1 class="goals-title">Tabungan</h1>
+
+      <div class="goals-grid" id="goals-grid">
+
+        <!-- Target Baru -->
+        <section class="goal-form-card" data-rise>
+          <div class="goal-form-head">
+            <h2>Target Baru</h2>
+            <span class="goal-form-icon">
+              <img src="assets/icons/piggy_bank.svg" alt="">
+            </span>
+          </div>
+
+          <form id="goal-form" novalidate>
+            <div class="goal-form-grid">
+              <div class="goal-field">
+                <label for="goal-name">Nama Target</label>
+                <input id="goal-name" type="text" autocomplete="off" maxlength="60">
+              </div>
+              <div class="goal-field">
+                <label for="goal-target">Nominal Target (Rp)</label>
+                <input id="goal-target" type="number" min="1" step="1000" inputmode="numeric">
+              </div>
+              <div class="goal-field">
+                <label for="goal-date">Tenggat Waktu</label>
+                <input id="goal-date" type="date">
+              </div>
+              <div class="goal-field">
+                <label for="goal-current">Sudah Terkumpul (Rp)</label>
+                <input id="goal-current" type="number" min="0" step="1000" inputmode="numeric">
+              </div>
+            </div>
+            <button class="goal-submit" type="submit">+ Catat Target Baru</button>
+          </form>
+        </section>
+
+        <!-- Goal cards are injected here by js/goals.js -->
+
+      </div>
+
+      <p class="goals-empty" id="goals-empty" hidden>Belum ada target tabungan. Buat satu di kartu sebelah untuk mulai melacaknya.</p>
+    </main>
+
+  </div>
+
+  <!-- Detail modal -->
+  <div class="goal-modal" id="goal-modal" hidden>
+    <div class="goal-modal-backdrop" data-close></div>
+
+    <div class="goal-modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-name" tabindex="-1">
+      <button class="goal-modal-close" type="button" data-close aria-label="Tutup">×</button>
+
+      <span class="goal-modal-date" id="modal-date">—</span>
+      <h2 class="goal-modal-name" id="modal-name">Target</h2>
+
+      <div class="goal-progress goal-progress-lg">
+        <span class="goal-percent" id="modal-percent">0%</span>
+        <div class="goal-track"><div class="goal-fill" id="modal-fill"></div></div>
+      </div>
+
+      <div class="goal-panel goal-panel-lg">
+        <img class="goal-panel-bg" src="assets/goal-bg.svg" alt="">
+        <p class="goal-amounts">
+          <strong id="modal-current">Rp.0</strong>
+          <span id="modal-target">/ 0</span>
+        </p>
+      </div>
+
+      <dl class="goal-stats">
+        <div><dt>Sisa</dt><dd id="modal-remaining">Rp0</dd></div>
+        <div><dt>Sisa waktu</dt><dd id="modal-months">—</dd></div>
+        <div><dt>Perlu ditabung / bulan</dt><dd id="modal-monthly">Rp0</dd></div>
+      </dl>
+
+      <form class="goal-topup" id="goal-topup-form">
+        <label for="goal-topup">Tambah dana</label>
+        <div class="goal-topup-row">
+          <input id="goal-topup" type="number" min="1" step="1000" placeholder="50000" inputmode="numeric">
+          <button type="submit">Tambah</button>
+        </div>
+      </form>
+
+      <form class="goal-edit" id="goal-edit-form" hidden>
+        <div class="goal-edit-grid">
+          <div class="goal-field goal-field-light">
+            <label for="edit-name">Nama Target</label>
+            <input id="edit-name" type="text" maxlength="60">
+          </div>
+          <div class="goal-field goal-field-light">
+            <label for="edit-target">Nominal Target (Rp)</label>
+            <input id="edit-target" type="number" min="1" step="1000">
+          </div>
+          <div class="goal-field goal-field-light">
+            <label for="edit-date">Tenggat Waktu</label>
+            <input id="edit-date" type="date">
+          </div>
+          <div class="goal-field goal-field-light">
+            <label for="edit-current">Sudah Terkumpul (Rp)</label>
+            <input id="edit-current" type="number" min="0" step="1000">
+          </div>
+        </div>
+        <button class="goal-edit-save" type="submit">Simpan perubahan</button>
+      </form>
+
+      <div class="goal-modal-foot">
+        <button type="button" id="modal-edit-toggle" class="goal-link">Ubah target</button>
+        <button type="button" id="modal-delete" class="goal-link goal-link-danger">Hapus target</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/calculation.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/goals.js"></script>
+</body>
+</html>

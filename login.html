@@ -6,6 +6,7 @@
     <title>PulseFi Login & Signup</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -92,10 +93,19 @@
             
             <!-- Header Text -->
             <div class="text-center mb-8">
-                <p id="subheading" class="text-[11px] text-[#828282] font-semibold uppercase spacing-caps mb-2 fade-text">
+                <p id="subheading" class="text-[11px] text-[#828282] font-regular uppercase spacing-caps mb-2 fade-text">
                     LOGIN KE AKUN
                 </p>
-          <h1 id="heading" class="text-2xl md:text-[1.65rem] leading-tight font-semibold text-black spacing-headline fade-text whitespace-nowrap">Selamat Datang Kembali!</h1>
+            <h1 id="heading" class="text-2xl md:text-[1.65rem] leading-tight font-semibold text-black spacing-headline fade-text whitespace-nowrap">Selamat Datang Kembali!</h1>
+            </div>
+
+            <!-- Inline error/success message — hidden until auth-ui.js shows one -->
+            <div id="auth-message" class="hidden items-start gap-2.5 rounded-2xl px-4 py-3 mb-5 text-[13px] font-medium leading-snug opacity-0 -translate-y-1 transition-all duration-300 ease-out" role="alert" aria-live="assertive">
+                <svg id="auth-message-icon" class="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"></svg>
+                <span id="auth-message-text" class="flex-1"></span>
+                <button id="auth-message-close" type="button" class="shrink-0 opacity-50 hover:opacity-100 transition-opacity" aria-label="Tutup pesan">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
             </div>
 
             <!-- Form -->
@@ -103,9 +113,9 @@
                 
                 <div class="space-y-4">
                     <!-- Email Field -->
-                    <div class="flex flex-col gap-1.5">
+                                 <div class="flex flex-col gap-1.5">
                         <label class="text-[13px] text-[#A3A3A3] ml-1">Email</label>
-                        <input type="email" class="custom-input w-full px-4 py-3" required>
+                        <input type="email" id="email-input" class="custom-input w-full px-4 py-3" required>
                     </div>
                     
                     <!-- Password Field with Toggle -->
@@ -124,13 +134,13 @@
                 </div>
 
                 <!-- Monthly Income Field (Smoothly expands/collapses) -->
-                <div id="pemasukan-container" class="flex flex-col gap-1.5 expand-transition">
+                         <div id="pemasukan-container" class="flex flex-col gap-1.5 expand-transition">
                     <label class="text-[13px] text-[#A3A3A3] ml-1">Pemasukan Bulanan</label>
-                    <input type="text" class="custom-input w-full px-4 py-3">
+                    <input type="text" id="pemasukan-input" inputmode="numeric" class="custom-input w-full px-4 py-3">
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full bg-[#2A263D] hover:bg-[#1f1c2d] text-white rounded-[24px] py-3.5 mt-6 transition-colors duration-200 text-[15px] font-medium">
+                <button type="submit" id="auth-submit-btn" class="w-full bg-[#2A263D] hover:bg-[#1f1c2d] text-white rounded-[24px] py-3.5 mt-6 transition-colors duration-200 text-[15px] font-medium">
                     Login
                 </button>
             </form>
@@ -146,72 +156,10 @@
         </div>
     </div>
 
+        <script src="js/app.js"></script>
+    <script src="js/auth-ui.js"></script>
+    <script src="js/auth.js"></script>
     <!-- Scripts for Logic -->
-    <script>
-        // Form Elements
-        const toggleFormBtn = document.getElementById('toggle-form-btn');
-        const subheading = document.getElementById('subheading');
-        const heading = document.getElementById('heading');
-        const pemasukanContainer = document.getElementById('pemasukan-container');
-        const footerText = document.getElementById('footer-text');
-        
-        // Password Toggle Elements
-        const togglePasswordBtn = document.getElementById('toggle-password-btn');
-        const passwordInput = document.getElementById('password-input');
-        const eyeIcon = document.getElementById('eye-icon');
-        
-        let isLoginState = true;
-
-        // SVG Paths for Eye Icons
-        const iconEyeOff = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />`;
-        const iconEyeOn = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />`;
-
-        // Toggle Password Visibility
-        togglePasswordBtn.addEventListener('click', () => {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeIcon.innerHTML = iconEyeOn;
-            } else {
-                passwordInput.type = 'password';
-                eyeIcon.innerHTML = iconEyeOff;
-            }
-        });
-
-        // Toggle Form State smoothly
-        toggleFormBtn.addEventListener('click', () => {
-            // Fade out texts
-            subheading.style.opacity = '0';
-            heading.style.opacity = '0';
-            footerText.style.opacity = '0';
-
-            setTimeout(() => {
-                isLoginState = !isLoginState;
-
-                if (isLoginState) {
-                    // Update Text for Login
-                    subheading.textContent = "LOGIN KE AKUN";
-                    heading.textContent = "Selamat Datang Kembali!";
-                    footerText.textContent = "Buat profil PulseFi baru?";
-                    
-                    // Collapse extra field smoothly
-                    pemasukanContainer.classList.remove('expanded');
-                } else {
-                    // Update Text for Sign Up
-                    subheading.textContent = "BUAT PROFIL BARU";
-                    heading.textContent = "Selamat Datang!";
-                    footerText.textContent = "Sudah punya akun PulseFi?";
-                    
-                    // Expand extra field smoothly
-                    pemasukanContainer.classList.add('expanded');
-                }
-
-                // Fade in texts
-                subheading.style.opacity = '1';
-                heading.style.opacity = '1';
-                footerText.style.opacity = '1';
-                
-            }, 200); // Matches the .fade-text CSS duration
-        });
-    </script>
+     
 </body>
 </html>

@@ -1,1 +1,293 @@
-<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Simulator — PulseFi</title><link rel="stylesheet" href="css/style.css"></head><body id="simulator-page"><header class="site-header"><nav class="nav"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="transactions.html">Transaksi</a><a href="goals.html">Target</a><a href="insights.html">Insight</a><a href="simulator.html">Simulator</a></div></nav></header><main class="page-shell"><section class="page-intro"><span class="eyebrow">What-if simulator</span><h1>Satu kebiasaan kecil. Dampak yang berbeda.</h1><p class="lede">Ubah skenario tanpa harus mengubah hidupmu dulu. Angka awal diambil dari transaksi lokalmu saat tersedia.</p></section><section class="sim-layout"><form id="simulator-form" class="sim-fields"><div class="sim-group"><h3>Kondisi saat ini</h3><div class="sim-row"><label>Kopi<input id="current-coffee" type="number" min="0"></label><label>Makan di luar<input id="current-eatingOut" type="number" min="0"></label></div><div class="sim-row"><label>Hiburan<input id="current-entertainment" type="number" min="0"></label><label>Belanja<input id="current-shopping" type="number" min="0"></label></div><div class="sim-row"><label>Pemasukan<input id="current-income" type="number" min="0"></label><label>Pengeluaran lain<input id="current-otherExpenses" type="number" min="0"></label></div></div><div class="sim-group"><h3>Skenario pilihanmu</h3><div class="sim-row"><label>Kopi<input id="scenario-coffee" type="number" min="0"></label><label>Makan di luar<input id="scenario-eatingOut" type="number" min="0"></label></div><div class="sim-row"><label>Hiburan<input id="scenario-entertainment" type="number" min="0"></label><label>Belanja<input id="scenario-shopping" type="number" min="0"></label></div><div class="sim-row"><label>Pemasukan<input id="scenario-income" type="number" min="0"></label><label>Pengeluaran lain<input id="scenario-otherExpenses" type="number" min="0"></label></div></div><div class="field"><label for="sim-goal">Target yang ingin dipercepat</label><select id="sim-goal"></select></div><button id="sim-reset" class="btn" type="button">Reset skenario</button></form><div class="sim-result"><span class="eyebrow">Projection</span><h2>Ruang untuk masa depan.</h2><p id="sim-sentence" class="sim-sentence">Ubah salah satu angka untuk melihat dampaknya.</p><div class="sim-results-grid"><div><span class="sim-label">Lebih banyak / bulan</span><div id="sim-monthly-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Dalam 1 tahun</span><div id="sim-yearly-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Dalam 3 tahun</span><div id="sim-three-year-diff" class="sim-value">Rp0</div></div><div><span class="sim-label">Tabungan bulanan baru</span><div id="sim-new-savings" class="sim-value">Rp0</div></div></div><div id="sim-goal-result" class="sim-goal-result" hidden></div></div></section></main><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/calculation.js"></script><script src="js/simulator.js"></script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kebiasaan — PulseFi</title>
+  <link rel="stylesheet" href="css/simulator.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            pulse: { active: '#f4f5f8', inactiveText: '#828282', darkText: '#101010' }
+          },
+          boxShadow: { 'soft-purple': '0 10px 40px -10px rgba(124, 58, 237, 0.08)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .nav-text, .logo-text, .user-name {
+      transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    #sidebar.collapsed { width: 96px; }
+    #sidebar.collapsed .nav-text,
+    #sidebar.collapsed .logo-text,
+    #sidebar.collapsed .user-name { opacity: 0; max-width: 0; margin-left: 0; margin-right: 0; }
+    #sidebar.collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+    #sidebar.collapsed .nav-icon { margin-left: 0; margin-right: 0; }
+    #sidebar.collapsed .nav-dot { left: 8px; }
+    #sidebar.collapsed .user-profile-btn { padding-left: 0; padding-right: 0; justify-content: center; background: transparent; }
+    #sidebar.collapsed #collapse-btn svg { transform: rotate(180deg); }
+    .nav-dot { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease; }
+    .nav-icon { stroke: #828282; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease; }
+    .nav-item.active .nav-icon { transform: scale(1.15); stroke: #101010; }
+    .nav-item:not(.active):hover .nav-icon { transform: scale(1.08); stroke: #4b5563; }
+  </style>
+</head>
+<body id="insights-page" class="bg-[#eef0f5] p-6 font-sans antialiased flex items-start gap-6">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+
+    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
+      <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+
+    <div class="mb-12 px-6 flex items-center h-8">
+      <img src="assets/pulsefi-logo.svg" alt="PulseFi Logo" class="ml-2 h-6 w-auto object-contain shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300">
+      <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
+    </div>
+
+    <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
+
+      <a href="dashboard.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
+      </a>
+
+      <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path>
+          <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+          <path d="M18 12a2 2 0 000 4h4v-4h-4z"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
+      </a>
+
+      <a href="goals.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
+      </a>
+
+      <a href="insights.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+          <path d="M22 4L12 14.01l-3-3"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+      </a>
+
+      <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
+          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <path d="M12 3v9h9"></path>
+        </svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+      </a>
+
+    </nav>
+
+    <div class="mt-auto px-4 w-full">
+      <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
+        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
+          <svg class="w-full h-full text-gray-500 bg-gray-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+          </svg>
+        </div>
+        <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left">Quaneisha</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main class="dash-wrap kebiasaan-page page-enter">
+
+    <div class="dash-greet-row">
+      <div class="dash-greet"><h1>Kebiasaan</h1></div>
+    </div>
+
+    <div class="grid-row kebiasaan-top-row">
+
+      <!-- Weekly habit intensity graph -->
+      <div class="card habit-graph-card" data-reveal>
+        <div class="day-pill-row" id="day-pill-row"><!-- populated by js --></div>
+        <div class="day-bars-row" id="day-bars-row"><!-- populated by js --></div>
+        <div class="mingguan-row">
+          <h2 class="mingguan-title">Mingguan</h2>
+          <div class="chart-nav">
+            <button class="chart-nav-btn" id="habit-week-prev" type="button" aria-label="Minggu sebelumnya">‹</button>
+            <button class="chart-nav-btn" id="habit-week-next" type="button" aria-label="Minggu selanjutnya">›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's checklist -->
+      <div class="card checklist-card" data-reveal>
+        <h2 class="checklist-title">Check List Hari ini</h2>
+        <div class="checklist-list" id="checklist-list"><!-- populated by js --></div>
+      </div>
+
+    </div>
+
+    <div class="grid-row simulator-row">
+
+      <!-- What-if simulator -->
+      <div class="card simulator-card" data-reveal>
+        <span class="label-caps">WHAT-IF SIMULATOR</span>
+        <h2 class="simulator-heading">Projeksikan Dampak jika kamu mulai kebiasaan baru.</h2>
+
+        <div class="simulator-columns">
+          <div class="simulator-col">
+            <span class="simulator-col-label">Kondisi Saat Ini</span>
+            <div class="simulator-fields">
+              <div class="field-group">
+                <label for="current-kopi">Kopi</label>
+                <input id="current-kopi" type="number" readonly>
+              </div>
+              <div class="field-group">
+                <label for="current-makan">Makan di luar</label>
+                <input id="current-makan" type="number" readonly>
+              </div>
+              <div class="field-group">
+                <label for="current-hiburan">Hiburan</label>
+                <input id="current-hiburan" type="number" readonly>
+              </div>
+              <div class="field-group">
+                <label for="current-belanja">Belanja</label>
+                <input id="current-belanja" type="number" readonly>
+              </div>
+              <div class="field-group">
+                <label for="current-pemasukan">Pemasukan</label>
+                <input id="current-pemasukan" type="number" readonly>
+              </div>
+              <div class="field-group">
+                <label for="current-lain">Pengeluaran lain</label>
+                <input id="current-lain" type="number" readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="simulator-col">
+            <span class="simulator-col-label">Skenario Pilihanmu</span>
+            <div class="simulator-fields">
+              <div class="field-group">
+                <label for="scenario-kopi">Kopi</label>
+                <input id="scenario-kopi" type="number" min="0">
+              </div>
+              <div class="field-group">
+                <label for="scenario-makan">Makan di luar</label>
+                <input id="scenario-makan" type="number" min="0">
+              </div>
+              <div class="field-group">
+                <label for="scenario-hiburan">Hiburan</label>
+                <input id="scenario-hiburan" type="number" min="0">
+              </div>
+              <div class="field-group">
+                <label for="scenario-belanja">Belanja</label>
+                <input id="scenario-belanja" type="number" min="0">
+              </div>
+              <div class="field-group">
+                <label for="scenario-pemasukan">Pemasukan</label>
+                <input id="scenario-pemasukan" type="number" min="0">
+              </div>
+              <div class="field-group">
+                <label for="scenario-lain">Pengeluaran lain</label>
+                <input id="scenario-lain" type="number" min="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-apply-scenario" id="apply-scenario-btn" type="button">Terapkan Skenario</button>
+      </div>
+
+      <!-- Projection result -->
+      <div class="card projection-card" data-reveal>
+        <div class="projection-head">
+          <span class="label-caps">Skenario</span>
+          <div class="projection-icon-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 9V7a2 2 0 00-2-2h-1.1a4.5 4.5 0 00-8.8 0H6a2 2 0 00-2 2v2a4 4 0 000 6.9V19a1 1 0 001 1h2a1 1 0 001-1v-.5h5.5V19a1 1 0 001 1h1a1 1 0 001-1v-3.1A4 4 0 0019 9z"></path>
+              <circle cx="16" cy="10" r="0.8" fill="#ffffff" stroke="none"></circle>
+            </svg>
+          </div>
+        </div>
+        <h2 class="projection-heading">Hasil Projeksi</h2>
+        <hr class="projection-divider">
+        <div class="projection-grid">
+          <div class="projection-item">
+            <span class="label-caps">Lebih banyak / bulan</span>
+            <strong id="proj-monthly">Rp0</strong>
+          </div>
+          <div class="projection-item">
+            <span class="label-caps">Dalam 1 tahun</span>
+            <strong id="proj-year1">Rp0</strong>
+          </div>
+          <div class="projection-item">
+            <span class="label-caps">Dalam 3 tahun</span>
+            <strong id="proj-year3">Rp0</strong>
+          </div>
+          <div class="projection-item">
+            <span class="label-caps">Tabungan bulanan baru</span>
+            <strong id="proj-newsaving">Rp0</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/calculation.js"></script>
+  <script src="js/habits-page.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sidebar = document.getElementById('sidebar');
+      const collapseBtn = document.getElementById('collapse-btn');
+
+      if (collapseBtn && sidebar) {
+        collapseBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+        });
+      }
+
+      const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
+      if (session) {
+        document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -280,6 +280,7 @@
 
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/calculation.js"></script>
   <script src="js/insights.js"></script>
   <script src="js/chart.js"></script>
@@ -293,6 +294,18 @@
         collapseBtn.addEventListener('click', () => {
           sidebar.classList.toggle('collapsed');
         });
+      }
+
+      // Swap the placeholder name for whoever's actually logged in.
+      const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
+      if (session) {
+        document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
+        const greetingEl = document.getElementById('greeting-name');
+        if (greetingEl) greetingEl.textContent = session;
+      } else {
+        // No active session — send them back to log in rather than
+        // silently showing the dashboard as a nameless guest.
+        window.location.href = "login.html";
       }
     });
   </script>

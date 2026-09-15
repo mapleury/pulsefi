@@ -70,3 +70,4 @@ const PulseSidebar = (function () {
 
   return { init };
 })();
+

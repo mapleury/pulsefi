@@ -98,15 +98,106 @@ img {
 }
 
 /* ---------------------------------------------------------
-   Navbar
+   Navbar — fixed, sits above every section (top z-index),
+   transparent over the dark hero, frosted + dark text once
+   scrolled onto a light section (see .site-navbar.scrolled below).
+  /* ---------------------------------------------------------
+   Floating pill nav — only the pill itself is fixed and blurred
+   (not a full-width bar). Starts lower on the page, and slides up
+   to sit right at the top edge once the hero has been scrolled past.
+   Dark-on-light swap happens the same way, via .scrolled.
    --------------------------------------------------------- */
+.floating-nav {
+  position: fixed;
+  top: 96px; /* resting position while the hero is still in view */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200; /* above .hero-frame (50) and everything else */
+  transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-nav.scrolled {
+  top: 20px; /* slides up to sit near the top edge once past the hero */
+}
+
+/* only the pill itself carries the blur/tint — no wide background bar */
+.floating-nav.scrolled .navbar-glass {
+  background: rgba(20, 22, 26, 0.06);
+  border-color: rgba(20, 22, 26, 0.12);
+}
+
+.floating-nav.scrolled .navbar-glass a:not(.nav-cta) {
+  color: rgba(20, 22, 26, 0.75);
+}
+
+.floating-nav.scrolled .navbar-glass a:not(.nav-cta)::after {
+  background: #14161a;
+}
+
+.floating-nav.scrolled .navbar-glass a:not(.nav-cta):hover,
+.floating-nav.scrolled .navbar-glass a:not(.nav-cta).is-active {
+  color: #14161a;
+  background: rgba(20, 22, 26, 0.08);
+}
+
+/* --- logo + mobile burger, back inside the hero itself --- */
 .hero-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  margin-left: 30px;
+} --------------------------------------------------------- */
+.site-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200; /* above .hero-frame (50) and everything else */
+  padding: 20px var(--hero-side-pad);
+  transition: background-color 0.35s ease, backdrop-filter 0.35s ease;
+}
+
+.site-navbar-inner {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  margin-top: 16px; 
-  margin-left: 30px;
+}
+
+.site-navbar.scrolled {
+  background: rgba(20, 22, 26, 0.06);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+/* the logo SVG is white by default (for the dark hero) — flip it dark once scrolled */
+.site-navbar.scrolled .logo-icon {
+  filter: brightness(0);
+}
+
+.site-navbar.scrolled .navbar-glass a:not(.nav-cta) {
+  color: rgba(20, 22, 26, 0.75);
+}
+
+.site-navbar.scrolled .navbar-glass a:not(.nav-cta)::after {
+  background: #14161a;
+}
+
+.site-navbar.scrolled .navbar-glass a:not(.nav-cta):hover,
+.site-navbar.scrolled .navbar-glass a:not(.nav-cta).is-active {
+  color: #14161a;
+  background: rgba(20, 22, 26, 0.08);
+}
+
+.site-navbar.scrolled .nav-burger {
+  background: rgba(20, 22, 26, 0.06);
+  border-color: rgba(20, 22, 26, 0.18);
+}
+
+.site-navbar.scrolled .nav-burger span {
+  background: #14161a;
 }
 
 .logo-icon {
@@ -278,7 +369,7 @@ img {
 
 .hero-title {
   margin: 0;
-  margin-top: clamp(28px, 6vw, 64px); /* space from the logo/navbar above */
+  margin-top: clamp(28px, 6vw, 64px); /* space from the logo/burger row above */
   color: #ffffff;
   margin-left: 30px;
   font-weight: 500; /* Inter Medium */
@@ -541,8 +632,8 @@ img {
 }
 
 @media (max-width: 768px) {
-  .navbar-glass {
-    display: none;
+  .floating-nav {
+    display: none; /* the in-hero burger + .mobile-menu dropdown take over below 768px */
   }
   .nav-burger {
     display: flex;

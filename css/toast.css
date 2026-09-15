@@ -1,0 +1,64 @@
+/* =========================================================
+   PulseFi — Notification toasts
+   Overrides/extends the plain .toast markup produced by
+   PulseUtils.toast() in app.js — no JS changes needed, this file
+   just gives it a proper look consistent with the rest of the app.
+   ========================================================= */
+
+.toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  max-width: 340px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #201842;
+  color: #ffffff;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  padding: 14px 18px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px -8px rgba(21, 19, 28, 0.35);
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast::before {
+  content: '';
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast-success::before { background: #6EE7A8; }
+.toast-warning::before { background: #F5C76B; }
+.toast-default::before { background: rgba(255, 255, 255, 0.6); }
+
+@media (max-width: 640px) {
+  .toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}

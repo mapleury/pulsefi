@@ -6,11 +6,14 @@
  localStorage directly, so the storage format can change in one spot.
 
  Keys used:
-   pulsefi_transactions   -> array of transaction objects
-   pulsefi_goals          -> array of goal objects
-   pulsefi_profile        -> object, answers given during onboarding
-   pulsefi_habits         -> array of habit commitment objects
-   pulsefi_onboarding     -> "demo" | "own" | null (has the user finished onboarding?)
+   pulsefi_transactions      -> array of transaction objects
+   pulsefi_goals              -> array of goal objects
+   pulsefi_profile            -> object, answers given during onboarding
+   pulsefi_habits              -> array of habit commitment objects
+   pulsefi_onboarding          -> "demo" | "own" | null (has the user finished onboarding?)
+   pulsefi_last_checkin_prompt -> "YYYY-MM-DD", last calendar day the daily
+                                    check-in modal was shown (so it only
+                                    interrupts the dashboard once per day)
 */
 
 const PulseStorage = (function () {
@@ -20,6 +23,7 @@ const PulseStorage = (function () {
     profile: "pulsefi_profile",
     habits: "pulsefi_habits",
     onboarding: "pulsefi_onboarding",
+    checkinPrompt: "pulsefi_last_checkin_prompt",
   };
 
   function read(key, fallback) {
@@ -199,6 +203,10 @@ const PulseStorage = (function () {
     return write(KEYS.habits, list);
   }
 
+  function getActiveHabits() {
+    return getHabits().filter((h) => h.status === "active");
+  }
+
   function addHabit(habit) {
     const list = getHabits();
     const record = {
@@ -237,6 +245,24 @@ const PulseStorage = (function () {
     saveHabits(list);
   }
 
+  // ---------------- daily check-in prompt ----------------
+  // Tracks whether the check-in modal has already been shown today,
+  // independent of which (if any) habits were actually checked off —
+  // dismissing it (finishing or skipping) is enough to silence it
+  // until tomorrow.
+
+  function getLastCheckinPromptDate() {
+    return read(KEYS.checkinPrompt, null);
+  }
+
+  function setLastCheckinPromptDate(dateStr) {
+    return write(KEYS.checkinPrompt, dateStr);
+  }
+
+  function hasBeenPromptedToday() {
+    return getLastCheckinPromptDate() === PulseUtils.todayISO();
+  }
+
   return {
     KEYS,
     uid,
@@ -260,8 +286,12 @@ const PulseStorage = (function () {
     addToGoal,
     getHabits,
     saveHabits,
+    getActiveHabits,
     addHabit,
     checkInHabit,
     deleteHabit,
+    getLastCheckinPromptDate,
+    setLastCheckinPromptDate,
+    hasBeenPromptedToday,
   };
 })();
