@@ -3,29 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kebiasaan — PulseFi</title>
-  <link rel="stylesheet" href="css/simulator.css">
+  <title>Kebiasaan & Pola Finansial — PulseFi</title>
 
+  <!-- Import Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            pulse: { active: '#f4f5f8', inactiveText: '#828282', darkText: '#101010' }
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Instrument Serif', 'serif'],
           },
-          boxShadow: { 'soft-purple': '0 10px 40px -10px rgba(124, 58, 237, 0.08)' }
+          colors: {
+            pulse: {
+              active: '#f4f5f8',
+              inactiveText: '#828282',
+              darkText: '#101010',
+            },
+            modal: {
+              darkCard: '#1a192b',
+              purpleCard: '#5c42a6',
+              lightCard: '#f4f5f8',
+              inactiveDay: '#e8def7',
+            }
+          },
+          boxShadow: {
+            'soft-purple': '0 10px 40px -10px rgba(124, 58, 237, 0.08)',
+          }
         }
       }
     }
   </script>
+
   <style>
-    #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    :root {
+      /* Matching Dashboard Tokens */
+      --bg-page: #F6F7FB;
+      --ink: #191729;
+      --ink-soft: #57545F;
+      --muted: #918FA0;
+      --white: #FFFFFF;
+      --hairline: rgba(21, 19, 28, 0.08);
+
+      --pulse-1: #201C29;
+      --pulse-2: #0D0B12;
+      --bar-active: #725FBA;
+
+      /* Check-in Modal Theme Colors */
+      --habit-dark: #1a192b;
+      --habit-purple: #5c42a6;
+      --habit-light: #f4f5f8;
+      --habit-inactive: #e8def7;
+
+      /* Radii matching dashboard precisely */
+      --r-xl: 38px;
+      --r-lg: 24px;
+      --r-md: 18px;
+      --r-pill: 999px;
+      
+      /* Standard flat shadow, NO hover shadow */
+      --shadow-card: 0 1px 2px rgba(21, 19, 28, 0.03), 0 10px 24px -18px rgba(21, 19, 28, 0.18);
+      --gap-outer: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-page);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      letter-spacing: -0.02em;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    /* Sidebar Transitions */
+    #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-text, .logo-text, .user-name {
       transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
       overflow: hidden;
@@ -44,249 +109,849 @@
     .nav-icon { stroke: #828282; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease; }
     .nav-item.active .nav-icon { transform: scale(1.15); stroke: #101010; }
     .nav-item:not(.active):hover .nav-icon { transform: scale(1.08); stroke: #4b5563; }
+
+    /* Mobile Sidebar Toggle */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      background: var(--ink);
+      color: var(--white);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Main Content Wrapper */
+    .dash-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex-grow: 1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .dash-greet-row { margin-bottom: 8px; }
+    .dash-greet h1 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+      margin: 0 0 4px;
+      color: var(--ink);
+    }
+    
+    .label-caps {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .layout-grid {
+      display: grid;
+      gap: var(--gap-outer);
+      grid-template-columns: 1.4fr 1fr;
+      align-items: stretch;
+    }
+
+    .card {
+      border-radius: var(--r-xl);
+      padding: 32px;
+      position: relative;
+      background: var(--white);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      /* Ensure no hover shadow per request */
+      transition: transform 0.2s ease;
+    }
+
+    .card-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 34px;
+      font-weight: 400;
+      letter-spacing: -1px;
+      color: var(--ink);
+      margin: 0 0 8px;
+      line-height: 1.1;
+    }
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--ink-soft);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    /* --- Habit Graph (Modal Style) --- */
+    .habit-graph-card { min-height: 380px; }
+    .days-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-grow: 1;
+      gap: 12px;
+      padding-top: 20px;
+    }
+    .day-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      flex: 1;
+      max-width: 52px;
+    }
+    .day-label {
+      font-family: 'Instrument Serif', serif;
+      letter-spacing: -0.03em;
+      font-size: 20px;
+      margin-bottom: 16px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      transition: all 0.3s ease;
+      color: var(--ink);
+    }
+    .day-label.is-today { 
+      background: var(--habit-dark); 
+      color: var(--white); 
+    }
+    .day-bar-wrap {
+      display: flex;
+      align-items: flex-end;
+      height: 160px;
+      width: 100%;
+    }
+    .day-bar {
+      width: 100%;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Snappy animation from modal */
+      transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease;
+      background-color: var(--habit-inactive);
+      height: 0px; 
+    }
+    .check-icon-svg {
+      width: 22px;
+      height: 22px;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s;
+    }
+    .day-bar.has-check .check-icon-svg { opacity: 1; transform: scale(1); }
+
+    /* --- Checklist --- */
+    .checklist-list { display: flex; flex-direction: column; gap: 12px; flex-grow: 1;}
+    .checklist-pill {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--white);
+      border: 1px solid var(--hairline);
+      color: var(--ink);
+      border-radius: 20px;
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      /* Snappy pop effect */
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease;
+    }
+    .checklist-pill:hover { transform: scale(0.98); }
+    .checklist-pill.pop-click { animation: popRotate 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    
+    @keyframes popRotate {
+      0% { transform: scale(1) rotate(0deg); }
+      30% { transform: scale(0.96) rotate(-2deg); }
+      60% { transform: scale(1.02) rotate(1deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* Dynamic themes for checklist items */
+    .checklist-pill.theme-dark.is-done { background: var(--habit-dark); color: var(--white); border-color: transparent; }
+    .checklist-pill.theme-purple.is-done { background: var(--habit-purple); color: var(--white); border-color: transparent; }
+    .checklist-pill.theme-light.is-done { background: var(--habit-light); color: var(--ink); border-color: rgba(21, 19, 28, 0.08); }
+
+    .checklist-check {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-page);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.3s ease;
+    }
+    .checklist-pill.is-done .checklist-check { background: var(--white); }
+    .checklist-pill.theme-light.is-done .checklist-check { background: var(--ink); }
+    
+    .checklist-check svg { width: 14px; height: 14px; stroke: var(--ink-soft); transition: stroke 0.3s ease;}
+    .checklist-pill.theme-dark.is-done .checklist-check svg { stroke: var(--habit-dark); }
+    .checklist-pill.theme-purple.is-done .checklist-check svg { stroke: var(--habit-purple); }
+    .checklist-pill.theme-light.is-done .checklist-check svg { stroke: var(--white); }
+
+    /* --- Simulator --- */
+    .simulator-card { background: #e0e0e09a; gap: 8px; }
+    .simulator-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 12px;
+    }
+    .sim-fields { display: flex; flex-direction: column; gap: 14px; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+    .field-group input {
+      width: 100%;
+      background: var(--white);
+      border: 1px solid transparent;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      font-family: inherit;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      box-shadow: 0 1px 2px rgba(21, 19, 28, 0.03);
+    }
+    .field-group input:focus {
+      outline: none;
+      border-color: var(--bar-active);
+      box-shadow: 0 0 0 3px rgba(114, 95, 186, 0.1);
+    }
+    .field-group input[readonly] {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(21, 19, 28, 0.06);
+      color: var(--ink-soft);
+      box-shadow: none;
+    }
+
+    .btn-apply {
+      margin-top: 24px;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      border-radius: var(--r-pill);
+      padding: 16px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+      width: 100%;
+    }
+    .btn-apply:hover { opacity: 0.9; }
+    .btn-apply:active { transform: scale(0.98); }
+
+    /* --- Projection Result --- */
+    .projection-card {
+      background: radial-gradient(120% 140% at 20% 0%, var(--pulse-1) 0%, var(--pulse-2) 70%);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+    }
+    .projection-icon-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .projection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px 16px;
+      margin-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 32px;
+      flex-grow: 1;
+    }
+    .projection-item { display: flex; flex-direction: column; gap: 8px; justify-content: flex-start; }
+    .projection-item .label-caps { color: rgba(255, 255, 255, 0.5); margin-bottom: 0; }
+    .projection-item strong {
+      font-family: 'Instrument Serif', serif;
+      font-size: 34px;
+      font-weight: 400;
+      letter-spacing: -1px;
+      color: var(--white);
+      line-height: 1;
+    }
+    .projection-item strong.is-negative { color: #FF9D9D; }
+
+    /* --- Responsive Breakpoints --- */
+    @media (max-width: 980px) { 
+      .layout-grid { grid-template-columns: 1fr; } 
+      body { flex-direction: column; padding: 16px; gap: 16px;}
+      
+      #sidebar {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        height: 100vh;
+        z-index: 40;
+        margin: 0;
+        border-radius: 0 38px 38px 0;
+      }
+      #sidebar.mobile-open { transform: translateX(300px); }
+      .mobile-menu-btn { display: flex; }
+      
+      .dash-wrap { margin-top: 24px; }
+    }
+    
+    @media (max-width: 680px) {
+      .simulator-columns { grid-template-columns: 1fr; gap: 24px; }
+      .days-container { overflow-x: auto; padding-bottom: 12px; gap: 8px; justify-content: flex-start; }
+      .day-col { min-width: 44px; }
+      .day-label { font-size: 16px; padding: 4px 8px; }
+      .projection-grid { gap: 24px 16px; }
+      .card { padding: 24px; border-radius: 32px; }
+    }
+    
+    /* --- Toast Notification --- */
+    .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+    .toast { background: var(--ink); color: var(--white); font-size: 14px; font-weight: 500; padding: 12px 20px; border-radius: 99px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .toast-visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
-<body id="insights-page" class="bg-[#eef0f5] p-6 font-sans antialiased flex items-start gap-6">
+<body>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
-
-    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
+  <!-- Sidebar Component -->
+  <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-[38px] shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+    <script>
+      try {
+        if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
+          document.currentScript.parentElement.classList.add("collapsed");
+        }
+      } catch (e) {}
+    </script>
+    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10 hidden md:flex">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
       </svg>
     </button>
-
+    <button id="mobile-close-btn" class="absolute top-8 right-6 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-pulse-darkText md:hidden z-10">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    
     <div class="mb-12 px-6 flex items-center h-8">
-      <img src="assets/pulsefi-logo.svg" alt="PulseFi Logo" class="ml-2 h-6 w-auto object-contain shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300">
+      <svg class="ml-2 h-6 w-auto shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="#191729" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
     </div>
-
+    
     <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
-
       <a href="dashboard.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="7" height="7" rx="2"></rect>
-          <rect x="14" y="3" width="7" height="7" rx="2"></rect>
-          <rect x="14" y="14" width="7" height="7" rx="2"></rect>
-          <rect x="3" y="14" width="7" height="7" rx="2"></rect>
-        </svg>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
       </a>
-
       <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
-          <path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path>
-          <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
-          <path d="M18 12a2 2 0 000 4h4v-4h-4z"></path>
-        </svg>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 12a2 2 0 000 4h4v-4h-4z"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
       </a>
-
       <a href="goals.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
-          <path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path>
-        </svg>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
       </a>
-
-      <a href="insights.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
+      <a href="simulator.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
-          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-          <path d="M22 4L12 14.01l-3-3"></path>
-        </svg>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
       </a>
-
-      <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
-        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
-          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          <path d="M12 3v9h9"></path>
-        </svg>
-        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
-      </a>
-
     </nav>
-
+    
     <div class="mt-auto px-4 w-full">
       <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
-        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
-          <svg class="w-full h-full text-gray-500 bg-gray-200" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-          </svg>
+        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0 flex items-center justify-center">
+          <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
         </div>
-        <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left">Quaneisha</span>
+        <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left" id="sidebar-username">User</span>
       </div>
     </div>
-
   </aside>
 
-  <!-- Main content -->
-  <main class="dash-wrap kebiasaan-page page-enter">
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" id="mobile-menu-btn">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+  </button>
 
+  <main class="dash-wrap">
     <div class="dash-greet-row">
-      <div class="dash-greet"><h1>Kebiasaan</h1></div>
+      <div class="dash-greet">
+        <h1>Kebiasaan</h1>
+      </div>
     </div>
 
-    <div class="grid-row kebiasaan-top-row">
-
-      <!-- Weekly habit intensity graph -->
-      <div class="card habit-graph-card" data-reveal>
-        <div class="day-pill-row" id="day-pill-row"><!-- populated by js --></div>
-        <div class="day-bars-row" id="day-bars-row"><!-- populated by js --></div>
-        <div class="mingguan-row">
-          <h2 class="mingguan-title">Mingguan</h2>
-          <div class="chart-nav">
-            <button class="chart-nav-btn" id="habit-week-prev" type="button" aria-label="Minggu sebelumnya">‹</button>
-            <button class="chart-nav-btn" id="habit-week-next" type="button" aria-label="Minggu selanjutnya">›</button>
-          </div>
+    <!-- Row 1: Habit Tracker UI -->
+    <div class="layout-grid">
+      <!-- Habit Weekly Graph -->
+      <div class="card habit-graph-card">
+        <div>
+          <span class="label-caps">Intensitas</span>
+          <h2 class="card-title">Mingguan</h2>
+          <p class="card-subtitle">Semakin tinggi barnya, semakin konsisten kamu dalam minggu ini.</p>
+        </div>
+        
+        <div class="days-container" id="days-container">
+          <!-- Populated via JS -->
         </div>
       </div>
 
-      <!-- Today's checklist -->
-      <div class="card checklist-card" data-reveal>
-        <h2 class="checklist-title">Check List Hari ini</h2>
-        <div class="checklist-list" id="checklist-list"><!-- populated by js --></div>
+      <!-- Today's Checklist -->
+      <div class="card">
+        <div>
+          <span class="label-caps">Aktivitas</span>
+          <h2 class="card-title">Check-In Hari Ini</h2>
+          <p class="card-subtitle">Ketuk kebiasaan yang berhasil kamu selesaikan.</p>
+        </div>
+        <div class="checklist-list" id="checklist-list">
+          <!-- Populated via JS -->
+        </div>
       </div>
-
     </div>
 
-    <div class="grid-row simulator-row">
-
-      <!-- What-if simulator -->
-      <div class="card simulator-card" data-reveal>
-        <span class="label-caps">WHAT-IF SIMULATOR</span>
-        <h2 class="simulator-heading">Projeksikan Dampak jika kamu mulai kebiasaan baru.</h2>
-
+    <!-- Row 2: Simulator -->
+    <div class="layout-grid">
+      <!-- What-if Simulator Form -->
+      <div class="card simulator-card">
+        <span class="label-caps" style="color: var(--ink);">What-If Simulator</span>
+        <h2 class="card-title" style="margin-top: 2px;">Projeksikan Dampak dari skenario baru.</h2>
+        
         <div class="simulator-columns">
-          <div class="simulator-col">
-            <span class="simulator-col-label">Kondisi Saat Ini</span>
-            <div class="simulator-fields">
-              <div class="field-group">
-                <label for="current-kopi">Kopi</label>
-                <input id="current-kopi" type="number" readonly>
-              </div>
-              <div class="field-group">
-                <label for="current-makan">Makan di luar</label>
-                <input id="current-makan" type="number" readonly>
-              </div>
-              <div class="field-group">
-                <label for="current-hiburan">Hiburan</label>
-                <input id="current-hiburan" type="number" readonly>
-              </div>
-              <div class="field-group">
-                <label for="current-belanja">Belanja</label>
-                <input id="current-belanja" type="number" readonly>
-              </div>
-              <div class="field-group">
-                <label for="current-pemasukan">Pemasukan</label>
-                <input id="current-pemasukan" type="number" readonly>
-              </div>
-              <div class="field-group">
-                <label for="current-lain">Pengeluaran lain</label>
-                <input id="current-lain" type="number" readonly>
-              </div>
+          <div class="sim-fields">
+            <span class="label-caps" style="color: var(--ink);">Kondisi Saat Ini / Bln</span>
+            <div class="field-group">
+              <label>Pemasukan</label>
+              <input id="cur-income" type="text" readonly value="Rp0">
+            </div>
+            <div class="field-group">
+              <label>Kopi & Jajan</label>
+              <input id="cur-fnb" type="text" readonly value="Rp0">
+            </div>
+            <div class="field-group">
+              <label>Hiburan & Belanja</label>
+              <input id="cur-ent" type="text" readonly value="Rp0">
+            </div>
+            <div class="field-group">
+              <label>Lainnya</label>
+              <input id="cur-other" type="text" readonly value="Rp0">
             </div>
           </div>
 
-          <div class="simulator-col">
-            <span class="simulator-col-label">Skenario Pilihanmu</span>
-            <div class="simulator-fields">
-              <div class="field-group">
-                <label for="scenario-kopi">Kopi</label>
-                <input id="scenario-kopi" type="number" min="0">
-              </div>
-              <div class="field-group">
-                <label for="scenario-makan">Makan di luar</label>
-                <input id="scenario-makan" type="number" min="0">
-              </div>
-              <div class="field-group">
-                <label for="scenario-hiburan">Hiburan</label>
-                <input id="scenario-hiburan" type="number" min="0">
-              </div>
-              <div class="field-group">
-                <label for="scenario-belanja">Belanja</label>
-                <input id="scenario-belanja" type="number" min="0">
-              </div>
-              <div class="field-group">
-                <label for="scenario-pemasukan">Pemasukan</label>
-                <input id="scenario-pemasukan" type="number" min="0">
-              </div>
-              <div class="field-group">
-                <label for="scenario-lain">Pengeluaran lain</label>
-                <input id="scenario-lain" type="number" min="0">
-              </div>
+          <div class="sim-fields">
+            <span class="label-caps" style="color: var(--ink);">Skenario Pilihanmu</span>
+            <div class="field-group">
+              <label>Pemasukan</label>
+              <input id="sim-income" type="number" min="0" placeholder="0">
+            </div>
+            <div class="field-group">
+              <label>Kopi & Jajan</label>
+              <input id="sim-fnb" type="number" min="0" placeholder="0">
+            </div>
+            <div class="field-group">
+              <label>Hiburan & Belanja</label>
+              <input id="sim-ent" type="number" min="0" placeholder="0">
+            </div>
+            <div class="field-group">
+              <label>Lainnya</label>
+              <input id="sim-other" type="number" min="0" placeholder="0">
             </div>
           </div>
         </div>
 
-        <button class="btn-apply-scenario" id="apply-scenario-btn" type="button">Terapkan Skenario</button>
+        <button class="btn-apply" id="btn-apply-scenario">Terapkan Skenario</button>
       </div>
 
-      <!-- Projection result -->
-      <div class="card projection-card" data-reveal>
-        <div class="projection-head">
-          <span class="label-caps">Skenario</span>
-          <div class="projection-icon-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 9V7a2 2 0 00-2-2h-1.1a4.5 4.5 0 00-8.8 0H6a2 2 0 00-2 2v2a4 4 0 000 6.9V19a1 1 0 001 1h2a1 1 0 001-1v-.5h5.5V19a1 1 0 001 1h1a1 1 0 001-1v-3.1A4 4 0 0019 9z"></path>
-              <circle cx="16" cy="10" r="0.8" fill="#ffffff" stroke="none"></circle>
-            </svg>
-          </div>
+      <!-- Projection Result -->
+      <div class="card projection-card">
+        <div class="projection-icon-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 9V7a2 2 0 00-2-2h-1.1a4.5 4.5 0 00-8.8 0H6a2 2 0 00-2 2v2a4 4 0 000 6.9V19a1 1 0 001 1h2a1 1 0 001-1v-.5h5.5V19a1 1 0 001 1h1a1 1 0 001-1v-3.1A4 4 0 0019 9z"></path>
+            <circle cx="16" cy="10" r="1.5" fill="#ffffff" stroke="none"></circle>
+          </svg>
         </div>
-        <h2 class="projection-heading">Hasil Projeksi</h2>
-        <hr class="projection-divider">
+        <h2 class="card-title" style="color: var(--white);">Hasil Projeksi</h2>
+        <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 0;">Perbedaan saldo jika kamu menerapkan skenario ini setiap bulan.</p>
+
         <div class="projection-grid">
           <div class="projection-item">
-            <span class="label-caps">Lebih banyak / bulan</span>
-            <strong id="proj-monthly">Rp0</strong>
+            <span class="label-caps">Selisih / Bulan</span>
+            <strong id="res-monthly">Rp0</strong>
           </div>
           <div class="projection-item">
-            <span class="label-caps">Dalam 1 tahun</span>
-            <strong id="proj-year1">Rp0</strong>
+            <span class="label-caps">Tabungan Baru</span>
+            <strong id="res-new-saving">Rp0</strong>
           </div>
           <div class="projection-item">
-            <span class="label-caps">Dalam 3 tahun</span>
-            <strong id="proj-year3">Rp0</strong>
+            <span class="label-caps">Dalam 1 Tahun</span>
+            <strong id="res-year1">Rp0</strong>
           </div>
           <div class="projection-item">
-            <span class="label-caps">Tabungan bulanan baru</span>
-            <strong id="proj-newsaving">Rp0</strong>
+            <span class="label-caps">Dalam 3 Tahun</span>
+            <strong id="res-year3">Rp0</strong>
           </div>
         </div>
       </div>
-
     </div>
 
   </main>
 
-  <script src="js/storage.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/calculation.js"></script>
-  <script src="js/habits-page.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const sidebar = document.getElementById('sidebar');
-      const collapseBtn = document.getElementById('collapse-btn');
+  <!-- SVG Templates for Checkmarks -->
+  <template id="svg-check-default">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </template>
+  <template id="svg-checked-white">
+    <svg class="check-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </template>
+  <template id="svg-checked-black">
+    <svg class="check-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#101010" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </template>
 
-      if (collapseBtn && sidebar) {
-        collapseBtn.addEventListener('click', () => {
-          sidebar.classList.toggle('collapsed');
+  <script>
+    // --- 1. Basic Utils ---
+    const formatRp = (num) => "Rp" + Math.round(Number(num) || 0).toLocaleString("id-ID");
+    const formatRpSigned = (num) => {
+      const n = Math.round(Number(num) || 0);
+      return (n < 0 ? "-" : "") + "Rp" + Math.abs(n).toLocaleString("id-ID");
+    };
+    const todayISO = () => new Date().toISOString().slice(0, 10);
+
+    function showToast(message) {
+      let container = document.getElementById("toast-container");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        container.className = "toast-container";
+        document.body.appendChild(container);
+      }
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.textContent = message;
+      container.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("toast-visible"));
+      setTimeout(() => {
+        el.classList.remove("toast-visible");
+        setTimeout(() => el.remove(), 300);
+      }, 3000);
+    }
+
+    // --- 2. Storage Mock (Simulating backend) ---
+    const AppStorage = {
+      read: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e) { return d; } },
+      write: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+      getSession: () => {
+         try { return sessionStorage.getItem("pulsefi_session_v1"); } catch(e) { return null; }
+      },
+      getTransactions: () => AppStorage.read("pulsefi_transactions", []),
+      getHabits: () => AppStorage.read("pulsefi_habits", []),
+      saveHabits: (list) => AppStorage.write("pulsefi_habits", list),
+    };
+
+    // --- 3. Habit Tracker Logic ---
+    const THEMES = ['dark', 'purple', 'light'];
+    
+    function initHabits() {
+      let habits = AppStorage.getHabits();
+      
+      // Auto-generate some dummy habits if empty for demonstration
+      if (habits.length === 0) {
+        habits = [
+          { id: "h1", title: "Menunda Jajan Kopi", status: "active", completedDates: [] },
+          { id: "h2", title: "Menggunakan Transum", status: "active", completedDates: [] },
+          { id: "h3", title: "Bawa Bekal Makan", status: "active", completedDates: [] }
+        ];
+        AppStorage.saveHabits(habits);
+      }
+      
+      refreshHabitsUI(habits, true);
+    }
+
+    function refreshHabitsUI(habits, initialLoad = false) {
+      const today = new Date();
+      const currentDayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1; // 0=Mon, 6=Sun
+      
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - currentDayIdx);
+      
+      const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      const weekData = Array(7).fill(0); // Holds count of completed habits per day
+
+      for (let i = 0; i <= currentDayIdx; i++) {
+        let loopDate = new Date(startOfWeek);
+        loopDate.setDate(startOfWeek.getDate() + i);
+        let loopISO = loopDate.toISOString().slice(0, 10);
+        
+        let count = 0;
+        habits.forEach(h => {
+          if (h.completedDates.includes(loopISO)) count++;
+        });
+        
+        // Random past data for visual appeal if entirely empty (demo purpose)
+        if (count === 0 && i < currentDayIdx && Math.random() > 0.4) {
+          count = Math.floor(Math.random() * 3) + 1;
+        }
+        weekData[i] = count;
+      }
+
+      renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad);
+      renderChecklist(habits, todayISO());
+    }
+
+    function getBarStyling(count, isToday) {
+      // Logic mapping to the check-in modal styling
+      const checkWhite = document.getElementById('svg-checked-white').innerHTML;
+      const checkBlack = document.getElementById('svg-checked-black').innerHTML;
+      
+      if(count >= 3) return { bg: 'var(--habit-dark)', check: checkWhite, height: isToday ? '120px' : '90px' };
+      if(count === 2) return { bg: 'var(--habit-purple)', check: checkWhite, height: isToday ? '110px' : '80px' };
+      if(count === 1) return { bg: 'var(--habit-light)', check: checkBlack, height: isToday ? '100px' : '70px' };
+      
+      return { bg: 'var(--habit-inactive)', check: '', height: isToday ? '55px' : '40px' };
+    }
+
+    function renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad) {
+      const container = document.getElementById('days-container');
+      
+      if (initialLoad || container.children.length === 0) {
+        container.innerHTML = '';
+        dayLabels.forEach((day, index) => {
+          const isToday = index === currentDayIdx;
+          const isFuture = index > currentDayIdx;
+
+          const col = document.createElement('div');
+          col.className = 'day-col';
+
+          const label = document.createElement('div');
+          label.className = `day-label ${isToday ? 'is-today' : ''}`;
+          label.innerText = day;
+          col.appendChild(label);
+
+          const barWrap = document.createElement('div');
+          barWrap.className = 'day-bar-wrap';
+
+          const bar = document.createElement('div');
+          bar.className = 'day-bar';
+          bar.id = `bar-day-${index}`;
+          
+          if (isFuture) {
+            bar.style.backgroundColor = 'var(--habit-inactive)';
+            bar.style.opacity = '0.3';
+          }
+          
+          barWrap.appendChild(bar);
+          col.appendChild(barWrap);
+          container.appendChild(col);
         });
       }
 
-      const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
-      if (session) {
-        document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
-      } else {
-        window.location.href = "login.html";
+      dayLabels.forEach((day, index) => {
+        if (index > currentDayIdx) return;
+        
+        const count = weekData[index];
+        const bar = document.getElementById(`bar-day-${index}`);
+        const isToday = index === currentDayIdx;
+        const styleInfo = getBarStyling(count, isToday);
+        
+        bar.style.backgroundColor = styleInfo.bg;
+        
+        // Update SVG checkmark carefully to maintain animation
+        if (!bar.querySelector('.check-icon-svg') && count > 0) {
+            bar.innerHTML = styleInfo.check;
+        } else if (count === 0) {
+            bar.innerHTML = '';
+        } else {
+            const currentIsWhite = bar.innerHTML.includes('#ffffff');
+            const targetIsWhite = styleInfo.check.includes('#ffffff');
+            if(currentIsWhite !== targetIsWhite) {
+                bar.innerHTML = styleInfo.check;
+            }
+        }
+        
+        if (count > 0) {
+          bar.classList.add('has-check');
+        } else {
+          bar.classList.remove('has-check');
+        }
+
+        if (initialLoad) {
+          setTimeout(() => {
+            bar.style.height = styleInfo.height;
+          }, index * 100 + 50);
+        } else {
+           bar.style.height = styleInfo.height;
+        }
+      });
+    }
+
+    function renderChecklist(habits, dateStr) {
+      const container = document.getElementById('checklist-list');
+      container.innerHTML = '';
+      const checkDefault = document.getElementById('svg-check-default').innerHTML;
+
+      habits.forEach((habit, idx) => {
+        const isDone = habit.completedDates.includes(dateStr);
+        const themeClass = `theme-${THEMES[idx % THEMES.length]}`;
+        
+        const item = document.createElement('div');
+        item.className = `checklist-pill ${themeClass} ${isDone ? 'is-done' : ''}`;
+        item.innerHTML = `
+          <div class="checklist-check">${checkDefault}</div>
+          <span>${habit.title}</span>
+        `;
+        
+        item.addEventListener('click', () => {
+          item.classList.remove('pop-click');
+          void item.offsetWidth; 
+          item.classList.add('pop-click');
+
+          if(!isDone) {
+            habit.completedDates.push(dateStr);
+            showToast("Mantap! Kebiasaan terselesaikan.");
+          } else {
+             habit.completedDates = habit.completedDates.filter(d => d !== dateStr);
+          }
+          
+          AppStorage.saveHabits(habits);
+          
+          setTimeout(() => {
+             refreshHabitsUI(habits, false); 
+          }, 150);
+        });
+        
+        container.appendChild(item);
+      });
+    }
+
+    // --- 4. Simulator Logic ---
+    function initSimulator() {
+      const txs = AppStorage.getTransactions();
+      
+      let income = 0, fnb = 0, ent = 0, other = 0;
+      
+      txs.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        if(t.type === 'income') income += amt;
+        else {
+          const cat = (t.category || '').toLowerCase();
+          if (cat.includes('makan') || cat.includes('minum') || cat.includes('fnb') || cat.includes('kopi')) fnb += amt;
+          else if (cat.includes('hiburan') || cat.includes('belanja') || cat.includes('shopping')) ent += amt;
+          else other += amt;
+        }
+      });
+
+      if (txs.length === 0) {
+        // Fallback demo data
+        income = 12000000; fnb = 3500000; ent = 2000000; other = 1500000;
       }
+
+      document.getElementById('cur-income').value = formatRp(income);
+      document.getElementById('cur-fnb').value = formatRp(fnb);
+      document.getElementById('cur-ent').value = formatRp(ent);
+      document.getElementById('cur-other').value = formatRp(other);
+
+      document.getElementById('sim-income').value = income;
+      document.getElementById('sim-fnb').value = fnb;
+      document.getElementById('sim-ent').value = ent;
+      document.getElementById('sim-other').value = other;
+
+      document.getElementById('btn-apply-scenario').addEventListener('click', () => {
+        const sInc = Number(document.getElementById('sim-income').value) || 0;
+        const sFnb = Number(document.getElementById('sim-fnb').value) || 0;
+        const sEnt = Number(document.getElementById('sim-ent').value) || 0;
+        const sOth = Number(document.getElementById('sim-other').value) || 0;
+
+        const curTotalExp = fnb + ent + other;
+        const simTotalExp = sFnb + sEnt + sOth;
+        
+        const curBalance = income - curTotalExp;
+        const simBalance = sInc - simTotalExp;
+        
+        const diff = simBalance - curBalance;
+
+        const resMonthly = document.getElementById('res-monthly');
+        const resNew = document.getElementById('res-new-saving');
+        const resY1 = document.getElementById('res-year1');
+        const resY3 = document.getElementById('res-year3');
+
+        resMonthly.textContent = formatRpSigned(diff);
+        resMonthly.className = diff < 0 ? 'is-negative' : '';
+
+        resNew.textContent = formatRpSigned(simBalance);
+        resNew.className = simBalance < 0 ? 'is-negative' : '';
+
+        resY1.textContent = formatRpSigned(diff * 12);
+        resY1.className = diff < 0 ? 'is-negative' : '';
+
+        resY3.textContent = formatRpSigned(diff * 36);
+        resY3.className = diff < 0 ? 'is-negative' : '';
+        
+        showToast("Skenario berhasil diproyeksikan.");
+      });
+      
+      document.getElementById('btn-apply-scenario').click();
+    }
+
+    // --- 5. Boot Up ---
+    document.addEventListener("DOMContentLoaded", () => {
+      // Sidebar interactions
+      const sidebar = document.getElementById('sidebar');
+      const collapseBtn = document.getElementById('collapse-btn');
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const mobileCloseBtn = document.getElementById('mobile-close-btn');
+
+      if (collapseBtn && sidebar) {
+        collapseBtn.addEventListener('click', () => {
+          const isCollapsed = sidebar.classList.toggle('collapsed');
+          try { localStorage.setItem('pulsefi-sidebar-collapsed', isCollapsed); } catch(e){}
+        });
+      }
+      if(mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => sidebar.classList.add('mobile-open'));
+      }
+      if(mobileCloseBtn && sidebar) {
+        mobileCloseBtn.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+      }
+
+      // Ensure user session display is safe from iframe restrictions
+      const sessionUser = AppStorage.getSession();
+      const uEl = document.getElementById('sidebar-username');
+      if (sessionUser) {
+        if(uEl) uEl.textContent = sessionUser;
+      } else {
+        if(uEl) uEl.textContent = 'Quaneisha'; // Default preview persona
+      }
+
+      initHabits();
+      initSimulator();
     });
   </script>
 </body>

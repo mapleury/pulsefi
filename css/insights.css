@@ -185,7 +185,8 @@ body {
 .pulse-card-wave {
   flex: 1;
   min-height: 34px;
-  margin: 8px 0 4px;
+  margin: 70px 0 4px;
+  
   overflow: hidden;
 }
 

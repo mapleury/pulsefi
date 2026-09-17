@@ -133,7 +133,7 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
       mode = next;
       applyCopy(next);
       els.pemasukanContainer.classList.toggle("expanded", next === "signup");
-            els.nameContainer.classList.toggle("expanded", next === "signup");
+      if (els.nameContainer) els.nameContainer.classList.toggle("expanded", next === "signup");
       fadeEls.forEach((el) => el && (el.style.opacity = "1"));
       if (els.form) {
         els.form.dispatchEvent(new CustomEvent("authmodechange", { detail: { mode } }));
