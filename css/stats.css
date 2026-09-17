@@ -1,7 +1,7 @@
 /* =========================================================
-   PulseFi — Stats / "Bukti Nyata" section
-   Plays once, when scrolled into view.
-   ========================================================= */
+  PulseFi — Stats / "Bukti Nyata" section
+  Plays once, when scrolled into view.
+  ========================================================= */
 
 .stats-section {
   background: #ffffff;
@@ -61,7 +61,9 @@
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); /* card 1 is visibly wider than 2 & 3 */
   gap: clamp(16px, 2vw, 28px);
   align-items: stretch;
-}.stats-card {
+}
+
+.stats-card {
   width: 100%;
   border-radius: 24px;
   overflow: hidden;
@@ -73,8 +75,8 @@
 }
 
 /* Match each card's box to its own SVG's viewBox ratio (width/height) —
-   open each SVG file, check its viewBox="0 0 W H", and plug W/H in below.
-   This is what stops the crop: the box is never a different shape than the art itself. */
+  open each SVG file, check its viewBox="0 0 W H", and plug W/H in below.
+  This is what stops the crop: the box is never a different shape than the art itself. */
 .stats-card-1 { aspect-ratio: 620 / 370; } /* placeholder — replace with statistik-1.svg's real viewBox ratio */
 .stats-card-2 { aspect-ratio: 380 / 360; } /* placeholder — replace with statistik-2.svg's real viewBox ratio */
 .stats-card-3 { aspect-ratio: 380 / 360; } /* placeholder — replace with statistik-3.svg's real viewBox ratio */
@@ -108,9 +110,28 @@
 }
 
 /* --- responsive --- */
+/* tablet: stack to one column, but keep the cards from stretching
+  edge-to-edge so the SVGs read smaller and more like a compact list */
 @media (max-width: 900px) {
   .stats-cards {
     grid-template-columns: 1fr;
+    justify-items: center;
   }
 
+  .stats-card {
+    max-width: 420px;
+  }
+}
+
+/* mobile: shrink further */
+@media (max-width: 640px) {
+  .stats-card {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 420px) {
+  .stats-card {
+    max-width: 240px;
+  }
 }

@@ -367,7 +367,37 @@ const PulseCalc = (function () {
 
     const monthLabel = anchor.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
 
-    return { buckets, rangeLabel: monthLabel, isCurrent: !monthOffset };
+     return { buckets, rangeLabel: monthLabel, isCurrent: !monthOffset };
+  }
+
+    const MONTH_LABELS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+  // yearOffset: 0 = current year, -1 = last year, etc.
+  // One point per calendar month (Jan-Dec) — a 12-month overview of
+  // total spend per month. `<`/`>` pages a whole year at a time.
+  function monthlyOverviewSeries(transactions, yearOffset) {
+    const today = new Date();
+    const year = today.getFullYear() + (yearOffset || 0);
+
+    const buckets = MONTH_LABELS_SHORT.map((label, i) => ({
+      label,
+      monthIndex: i,
+      year,
+      value: 0,
+      amount: 0,
+      isCurrent: !yearOffset && i === today.getMonth(),
+    }));
+
+    (transactions || []).forEach((t) => {
+      const d = new Date(t.date);
+      if (isNaN(d.getTime())) return;
+      if (d.getFullYear() !== year) return;
+      const bucket = buckets[d.getMonth()];
+      bucket.value += 1;
+      bucket.amount += t.type === "expense" ? Number(t.amount) || 0 : 0;
+    });
+
+    return { buckets, rangeLabel: String(year), isCurrent: !yearOffset };
   }
 
   return {
@@ -381,5 +411,6 @@ const PulseCalc = (function () {
     classifyFinancialTwin,
     weeklySeries,
     monthlySeries,
+    monthlyOverviewSeries,
   };
 })();

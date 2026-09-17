@@ -38,6 +38,7 @@ const PulseAuthUI = (function () {
     els.footerText = document.getElementById("footer-text");
     els.submitBtn = document.getElementById("auth-submit-btn");
     els.pemasukanContainer = document.getElementById("pemasukan-container");
+        els.nameContainer = document.getElementById("name-container");
     els.togglePasswordBtn = document.getElementById("toggle-password-btn");
     els.passwordInput = document.getElementById("password-input");
     els.eyeIcon = document.getElementById("eye-icon");
@@ -58,7 +59,7 @@ const PulseAuthUI = (function () {
       icon: `<path fill="currentColor" fill-rule="evenodd" d="M8.68 2.87a1.5 1.5 0 012.64 0l7.1 13.02A1.5 1.5 0 0117.1 18H2.9a1.5 1.5 0 01-1.32-2.11l7.1-13.02zM10 7a.75.75 0 00-.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 0010 7zm0 7.25a.9.9 0 100-1.8.9.9 0 000 1.8z" clip-rule="evenodd"/>`,
     },
     success: {
-      classes: "bg-[#EAF7EE] text-[#1F7A3D]",
+classes: "bg-[#C9DEBB] text-[#697D5B]",
       icon: `<path fill="currentColor" fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.53-9.47a.75.75 0 00-1.06-1.06L9 10.94 7.53 9.47a.75.75 0 00-1.06 1.06l2 2c.3.3.77.3 1.06 0l4-4z" clip-rule="evenodd"/>`,
     },
   };
@@ -132,6 +133,7 @@ const PulseAuthUI = (function () {
       mode = next;
       applyCopy(next);
       els.pemasukanContainer.classList.toggle("expanded", next === "signup");
+            els.nameContainer.classList.toggle("expanded", next === "signup");
       fadeEls.forEach((el) => el && (el.style.opacity = "1"));
       if (els.form) {
         els.form.dispatchEvent(new CustomEvent("authmodechange", { detail: { mode } }));

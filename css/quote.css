@@ -5,18 +5,19 @@
   background: #ffffff;
   padding: clamp(64px, 10vw, 140px) clamp(16px, 3vw, 40px); /* tighter horizontal padding so both title and image sit further out */
   text-align: left;
-  margin-top: clamp(64px, 10vw, 140px);
+  margin-top: 8px;
+  margin-bottom: 40px;
 }
 
 .quote-title {
   margin: 0 0 clamp(32px, 5vw, 56px);
+margin-left: clamp(20px, 10vw, 130px);
   color: #14161a;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   font-weight: 500; /* matches .stats-title */
   letter-spacing: -0.06em; /* matches .stats-title */
   font-size: clamp(1.5rem, 2.6vw, 2.1rem); /* smaller than before — was clamp(2rem, 4vw, 3.25rem) */
   line-height: 1.15;
-
   /* blur-slide-down entrance, same as .stats-title */
   opacity: 0;
   transform: translateY(-24px);
@@ -30,22 +31,28 @@
   opacity: 1;
   transform: translateY(0);
   filter: blur(0);
+  /* note: align-items: center was removed here — it has no effect on a
+     block-level <h2> that isn't a flex/grid container, so it was dead
+     code and not actually doing anything */
 }
+
 .quote-img {
   display: block;
-  width: 100%; /* fills the section's own padded content box — same left edge as .quote-title */
+  width: 85%; /* narrower than before (was 80%) */
   height: auto;
-  margin-top: -70px;
-
+  margin: 1px auto 0; /* margin: 0 auto is what actually centers a
+     block element with a fixed width — text-align on the parent only
+     affects inline content, it never centers a block-level <img> */
   opacity: 0;
-  transform: scale(0.92);
+  transform: scale(0.92) translateX(3px); /* centered by the margin above, then nudged right by 40px — tweak this px value to taste */
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: 0.35s;
 }
+
 .quote-section.in-view .quote-img {
   opacity: 1;
-  transform: scale(1);
+  transform: scale(1) translateX(10px); /* keep the same translateX here so it doesn't snap back to center once the entrance animation finishes */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -53,7 +60,7 @@
   .quote-img {
     transition: none !important;
     opacity: 1 !important;
-    transform: none !important;
+    transform: translateX(40px) !important;
     filter: none !important;
   }
 }

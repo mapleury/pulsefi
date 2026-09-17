@@ -27,7 +27,14 @@
 <body id="insights-page" class="bg-[#eef0f5] p-6 antialiased flex items-start gap-6">
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+  <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+  <script>
+    try {
+      if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
+        document.currentScript.parentElement.classList.add("collapsed");
+      }
+    } catch (e) {}
+  </script>
 
     <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -115,7 +122,7 @@
           <div class="pulse-score">
             <span id="pulse-score">0</span><small>/100</small>
           </div>
-          <svg class="pulse-wave-svg" viewBox="0 0 300 90" preserveAspectRatio="none">
+      <div class="pulse-card-wave" id="pulse-wave"></div>
             <path id="pulse-wave-path" class="pulse-wave-path" d=""></path>
           </svg>
           <div class="pulse-foot">
@@ -155,12 +162,84 @@
 
     </div>
   </main>
+  <script>
+(function () {
+  const container = document.getElementById('pulse-wave');
+  const pulseCard = document.querySelector('.pulse-card');
+  const scoreEl = document.getElementById('pulse-score');
+  if (!container || !pulseCard || !scoreEl) return;
 
-  <script src="js/storage.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/calculation.js"></script>
-  <script src="js/insights.js"></script>
-  <script src="js/sidebar.js"></script>
-  <script src="js/insights-page.js"></script>
+  const UNIT_W = 30, BEATS = 8, HEIGHT = 40;
+  const PATTERN_W = UNIT_W * BEATS;
+
+  function beatPath(startX) {
+    const mid = HEIGHT / 2;
+    const amp = HEIGHT * 0.42;
+    const pts = [
+      [0, 0], [0.13, 0], [0.20, -amp * 0.28], [0.27, 0],
+      [0.32, amp * 0.3], [0.37, -amp], [0.42, amp * 0.55],
+      [0.48, 0], [0.58, -amp * 0.35], [0.68, 0], [1, 0]
+    ];
+    return pts.map(([fx, fy], i) =>
+      (i === 0 ? 'M' : 'L') + (startX + fx * UNIT_W).toFixed(1) + ',' + (mid + fy).toFixed(1)
+    ).join(' ');
+  }
+  function buildPattern() {
+    let d = '';
+    for (let i = 0; i < BEATS; i++) d += beatPath(i * UNIT_W) + ' ';
+    return d.trim();
+  }
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'ecg-svg');
+  svg.setAttribute('viewBox', `0 0 300 ${HEIGHT}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+
+  const track = document.createElementNS(ns, 'g');
+  track.setAttribute('class', 'ecg-track');
+  svg.appendChild(track);
+  container.appendChild(svg);
+
+  const d = buildPattern();
+  [0, 1].forEach((copy) => {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('class', 'ecg-line');
+    path.setAttribute('d', d);
+    path.setAttribute('transform', `translate(${copy * PATTERN_W}, 0)`);
+    track.appendChild(path);
+  });
+
+  function applyECGSpeed() {
+    const score = Math.max(0, Math.min(100, parseFloat(scoreEl.textContent) || 0));
+    const STANDARD_DURATION = 4.5, FASTEST_DURATION = 1.6, THRESHOLD = 60;
+    const duration = score >= THRESHOLD
+      ? STANDARD_DURATION
+      : FASTEST_DURATION + (score / THRESHOLD) * (STANDARD_DURATION - FASTEST_DURATION);
+    track.style.setProperty('--ecg-duration', duration.toFixed(2) + 's');
+    pulseCard.classList.toggle('is-racing', score < THRESHOLD * 0.4);
+  }
+
+  applyECGSpeed();
+  new MutationObserver(applyECGSpeed).observe(scoreEl, { characterData: true, childList: true, subtree: true });
+})();
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
+    if (session) {
+      document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
+    } else {
+      window.location.href = "login.html";
+    }
+  });
+</script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/calculation.js"></script>
+<script src="js/insights.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/insights-page.js"></script>
 </body>
 </html>

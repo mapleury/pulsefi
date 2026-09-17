@@ -2,32 +2,45 @@
 // Vanilla JS, no dependencies.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const burger = document.querySelector('.nav-burger');
-  const mobileMenu = document.querySelector('.mobile-menu');
+  // Two independent burger/menu pairs can exist on the page: the
+  // decorative one inside the hero itself, and the one inside the
+  // fixed #siteNavbar mobile sticky bar. Wire up whichever are present.
+  const pairs = [
+    {
+      burger: document.querySelector('.hero-nav-row .nav-burger'),
+      menu: document.querySelector('.hero-content > .mobile-menu'),
+    },
+    {
+      burger: document.querySelector('#siteNavbar .nav-burger'),
+      menu: document.querySelector('#siteNavbar .mobile-menu'),
+    },
+  ];
 
-  if (!burger || !mobileMenu) return;
+  pairs.forEach(({ burger, menu }) => {
+    if (!burger || !menu) return;
 
-  const closeMenu = () => {
-    mobileMenu.classList.remove('is-open');
-    burger.setAttribute('aria-expanded', 'false');
-  };
+    const closeMenu = () => {
+      menu.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+    };
 
-  burger.addEventListener('click', () => {
-    const isOpen = mobileMenu.classList.toggle('is-open');
-    burger.setAttribute('aria-expanded', String(isOpen));
+    burger.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Close the mobile menu after a link is tapped.
+    menu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // Close on resize back to desktop width.
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) closeMenu();
+    });
   });
 
-  // Close the mobile menu after a link is tapped.
-  mobileMenu.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', closeMenu);
-  });
-
-  // Close on resize back to desktop width.
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) closeMenu();
-  });
-
-    const scrollWrap = document.querySelector('.hero-scroll-wrap');
+  const scrollWrap = document.querySelector('.hero-scroll-wrap');
   const shell = document.querySelector('.hero-shell');
 
   if (scrollWrap && shell) {
@@ -44,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onHeroScroll();
   }
 
-    const sections = document.querySelectorAll('#home, #tentang, #tujuan, #testimoni');
+  const sections = document.querySelectorAll('#home, #tentang, #tujuan, #testimoni');
   const navLinks = document.querySelectorAll('.navbar-glass a:not(.nav-cta)');
 
   if (sections.length && navLinks.length) {

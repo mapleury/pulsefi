@@ -42,6 +42,7 @@
 
 html, body {
   margin: 0;
+    padding: 0;
   background: var(--bg-page);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -116,14 +117,30 @@ body {
 .insights-wrap {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 8px 0 64px;
+  padding: 24px 32px 0;
+  animation: page-blur-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes page-blur-in {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
 }
 
 .page-heading {
   font-family: var(--font-sans);
-  font-size: 22px;
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 0 0 20px;
   color: var(--ink);
-  margin: 0 0 24px;
 }
 
 /* ================= top section: pulse card + twin ================= */
@@ -138,9 +155,10 @@ body {
 
 .pulse-card {
   background: radial-gradient(120% 140% at 15% 0%, var(--pulse-1) 0%, var(--pulse-2) 75%);
-  border-radius: 28px;
+  border-radius: 35px;
   padding: 28px;
-  min-height: 340px;
+  min-height: 290px;
+  max-width: 90%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -164,40 +182,33 @@ body {
   margin-bottom: 6px;
 }
 
-.pulse-wave-svg { width: 100%; height: 90px; display: block; margin: 12px 0; overflow: visible; }
-.pulse-wave-path {
-  transform-box: fill-box; /* lets scaleY pulse around the path's own center, not the SVG's corner */
-  transform-origin: center;
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 2;
+.pulse-card-wave {
+  flex: 1;
+  min-height: 34px;
+  margin: 8px 0 4px;
+  overflow: hidden;
+}
+
+.ecg-svg { width: 100%; height: 40px; display: block; }
+
+.ecg-track {
+  animation: ecg-scroll var(--ecg-duration, 4.5s) linear infinite;
+}
+
+.ecg-line {
   fill: none;
-  stroke-dasharray: 500;
-  stroke-dashoffset: 500;
-  animation: draw-pulse 1.3s ease forwards 0.15s;
-}
-@keyframes draw-pulse { to { stroke-dashoffset: 0; } }
-
-/* Continuous loop, started via JS once draw-pulse finishes. Duration and
-   which keyframe set plays are both driven by the real score — see
-   startPulseLoop() in insights-page.js. */
-@keyframes pulse-loop-steady {
-  0%, 100% { opacity: 0.55; transform: scaleY(1); }
-  50% { opacity: 0.9; transform: scaleY(1.05); }
+  stroke: var(--ecg-stroke, rgba(255, 255, 255, 0.55));
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.6s ease;
 }
 
-@keyframes pulse-loop-erratic {
-  0% { opacity: 0.5; transform: scaleY(0.95); }
-  12% { opacity: 0.95; transform: scaleY(1.1); }
-  28% { opacity: 0.6; transform: scaleY(0.97); }
-  40% { opacity: 1; transform: scaleY(1.15); }
-  55% { opacity: 0.5; transform: scaleY(0.93); }
-  70% { opacity: 0.85; transform: scaleY(1.06); }
-  85% { opacity: 0.6; transform: scaleY(0.98); }
-  100% { opacity: 0.5; transform: scaleY(0.95); }
-}
+.pulse-card.is-racing .ecg-line { --ecg-stroke: #E8A6A6; }
 
-@media (prefers-reduced-motion: reduce) {
-  .pulse-wave-path { animation: none !important; opacity: 0.7; }
+@keyframes ecg-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-240px); }
 }
 
 .pulse-foot {
@@ -226,7 +237,7 @@ body {
 
 .twin-eyebrow {
   display: block;
-  font-size: 12px;
+  font-size: 8px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -236,7 +247,7 @@ body {
 .twin-title {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  font-size: clamp(1.3rem, 2.5vw, 2rem);
   letter-spacing: -0.03em;
   color: #201842;
   margin: 0 0 14px;
@@ -297,6 +308,7 @@ body {
   font-family: var(--font-sans);
   font-size: 22px;
   color: var(--ink);
+  letter-spacing: -0.5px;
   margin: 0 0 20px;
 }
 
@@ -318,8 +330,8 @@ body {
 
 .pattern-card {
   position: relative;
-  background: var(--card-soft);
-  border-radius: 24px;
+  background: #dcdde071;
+  border-radius: 35px;
   padding: 26px 28px;
 }
 
@@ -341,13 +353,12 @@ body {
 
 .pattern-title {
   font-family: var(--font-serif);
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 400;
   color: var(--ink);
   margin: 0 0 14px;
     letter-spacing: -0.05em;
   display: inline-block;
-  border-bottom: 2px solid var(--ink);
   padding-bottom: 2px;
 }
 
@@ -406,4 +417,8 @@ body {
   .two-col-bottom {
     grid-template-columns: 1fr;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ecg-track { animation: none !important; }
+  .insights-wrap { animation: none !important; opacity: 1; filter: none; transform: none; }
 }

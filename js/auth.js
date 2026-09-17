@@ -120,7 +120,7 @@ const PulseAuth = (function () {
     // reintroduced as a gate later, swap this back to check
     // PulseUtils.requiresOnboarding() and branch to index.html.
     setTimeout(() => {
-      window.location.href = "dashboard.html";
+window.location.href = "/dashboard.html";
     }, 500); // short pause so the success toast is actually visible before navigating
   }
 

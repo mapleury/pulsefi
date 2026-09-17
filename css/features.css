@@ -234,7 +234,7 @@
 .feature-stat-label {
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   font-weight: 300;
-  font-size: 0.20rem;
+  font-size: 0.8rem;
   color: rgba(20, 22, 26, 0.6);
   max-width: 260px;
 }
@@ -265,10 +265,9 @@
 
 /* --- responsive: collapse the reserved image column on small screens --- */
 @media (max-width: 860px) {
-  .feature-item {
-    grid-template-columns: 52px 1fr;
-    column-gap: 16px;
-  }
+.feature-item::before {
+  display: none;
+}
 
   .feature-header {
     grid-column: 2;

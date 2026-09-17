@@ -15,6 +15,10 @@
 
 const PulseChart = (function () {
   const EASE_FRAMES = 2; // frames to wait before triggering the CSS transition
+  const MONTH_LABELS_LONG = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  ];
 
   function create(config) {
     const { bodyEl, toggleEl, prevBtn, nextBtn } = config;
@@ -26,17 +30,18 @@ const PulseChart = (function () {
     const tooltip = document.createElement("div");
     tooltip.className = "chart-tooltip";
     tooltip.setAttribute("role", "status");
-    bodyEl.appendChild(tooltip);
+    tooltip.style.position = "fixed";
+    document.body.appendChild(tooltip);
     bodyEl.style.position = bodyEl.style.position || "relative";
 
+    // Positioned with getBoundingClientRect() against the viewport and
+    // parented to <body>, so the card's `overflow: hidden` (needed for
+    // its rounded corners) never clips the tooltip.
     function showTooltip(anchorEl, text) {
-      const hostRect = bodyEl.getBoundingClientRect();
       const anchorRect = anchorEl.getBoundingClientRect();
-      const x = anchorRect.left - hostRect.left + anchorRect.width / 2;
-      const y = anchorRect.top - hostRect.top;
       tooltip.textContent = text;
-      tooltip.style.left = x + "px";
-      tooltip.style.top = y - 8 + "px";
+      tooltip.style.left = anchorRect.left + anchorRect.width / 2 + "px";
+      tooltip.style.top = anchorRect.top - 8 + "px";
       tooltip.classList.add("is-visible");
     }
 
@@ -45,9 +50,7 @@ const PulseChart = (function () {
     }
 
     function clearChart() {
-      Array.from(bodyEl.children).forEach((child) => {
-        if (child !== tooltip) child.remove();
-      });
+      bodyEl.innerHTML = "";
     }
 
     // ---------------- weekly bar chart ----------------
@@ -94,7 +97,7 @@ const PulseChart = (function () {
         col.setAttribute("aria-label", `${bucket.label}: ${tipText}`);
       });
 
-      bodyEl.insertBefore(container, tooltip);
+      bodyEl.appendChild(container);
       updateNavButtons(data.isCurrent);
     }
 
@@ -120,19 +123,24 @@ const PulseChart = (function () {
       return d;
     }
 
-    function renderMonthly() {
-      const data = PulseCalc.monthlySeries(getTransactions(), offset);
+        function renderMonthly() {
+      const data = PulseCalc.monthlyOverviewSeries(getTransactions(), offset);
       const wrap = document.createElement("div");
       wrap.style.display = "flex";
       wrap.style.flexDirection = "column";
       wrap.style.height = "100%";
 
+      const heading = document.createElement("div");
+      heading.className = "line-chart-month-label";
+      heading.textContent = data.rangeLabel;
+      wrap.appendChild(heading);
+
       const svgWrap = document.createElement("div");
       svgWrap.style.flex = "1";
       svgWrap.style.minHeight = "0";
 
-      const width = 300;
-      const height = 100;
+          const width = 300;
+      const height = 150;
       const topPad = 12;
       const bottomPad = 14;
       const max = Math.max(1, ...data.buckets.map((b) => b.value));
@@ -190,23 +198,25 @@ const PulseChart = (function () {
         const g = document.createElementNS(svgNS, "g");
         g.classList.add("line-chart-point");
 
+        const hitRadius = Math.max(5, Math.min(12, (width / n) / 2));
+
         const hit = document.createElementNS(svgNS, "circle");
         hit.setAttribute("cx", pt.x);
         hit.setAttribute("cy", pt.y);
-        hit.setAttribute("r", "12");
+        hit.setAttribute("r", String(hitRadius));
         hit.classList.add("line-chart-hit");
 
         const dot = document.createElementNS(svgNS, "circle");
         dot.setAttribute("cx", pt.x);
         dot.setAttribute("cy", pt.y);
-        dot.setAttribute("r", pt.bucket.isCurrent ? "4.5" : "3.5");
+        dot.setAttribute("r", pt.bucket.isCurrent ? "4" : "2.2");
         dot.classList.add("line-chart-dot");
         if (pt.bucket.isCurrent) dot.classList.add("is-active");
 
         g.append(hit, dot);
         svg.appendChild(g);
 
-        const tipText = `${pt.bucket.label}: ${pt.bucket.value} transaksi \u00B7 ${PulseUtils.formatCurrencyCompact(pt.bucket.amount)}`;
+        const tipText = `${MONTH_LABELS_LONG[pt.bucket.monthIndex]} ${pt.bucket.year}: ${pt.bucket.value} transaksi \u00B7 ${PulseUtils.formatCurrencyCompact(pt.bucket.amount)}`;
         g.addEventListener("mouseenter", () => showTooltip(dot, tipText));
         g.addEventListener("mousemove", () => showTooltip(dot, tipText));
         g.addEventListener("mouseleave", hideTooltip);
@@ -214,17 +224,8 @@ const PulseChart = (function () {
 
       svgWrap.appendChild(svg);
 
-      const labels = document.createElement("div");
-      labels.className = "line-chart-labels";
-      data.buckets.forEach((b) => {
-        const span = document.createElement("span");
-        span.textContent = b.label;
-        if (b.isCurrent) span.classList.add("is-active");
-        labels.appendChild(span);
-      });
-
-      wrap.append(svgWrap, labels);
-      bodyEl.insertBefore(wrap, tooltip);
+           wrap.append(svgWrap);
+      bodyEl.appendChild(wrap);
       updateNavButtons(data.isCurrent);
 
       // Draw-on animation for the line, once its real length is known.

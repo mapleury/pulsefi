@@ -19,8 +19,7 @@
 
 (function () {
   function init() {
-    if (!document.getElementById("dashboard-page")) return;
-    if (PulseUtils.redirectIfNeedsOnboarding()) return;
+     if (!document.getElementById("dashboard-page")) return;
 
     const transactions = PulseStorage.getTransactions();
     const goals = PulseStorage.getGoals();
@@ -61,46 +60,100 @@
 
   // Heartbeat-style SVG line. A higher score produces a calmer, more even
   // rhythm; a lower score produces a sharper, more irregular rhythm.
-  function renderPulseWave(host, score) {
-    const width = 600;
-    const height = 60;
-    const midY = height / 2;
-    const amplitude = 6 + (100 - score) * 0.16;
-    const segments = score >= 80 ? 3 : score >= 60 ? 4 : score >= 40 ? 5 : 7;
-    const segWidth = width / segments;
+   function renderPulseWave(host, score) {
+    const width = 240;
+    const height = 40;
+    const unitW = 30;
+    const beats = 8;
+    const patternW = unitW * beats; // 240 — exactly one loop width
 
-    let d = `M0,${midY}`;
-    for (let i = 0; i < segments; i++) {
-      const x0 = i * segWidth;
-      const peakX = x0 + segWidth * 0.45;
-      const dipX = x0 + segWidth * 0.6;
-      const backX = x0 + segWidth * 0.75;
-      d += ` L${x0 + segWidth * 0.25},${midY}`;
-      d += ` L${peakX},${midY - amplitude}`;
-      d += ` L${dipX},${midY + amplitude * 0.6}`;
-      d += ` L${backX},${midY}`;
-      d += ` L${x0 + segWidth},${midY}`;
+    function beatPath(startX) {
+      const mid = height / 2;
+      const amp = height * 0.42;
+      const pts = [
+        [0, 0], [0.13, 0], [0.20, -amp * 0.28], [0.27, 0],
+        [0.32, amp * 0.3], [0.37, -amp], [0.42, amp * 0.55],
+        [0.48, 0], [0.58, -amp * 0.35], [0.68, 0], [1, 0],
+      ];
+      return pts
+        .map(([fx, fy], i) => (i === 0 ? "M" : "L") + (startX + fx * unitW).toFixed(1) + "," + (mid + fy).toFixed(1))
+        .join(" ");
     }
+
+    let d = "";
+    for (let i = 0; i < beats; i++) d += beatPath(i * unitW) + " ";
+    d = d.trim();
 
     host.innerHTML = "";
     const svgNS = "http://www.w3.org/2000/svg";
+
     const svg = document.createElementNS(svgNS, "svg");
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     svg.setAttribute("preserveAspectRatio", "none");
-    svg.classList.add("pulse-wave-svg");
+    svg.classList.add("ecg-svg");
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "Visualisasi detak finansial");
 
-    const path = document.createElementNS(svgNS, "path");
-    path.setAttribute("d", d);
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke-width", "3");
-    path.setAttribute("stroke-linecap", "round");
-    path.setAttribute("stroke-linejoin", "round");
-    path.classList.add("pulse-wave-path");
+    const defs = document.createElementNS(svgNS, "defs");
 
-    svg.appendChild(path);
+    const grad = document.createElementNS(svgNS, "linearGradient");
+    grad.setAttribute("id", "ecg-fade");
+    grad.setAttribute("x1", "0"); grad.setAttribute("y1", "0");
+    grad.setAttribute("x2", "1"); grad.setAttribute("y2", "0");
+    [["0%", "0"], ["18%", "1"], ["82%", "1"], ["100%", "0"]].forEach(([offset, opacity]) => {
+      const stop = document.createElementNS(svgNS, "stop");
+      stop.setAttribute("offset", offset);
+      stop.setAttribute("stop-color", "#fff");
+      stop.setAttribute("stop-opacity", opacity);
+      grad.appendChild(stop);
+    });
+    defs.appendChild(grad);
+
+    const mask = document.createElementNS(svgNS, "mask");
+    mask.setAttribute("id", "ecg-mask");
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "0"); mask.setAttribute("y", "0");
+    mask.setAttribute("width", String(width)); mask.setAttribute("height", String(height));
+    const rect = document.createElementNS(svgNS, "rect");
+    rect.setAttribute("x", "0"); rect.setAttribute("y", "0");
+    rect.setAttribute("width", String(width)); rect.setAttribute("height", String(height));
+    rect.setAttribute("fill", "url(#ecg-fade)");
+    mask.appendChild(rect);
+    defs.appendChild(mask);
+
+    svg.appendChild(defs);
+
+    // static wrapper carries the fixed fade mask; the inner group scrolls
+    const staticG = document.createElementNS(svgNS, "g");
+    staticG.setAttribute("mask", "url(#ecg-mask)");
+
+    const track = document.createElementNS(svgNS, "g");
+    track.classList.add("ecg-track");
+
+    [0, 1].forEach((copy) => {
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("class", "ecg-line");
+      path.setAttribute("d", d);
+      path.setAttribute("transform", `translate(${copy * patternW}, 0)`);
+      track.appendChild(path);
+    });
+
+    staticG.appendChild(track);
+    svg.appendChild(staticG);
     host.appendChild(svg);
+
+    // Below 60, the beat quickens toward a racing 1.6s loop.
+    // At or above 60, it settles into a calm, standard 4.5s loop.
+    const STANDARD_DURATION = 4.5;
+    const FASTEST_DURATION = 1.6;
+    const THRESHOLD = 60;
+    const duration = score >= THRESHOLD
+      ? STANDARD_DURATION
+      : FASTEST_DURATION + (score / THRESHOLD) * (STANDARD_DURATION - FASTEST_DURATION);
+    track.style.setProperty("--ecg-duration", duration.toFixed(2) + "s");
+
+    const card = host.closest(".card-pulse");
+    if (card) card.classList.toggle("is-racing", score < THRESHOLD * 0.4);
   }
 
   // ---------------- 3. rata rata transaksi ----------------

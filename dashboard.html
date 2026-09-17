@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — PulseFi</title>
-<link rel="stylesheet" href="css/style.css">
-  
+  <link rel="stylesheet" href="css/style.css">
+
   <!-- Import Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
   
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -74,23 +76,34 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease;
     }
     .nav-icon {
-      stroke: #828282; 
+      stroke: #828282;
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease;
     }
     .nav-item.active .nav-icon {
       transform: scale(1.15);
-      stroke: #101010; 
+      stroke: #101010;
     }
     .nav-item:not(.active):hover .nav-icon {
       transform: scale(1.08);
-      stroke: #4b5563; 
+      stroke: #4b5563;
     }
   </style>
 </head>
-<body id="dashboard-page" class="bg-[#eef0f5] p-6 font-sans antialiased flex items-start gap-6">
- <!-- Sidebar Component -->
-  <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
-    
+<body id="insights-page" class="bg-[#eef0f5] p-6 font-sans antialiased flex items-start gap-6">
+
+  <!-- Sidebar Component -->
+  <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+    <script>
+      // Runs the instant #sidebar is parsed, before the browser paints
+      // it — restores the collapsed state synchronously so there's no
+      // expanded-then-collapsed flash on page load.
+      try {
+        if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
+          document.currentScript.parentElement.classList.add("collapsed");
+        }
+      } catch (e) {}
+    </script>
+
     <!-- Collapse Toggle Button -->
     <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -106,7 +119,7 @@
 
     <!-- Navigation Links -->
     <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
-      
+
       <!-- Dashboard (Active) -->
       <a href="dashboard.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
@@ -175,127 +188,188 @@
 
   </aside>
 
-<main class="dash-wrap flex-1 min-w-0">
+  <main class="dash-wrap flex-1 min-w-0">
 
     <div class="dash-greet-row">
       <div class="dash-greet">
-        <h1>Welcome back, <span id="greeting-name">kamu</span>!</h1>
+        <h1>Halo <span id="greeting-name"></span>!</h1>
       </div>
-      <a class="btn btn-primary" href="transactions.html">+ Catat transaksi</a>
     </div>
 
-    <div class="grid-row top-row">
+    <div class="layout">
 
-      <div class="card card-pulse" data-reveal>
-        <div class="card-pulse-value">
-          <span id="pulse-score">0</span><small>/100</small>
+      <!-- pair-a: Financial Pulse + Rata-rata Transaksi, side by side -->
+      <div class="group group--pair-a">
+
+        <div class="card card-pulse" data-reveal>
+          <div class="card-pulse-value">
+            <span id="pulse-score">0</span><small>/100</small>
+          </div>
+<div class="card-pulse-wave" id="pulse-wave"></div>
+          <div class="card-pulse-foot">
+            <span class="label-caps">Skor Finansial</span>
+            <span class="pulse-status" id="pulse-status">Belum ada data</span>
+          </div>
         </div>
-        <div class="card-pulse-wave" id="pulse-wave"></div>
-        <div class="card-pulse-foot">
-          <span class="label-caps">Financial Pulse</span>
-          <span class="pulse-status" id="pulse-status">Belum ada data</span>
+
+        <div class="card card-avg" data-reveal>
+          <div class="card-avg-value" id="avg-value">0</div>
+          <div class="card-avg-foot">
+            <span class="label-caps">Rata Rata Transaksi</span>
+            <span>Minggu ini</span>
+          </div>
         </div>
+
       </div>
 
-      <div class="card card-avg" data-reveal>
-        <div class="card-avg-value" id="avg-value">0</div>
-        <div class="card-avg-foot">
-          <span class="label-caps">Rata Rata Transaksi</span>
-          <span>Minggu ini</span>
-        </div>
-      </div>
-
-      <div class="card card-chart" data-reveal>
-        <div class="chart-head">
-          <h2>Grafik Transaksi</h2>
-          <div class="icon-badge">
-            <img src="assets/icons/piggy_bank.svg" alt="">
+      <!-- tall: Grafik Transaksi, spans the height of pair-a + pair-b -->
+      <div class="group group--tall">
+        <div class="card card-chart" data-reveal>
+          <div class="chart-head">
+            <h2>Grafik Transaksi</h2>
+            <div class="icon-badge">
+              <img src="assets/icons/transaction-icon.svg" alt="">
+            </div>
           </div>
-        </div>
-        <div class="chart-body" id="chart-body"></div>
-        <div class="chart-foot">
-          <button class="chart-mode-toggle" id="chart-mode-toggle" type="button">Mingguan</button>
-          <div class="chart-nav">
-            <button class="chart-nav-btn" id="chart-prev" type="button" aria-label="Periode sebelumnya">‹</button>
-            <button class="chart-nav-btn" id="chart-next" type="button" aria-label="Periode selanjutnya">›</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="grid-row mid-row">
-
-      <div class="card card-context" data-reveal>
-        <h2>Konteks Keseluruhan</h2>
-        <div class="context-grid">
-          <div class="context-item">
-            <span class="label-caps">Pemasukan</span>
-            <strong id="overview-income">Rp0</strong>
-          </div>
-          <div class="context-item">
-            <span class="label-caps">Pengeluaran</span>
-            <strong id="overview-expense">Rp0</strong>
-          </div>
-          <div class="context-item">
-            <span class="label-caps">Saldo Bersih</span>
-            <strong id="overview-balance">Rp0</strong>
+          <div class="chart-body" id="chart-body"></div>
+          <div class="chart-foot">
+            <button class="chart-mode-toggle" id="chart-mode-toggle" type="button">Mingguan</button>
+            <div class="chart-nav">
+              <button class="chart-nav-btn" id="chart-prev" type="button" aria-label="Periode sebelumnya">‹</button>
+              <button class="chart-nav-btn" id="chart-next" type="button" aria-label="Periode selanjutnya">›</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="card card-signal" data-reveal>
-        <div class="signal-badge" id="signal-badge">!</div>
-        <div class="signal-value" id="signal-value">0%</div>
-        <span class="label-caps">AI Insight</span>
-        <p class="signal-text" id="signal-text">Belum cukup data untuk membentuk insight.</p>
+      <!-- pair-b: Konteks Keseluruhan (wide) + AI Insight (narrow) -->
+      <div class="group group--pair-b">
+
+        <div class="card card-context" data-reveal>
+          <h2>Konteks Keseluruhan</h2>
+          <div class="context-grid">
+            <div class="context-item">
+              <span class="label-caps">Pemasukan</span>
+              <strong id="overview-income">Rp0</strong>
+            </div>
+            <div class="context-item">
+              <span class="label-caps">Pengeluaran</span>
+              <strong id="overview-expense">Rp0</strong>
+            </div>
+            <div class="context-item">
+              <span class="label-caps">Saldo Bersih</span>
+              <strong id="overview-balance">Rp0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-signal" data-reveal>
+          <div class="signal-badge" id="signal-badge">!</div>
+          <div class="signal-value" id="signal-value">0%</div>
+          <span class="label-caps">AI Insight</span>
+          <p class="signal-text" id="signal-text">Belum cukup data untuk membentuk insight.</p>
+        </div>
+
       </div>
 
-    </div>
+      <!-- full: Financial Twin banner -->
+      <div class="group group--full">
+        <div class="card card-twin" data-reveal>
+          <img src="assets/financial-twin.svg" alt="" class="twin-bg">
+          <div class="twin-top">
+            <div class="twin-kicker">
+              <span class="label-caps">Financial Twin</span>
+      
+            </div>
+            <div class="twin-actions">
+              <a class="btn-outline-pill" href="goals.html">+ Tabungan</a>
+              <a class="btn-dark-pill" href="transactions.html">+ Transaksi</a>
+            </div>
+          </div>
+          <div class="twin-body">
+            <div class="twin-decor">
+              <img src="assets/flower-decor.svg" alt="">
+            </div>
+            <div class="twin-copy">
+              <h3 id="twin-title">Belum Terlihat Polanya</h3>
+              <p id="twin-desc">Tambahkan beberapa transaksi supaya PulseFi bisa mulai mengenali kebiasaan finansialmu.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div class="card card-twin" data-reveal>
-      <img src="assets/financial-twin.svg" alt="" class="twin-bg">
-      <div class="twin-top">
-        <div class="twin-kicker">
-          <span class="label-caps">Financial Twin</span>
-          <p>Kamu adalah..</p>
-        </div>
-        <div class="twin-actions">
-          <a class="btn-outline-pill" href="goals.html">+ Tabungan</a>
-          <a class="btn-dark-pill" href="transactions.html">+ Transaksi</a>
-        </div>
-      </div>
-      <div class="twin-body">
-        <div class="twin-decor">
-          <img src="assets/flower-decor.svg" alt="">
-        </div>
-        <div class="twin-copy">
-          <h3 id="twin-title">Belum Terlihat Polanya</h3>
-          <p id="twin-desc">Tambahkan beberapa transaksi supaya PulseFi bisa mulai mengenali kebiasaan finansialmu.</p>
-        </div>
-      </div>
     </div>
 
   </main>
-
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
   <script src="js/calculation.js"></script>
   <script src="js/insights.js"></script>
   <script src="js/chart.js"></script>
-<script src="js/dashboard.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+  (function () {
+    const track = document.getElementById('ecg-track');
+    const pulseCard = document.querySelector('.card-pulse');
+    const scoreEl = document.getElementById('pulse-score');
+    if (!track || !pulseCard || !scoreEl) return;
+
+    const UNIT_W = 30;
+    const BEATS = 8;
+    const HEIGHT = 40;
+    const PATTERN_W = UNIT_W * BEATS;
+
+    function beatPath(startX) {
+      const mid = HEIGHT / 2;
+      const amp = HEIGHT * 0.42;
+      const pts = [
+        [0, 0], [0.13, 0], [0.20, -amp * 0.28], [0.27, 0],
+        [0.32, amp * 0.3], [0.37, -amp], [0.42, amp * 0.55],
+        [0.48, 0], [0.58, -amp * 0.35], [0.68, 0], [1, 0]
+      ];
+      return pts.map(([fx, fy], i) =>
+        (i === 0 ? 'M' : 'L') + (startX + fx * UNIT_W).toFixed(1) + ',' + (mid + fy).toFixed(1)
+      ).join(' ');
+    }
+
+    function buildPattern() {
+      let d = '';
+      for (let i = 0; i < BEATS; i++) d += beatPath(i * UNIT_W) + ' ';
+      return d.trim();
+    }
+
+    const d = buildPattern();
+    const ns = 'http://www.w3.org/2000/svg';
+    [0, 1].forEach((copy) => {
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('class', 'ecg-line');
+      path.setAttribute('d', d);
+      path.setAttribute('transform', `translate(${copy * PATTERN_W}, 0)`);
+      track.appendChild(path);
+    });
+
+    function applyECGSpeed() {
+      const score = Math.max(0, Math.min(100, parseFloat(scoreEl.textContent) || 0));
+      const STANDARD_DURATION = 4.5;
+      const FASTEST_DURATION = 1.6;
+      const THRESHOLD = 60;
+
+      const duration = score >= THRESHOLD
+        ? STANDARD_DURATION
+        : FASTEST_DURATION + (score / THRESHOLD) * (STANDARD_DURATION - FASTEST_DURATION);
+
+      track.style.setProperty('--ecg-duration', duration.toFixed(2) + 's');
+      pulseCard.classList.toggle('is-racing', score < THRESHOLD * 0.4);
+    }
+
+    applyECGSpeed();
+    new MutationObserver(applyECGSpeed).observe(scoreEl, { characterData: true, childList: true, subtree: true });
+  })();
+</script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const sidebar = document.getElementById('sidebar');
-      const collapseBtn = document.getElementById('collapse-btn');
-
-      if (collapseBtn && sidebar) {
-        collapseBtn.addEventListener('click', () => {
-          sidebar.classList.toggle('collapsed');
-        });
-      }
-
       // Swap the placeholder name for whoever's actually logged in.
       const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
       if (session) {
@@ -309,6 +383,6 @@
       }
     });
   </script>
-</body>
+  
 </body>
 </html>

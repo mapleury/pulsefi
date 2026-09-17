@@ -1,6 +1,251 @@
-<!doctype html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PulseFi — Kenali cara uangmu bergerak</title><link rel="stylesheet" href="css/style.css"></head>
-<body id="onboarding-page"><header class="site-header"><nav class="nav" aria-label="Navigasi utama"><a class="brand brand-mark" href="index.html">PULSEFI</a><button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button><div class="nav-links"><a href="#cara-kerja">Cara kerja</a><a href="dashboard.html">Masuk ke dashboard</a></div></nav></header>
-<main><section class="hero" data-reveal><div class="hero-copy"><span class="eyebrow">Financial behavior mirror</span><h1>Kenali cara uangmu bergerak.</h1><p class="lede">PulseFi membantumu melihat pola di balik setiap transaksi, memahami kebiasaan finansial, dan melihat bagaimana keputusan kecil hari ini membentuk masa depanmu.</p><div class="hero-actions"><a class="btn btn-primary" href="#onboarding">Mulai mengenali uangmu</a><a class="btn" href="#cara-kerja">Lihat cara kerjanya</a></div></div><div class="hero-art" aria-label="Ilustrasi pulse finansial"><div class="pulse-orbit"><span class="orbit-label">MONEY HAS A RHYTHM</span><strong class="orbit-number">∞</strong><span class="orbit-note">Bukan sekadar angka. Sebuah pola yang bisa kamu pahami.</span><svg class="wave-line" viewBox="0 0 400 90" aria-hidden="true"><path d="M0 46h55l15-34 17 60 17-30h50l18-25 18 36 20-7h190"></path></svg></div></div></section>
-<section class="story-band" id="cara-kerja"><div class="wide-shell story-grid"><div><span class="eyebrow">Satu alur yang utuh</span><h2>Dari transaksi menuju pemahaman.</h2></div><div class="feature-list"><article class="feature-item"><span class="kicker">01 / Kenali dirimu</span><h3>Financial Twin</h3><p>Financial Twin mempelajari pola dari transaksi dan kebiasaanmu untuk membentuk gambaran sederhana tentang bagaimana kamu berhubungan dengan uang. Bukan sekadar berapa yang kamu habiskan, tetapi kapan, untuk apa, dan pola apa yang terus berulang.</p></article><article class="feature-item"><span class="kicker">02 / Lebih dari sekadar angka</span><h3>AI Insight</h3><p>AI Insight mengubah data finansial menjadi cerita yang mudah dipahami. Temukan kebiasaan yang mungkin selama ini tidak kamu sadari, mulai dari pengeluaran impulsif hingga waktu tertentu ketika kamu cenderung lebih boros.</p></article><article class="feature-item"><span class="kicker">03 / Lihat kemungkinan</span><h3>What-If Simulator</h3><p>Coba ubah kebiasaanmu tanpa harus benar-benar mengubahnya terlebih dahulu. Lihat bagaimana keputusan kecil hari ini dapat memengaruhi kondisi finansialmu beberapa bulan ke depan.</p></article><article class="feature-item"><span class="kicker">04 / Saatnya bertindak</span><h3>Habit Intervention</h3><p>PulseFi mengenali ketika pola pengeluaranmu mulai berubah dan memberikan dorongan kecil pada saat yang tepat. Bukan menghakimi, hanya membantu membuat keputusan yang lebih sadar.</p></article><article class="feature-item"><span class="kicker">05 / Semua tercatat</span><h3>Transaction Tracker</h3><p>Catat dan pahami setiap pemasukan serta pengeluaranmu dalam satu tampilan yang sederhana. Angka-angka berubah menjadi konteks yang membantu kamu memahami kebiasaan sehari-hari.</p></article></div></div></section>
-<section id="onboarding" class="onboarding-wrap"><div class="onboarding-copy"><span class="eyebrow">Mulai dari sini</span><h1>Bangun cermin finansialmu.</h1><p class="lede">Isi sedikit konteks. PulseFi akan menyiapkan ruang pertama untuk membaca ritme uangmu.</p></div><div class="form-panel" data-reveal><h2>Profil awal</h2><p class="muted">Pilih data contoh untuk langsung menjelajah, atau mulai dengan data milikmu sendiri.</p><form id="onboarding-form"><div class="form-grid"><div class="field"><label for="ob-income">Pemasukan bulanan</label><input id="ob-income" type="number" min="0" placeholder="5000000" required></div><div class="field"><label for="ob-savings">Tabungan saat ini</label><input id="ob-savings" type="number" min="0" placeholder="3000000"></div><div class="field"><label for="ob-goal-name">Target utama</label><input id="ob-goal-name" type="text" placeholder="Dana darurat"></div><div class="field"><label for="ob-goal-target">Nominal target</label><input id="ob-goal-target" type="number" min="0" placeholder="10000000"></div><div class="field field-full"><label for="ob-goal-months">Target tercapai dalam (bulan)</label><input id="ob-goal-months" type="number" min="1" value="12"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit" data-mode="demo">Gunakan data contoh</button><button class="btn" type="submit" data-mode="own">Mulai dari kosong</button></div><p class="helper">Data disimpan hanya di browser ini melalui localStorage. Tidak ada akun atau server.</p></form></div></section></main><footer class="site-footer"><strong>PULSEFI</strong><span>Financial behavior mirror · Client-side by design</span></footer><script src="js/storage.js"></script><script src="js/app.js"></script><script src="js/onboarding.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulsefi</title>
+  <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
+<!-- Tailwind CSS (CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ink: '#14161A',
+        },
+      },
+    },
+  };
+</script>
+
+<!-- Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<!-- Custom styles (keyframes, glassmorphism, precise hero layout) -->
+<link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/stats.css">
+<link rel="stylesheet" href="css/features.css">
+<link rel="stylesheet" href="css/quote.css">
+<link rel="stylesheet" href="css/testimonial.css">
+<link rel="stylesheet" href="css/footer.css">
+</head>
+<body class="bg-white antialiased font-sans">
+
+  <!-- Floating pill nav — desktop only (hidden below 768px, see hero.css).
+       js/navbar.js toggles .scrolled once past the hero, swapping it to
+       dark-on-light. -->
+  <div class="floating-nav" id="floatingNav">
+    <nav class="navbar-glass" aria-label="Navigasi utama">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#tentang">Tentang</a></li>
+        <li><a href="#tujuan">Tujuan</a></li>
+        <li><a href="#testimoni">Testimoni</a></li>
+        <li><a href="login.html" class="nav-cta">Mulai</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Mobile sticky nav — fixed, lives outside .hero-shell so it isn't
+       clipped by its overflow:hidden. Hidden until scrolled past the
+       hero (same .scrolled class/threshold as #floatingNav above), then
+       stays pinned to the top. Only shown below 768px, see hero.css. -->
+  <div class="site-navbar" id="siteNavbar">
+    <div class="site-navbar-inner">
+      <a href="#home" class="logo" aria-label="PulseFi Home">
+        <img src="assets/pulsefi-logo-icon.svg" alt="PulseFi" class="logo-icon">
+      </a>
+      <button class="nav-burger" type="button" aria-label="Buka menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-menu" aria-label="Navigasi mobile (sticky)">
+      <a href="#home">Home</a>
+      <a href="#tentang">Tentang</a>
+      <a href="#tujuan">Tujuan</a>
+      <a href="#testimoni">Testimoni</a>
+      <a href="login.html" class="nav-cta">Mulai</a>
+    </nav>
+  </div>
+
+  <div class="hero-scroll-wrap">
+  <div class="page-pad">
+    <div class="hero-shell" id="home">
+
+      <!-- background curtain artwork -->
+      <img src="assets/hero-bg.svg" alt="" class="hero-bg" aria-hidden="true">
+
+      <div class="hero-content">
+
+        <!-- ============ NAVBAR (logo + mobile burger only — the desktop
+             pill lives in .floating-nav above, the mobile sticky bar
+             lives in #siteNavbar above) ============ -->
+        <header class="hero-nav-row">
+          <a href="#home" class="logo" aria-label="PulseFi Home">
+            <img src="assets/pulsefi-logo-icon.svg" alt="PulseFi" class="logo-icon">
+          </a>
+
+          <button class="nav-burger" type="button" aria-label="Buka menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </header>
+
+        <!-- mobile dropdown menu (for the in-hero burger above) -->
+        <nav class="mobile-menu" aria-label="Navigasi mobile">
+          <a href="#home">Home</a>
+          <a href="#tentang">Tentang</a>
+          <a href="#tujuan">Tujuan</a>
+          <a href="#testimoni">Testimoni</a>
+          <a href="login.html" class="nav-cta">Mulai</a>
+        </nav>
+
+        <!-- ============ HERO BODY ============ -->
+        <div class="hero-inner">
+
+          <!-- left: heading + CTA + user count -->
+          <div class="hero-copy">
+            <h1 class="hero-title">
+              Kebiasaan Baik, <br> Finansial Naik.
+            </h1>
+
+            <a href="login.html" class="hero-cta">
+              <span>Mulai Sekarang</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.33 8h9.34M8.67 3.33 13.33 8l-4.66 4.67" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+
+            <div class="hero-users">
+              <img src="assets/user-count.svg" alt="15 ribu+ pengguna aktif" class="user-count-img">
+            </div>
+          </div>
+
+          <!-- right: card stack + feature list -->
+          <div class="hero-visual">
+
+            <div class="card-stack">
+              <img src="assets/cc-1.svg" alt="" class="card card-1" aria-hidden="true">
+              <img src="assets/cc-2.svg" alt="Kartu PulseFi atas nama Ralph Edwards" class="card card-2">
+              <img src="assets/cc-3.svg" alt="Kartu PulseFi" class="card card-3">
+            </div>
+
+            <img src="assets/detail-hero.svg"
+                 alt="Kelola uang lebih cerdas, rencanakan masa depan, pahami pola pengeluaranmu"
+                 class="detail-hero-img">
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Frame overlay: a white matte with a notched window cut out,
+           painted the same white as the page background so it "erases"
+           the shell's square corners and leaves only the notched
+           window visible. Sits above absolutely everything else.
+           Hidden on mobile/tablet (<=1024px) — see hero.css. -->
+      <img src="assets/hero-frame.svg" alt="" class="hero-frame" aria-hidden="true">
+    </div>
+  </div>
+  </div>
+
+  <section class="stats-section" id="tentang">
+    <div class="stats-inner">
+      <div class="stats-heading">
+        <p class="stats-label">STATISTIK</p>
+        <h2 class="stats-title">Bukti Nyata</h2>
+      </div>
+
+              <div class="stats-cards">
+        <div class="stats-card stats-card-1">
+          <img src="assets/statistik-1.svg" alt="15.000 pengguna aktif — ribuan pengguna telah mulai membangun kebiasaan finansial yang lebih baik bersama PulseFi.">
+        </div>
+        <div class="stats-card stats-card-2">
+          <img src="assets/statistik-2.svg" alt="89% mayoritas pengguna terbantu">
+        </div>
+        <div class="stats-card stats-card-3">
+          <img src="assets/statistik-3.svg" alt="2,4 juta akumulasi penghematan yang pengguna capai">
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <section class="features-section" id="tujuan">
+    <div class="features-inner">
+
+      <div class="features-top">
+        <h2 class="features-title">Mengapa<br>PulseFi?</h2>
+        <p class="features-intro">
+          <span class="features-intro-dark">Tujuan kami adalah meningkatkan literasi finansial,</span>
+          <span class="features-intro-light">mempermudah kalian membangun masa depan.</span>
+        </p>
+      </div>
+
+      <!-- Rendered by js/features.js from js/features-data.js — no
+           per-feature markup lives here anymore. To add, remove, or
+           reorder a feature, edit js/features-data.js only. -->
+      <div class="features-list"></div>
+
+    </div>
+  </section>
+
+  <section class="quote-section">
+    <h2 class="quote-title">Uangmu sudah bercerita. <br> Mulai membacanya.</h2>
+    <img src="assets/quotes.svg" alt="" class="quote-img" aria-hidden="true">
+  </section>
+
+    <section class="testimonial-section" id="testimoni">
+    <div class="testimonial-inner">
+      <div class="testimonial-top">
+        <span class="testimonial-label">Testimoni</span>
+               <img src="assets/apostrophe.svg" alt="" class="testimonial-quote-icon" aria-hidden="true">
+      </div>
+
+      <blockquote class="testimonial-quote" id="testimonialQuote" aria-live="polite"></blockquote>
+
+      <div class="testimonial-divider"></div>
+
+      <div class="testimonial-bottom">
+        <div class="testimonial-person">
+          <div class="testimonial-avatar" id="testimonialAvatar"></div>
+          <div class="testimonial-person-info">
+            <span class="testimonial-name" id="testimonialName"></span>
+            <span class="testimonial-role" id="testimonialRole"></span>
+          </div>
+        </div>
+
+        <div class="testimonial-nav">
+          <button class="testimonial-arrow" id="testimonialPrev" type="button" aria-label="Testimoni sebelumnya">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3.5 5 8l5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="testimonial-arrow" id="testimonialNext" type="button" aria-label="Testimoni berikutnya">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5 11 8l-5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="page-pad">
+<footer class="site-footer">
+    <img class="footer-bg" src="assets/hero-bg.svg" alt="" aria-hidden="true" />
+    <div class="footer-content">
+      <p class="footer-copyright">© 2026 PulseFi. All rights reserved.</p>
+    </div>
+  </footer>
+  </div>
+  <script src="js/navbar.js"></script>
+  <script src="js/hero.js"></script>
+  <script src="js/stats.js" defer></script>
+  <script src="js/features-data.js"></script>
+  <script src="js/features.js" defer></script>
+  <script src="js/quote.js" defer></script>
+  <script src="js/testimonial.js" defer></script>
+</body>
+</html>

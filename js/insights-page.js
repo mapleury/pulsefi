@@ -31,53 +31,15 @@
     renderInsights(transactions, goals);
     renderInterventions(transactions, goals);
   }
-
-    function renderPulseCard(transactions, goals) {
+  function renderPulseCard(transactions, goals) {
     const result = PulseCalc.calculateFinancialScore(transactions, goals);
     document.getElementById("pulse-score").textContent = result.score;
     document.getElementById("pulse-status").textContent = result.label;
-    const pathEl = document.getElementById("pulse-wave-path");
-    drawWave(pathEl, result.score);
-    startPulseLoop(pathEl, result.score);
+    // Heartbeat speed/erratic-vs-steady behavior is driven entirely by the
+    // inline ECG script in insights.html, which watches #pulse-score via
+    // MutationObserver — setting textContent above is all this needs to do.
   }
 
-  // Continuous pulsing that reflects the real score: a low score pulses
-  // fast and erratically (unstable rhythm), a high score pulses slow and
-  // steady. Starts once the initial draw-in animation has finished.
-  function startPulseLoop(pathEl, score) {
-    if (!pathEl) return;
-    const clamped = Math.max(0, Math.min(100, Number(score) || 0));
-
-    // 0 -> 0.7s (fast), 100 -> 2.5s (slow) — linear interpolation
-    const duration = (0.7 + (clamped / 100) * 1.8).toFixed(2);
-    const animationName = clamped >= 55 ? "pulse-loop-steady" : "pulse-loop-erratic";
-
-    const drawInTotalMs = 1300 + 150; // matches draw-pulse's 1.3s duration + 0.15s delay
-    setTimeout(() => {
-      pathEl.style.animation = `${animationName} ${duration}s ease-in-out infinite`;
-    }, drawInTotalMs);
-  }
-
-  // Simple illustrative waveform, shaped by the real score (higher score
-  // = calmer/higher line, lower score = more jagged) — not random noise.
-  function drawWave(pathEl, score) {
-    if (!pathEl) return;
-    const amplitude = 10 + (100 - score) * 0.25; // lower score -> more jagged
-    const baseline = 45;
-    const points = [
-      [0, baseline],
-      [40, baseline - amplitude * 0.3],
-      [70, baseline + amplitude * 0.5],
-      [100, baseline - amplitude],
-      [130, baseline + amplitude * 0.2],
-      [170, baseline - amplitude * 0.6],
-      [220, baseline],
-      [260, baseline - amplitude * 0.4],
-      [300, baseline],
-    ];
-    const d = points.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
-    pathEl.setAttribute("d", d);
-  }
 
   function renderTwin(transactions) {
     const twin = PulseCalc.classifyFinancialTwin(transactions);

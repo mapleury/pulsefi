@@ -1,67 +1,108 @@
-// PulseFi — feature accordion: hover-to-expand on desktop, tap-to-toggle on touch.
+// PulseFi — "Mengapa PulseFi?" feature accordion.
+// Renders each item from window.PULSEFI_FEATURES (features-data.js)
+// into .features-list, then wires up the accordion open/close and the
+// scroll-in entrance animation. No per-feature markup lives in the HTML.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const items = document.querySelectorAll('.feature-item');
-  if (!items.length) return;
+  const list = document.querySelector('.features-list');
+  const items = window.PULSEFI_FEATURES;
+  if (!list || !Array.isArray(items)) return;
 
-  // Blur-in reveal, staggered one by one, plays once per item as it scrolls into view.
-  const revealObserver = new IntersectionObserver(
+  list.innerHTML = items.map((item, index) => `
+    <div class="feature-item" data-index="${index + 1}">
+      <div class="feature-number">${item.number}</div>
+      <div class="feature-header" tabindex="0" role="button" aria-expanded="false">
+        <span class="feature-eyebrow">${item.eyebrow}</span>
+        <span class="feature-category">${item.category}</span>
+      </div>
+      <div class="feature-expand">
+        <div class="feature-expand-inner">
+          <div class="feature-image">
+            <img src="${item.image}" alt="${item.imageAlt}">
+          </div>
+          <div class="feature-text">
+            <p class="feature-headline">${item.headline}</p>
+            <div class="feature-stat">
+              <span class="feature-stat-number">${item.statNumber}</span>
+              <span class="feature-stat-label">${item.statLabel}</span>
+            </div>
+            <p class="feature-desc">${item.desc}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const featureItems = list.querySelectorAll('.feature-item');
+
+  // Real mouse + hover-capable devices get hover-to-open (desktop).
+  // Touch devices (mobile/tablet, no hover) get click/tap instead.
+  const hoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  // --- accordion: one open at a time ---
+  const openItem = (item, header) => {
+    featureItems.forEach((other) => {
+      other.classList.remove('active');
+      const otherHeader = other.querySelector('.feature-header');
+      if (otherHeader) otherHeader.setAttribute('aria-expanded', 'false');
+    });
+    item.classList.add('active');
+    header.setAttribute('aria-expanded', 'true');
+  };
+
+  featureItems.forEach((item) => {
+    const header = item.querySelector('.feature-header');
+    if (!header) return;
+
+    const toggleOnClick = () => {
+      const isActive = item.classList.contains('active');
+      if (isActive) {
+        item.classList.remove('active');
+        header.setAttribute('aria-expanded', 'false');
+      } else {
+        openItem(item, header);
+      }
+    };
+
+    // Click/tap always works (covers touch devices, and desktop users
+    // who click instead of hovering).
+    header.addEventListener('click', () => {
+      if (!hoverQuery.matches) toggleOnClick();
+    });
+
+    // Hover only binds on real mouse devices.
+    header.addEventListener('mouseenter', () => {
+      if (hoverQuery.matches) openItem(item, header);
+    });
+
+    // Keyboard access always works, regardless of device.
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleOnClick();
+      }
+    });
+  });
+
+  // open the first item by default
+  if (featureItems[0]) {
+    featureItems[0].classList.add('active');
+    const firstHeader = featureItems[0].querySelector('.feature-header');
+    if (firstHeader) firstHeader.setAttribute('aria-expanded', 'true');
+  }
+
+  // --- scroll-in entrance, one by one ---
+  const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const item = entry.target;
-        const index = Number(item.dataset.index) || 1;
-        item.style.transitionDelay = `${(index - 1) * 0.12}s`;
-        item.classList.add('in-view');
-        revealObserver.unobserve(item);
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
       });
     },
     { threshold: 0.2 }
   );
 
-  items.forEach((item) => revealObserver.observe(item));
-
-  const supportsHover = window.matchMedia('(hover: hover)').matches;
-
-  const setActive = (target) => {
-    items.forEach((item) => {
-      const isTarget = item === target;
-      item.classList.toggle('active', isTarget);
-      item.querySelector('.feature-header')?.setAttribute('aria-expanded', String(isTarget));
-    });
-  };
-
-  const clearActive = () => {
-    items.forEach((item) => {
-      item.classList.remove('active');
-      item.querySelector('.feature-header')?.setAttribute('aria-expanded', 'false');
-    });
-  };
-
-  items.forEach((item) => {
-    const header = item.querySelector('.feature-header');
-    if (!header) return;
-
-    if (supportsHover) {
-      item.addEventListener('mouseenter', () => setActive(item));
-      item.addEventListener('mouseleave', () => item.classList.remove('active'));
-    }
-
-    // click/tap toggles regardless of hover support, so keyboard + touch users can open it too
-    header.addEventListener('click', () => {
-      const isActive = item.classList.contains('active');
-      if (isActive) {
-        clearActive();
-      } else {
-        setActive(item);
-      }
-    });
-
-    header.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        header.click();
-      }
-    });
-  });
+  featureItems.forEach((item) => observer.observe(item));
 });

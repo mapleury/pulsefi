@@ -185,7 +185,11 @@
     <div class="goal-modal-backdrop" data-close></div>
 
     <div class="goal-modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-name" tabindex="-1">
-      <button class="goal-modal-close" type="button" data-close aria-label="Tutup">×</button>
+      <button class="goal-close-btn" type="button" data-close aria-label="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
 
       <span class="goal-modal-date" id="modal-date">—</span>
       <h2 class="goal-modal-name" id="modal-name">Target</h2>
@@ -195,26 +199,15 @@
         <div class="goal-track"><div class="goal-fill" id="modal-fill"></div></div>
       </div>
 
-      <div class="goal-panel goal-panel-lg">
-        <img class="goal-panel-bg" src="assets/goal-bg.svg" alt="">
-        <p class="goal-amounts">
-          <strong id="modal-current">Rp.0</strong>
-          <span id="modal-target">/ 0</span>
-        </p>
-      </div>
-
-      <dl class="goal-stats">
-        <div><dt>Sisa</dt><dd id="modal-remaining">Rp0</dd></div>
-        <div><dt>Sisa waktu</dt><dd id="modal-months">—</dd></div>
-        <div><dt>Perlu ditabung / bulan</dt><dd id="modal-monthly">Rp0</dd></div>
-      </dl>
+      <p class="goal-pace" id="modal-pace"></p>
 
       <form class="goal-topup" id="goal-topup-form">
-        <label for="goal-topup">Tambah dana</label>
-        <div class="goal-topup-row">
-          <input id="goal-topup" type="number" min="1" step="1000" placeholder="50000" inputmode="numeric">
-          <button type="submit">Tambah</button>
-        </div>
+        <button class="goal-round-btn goal-round-dark" type="submit" aria-label="Tambah dana ke target ini">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+        </button>
+        <input id="goal-topup" type="number" min="1" step="1000" inputmode="numeric" placeholder="Tambah dana (Rp)" aria-label="Nominal dana yang ditambahkan">
       </form>
 
       <form class="goal-edit" id="goal-edit-form" hidden>
@@ -236,13 +229,43 @@
             <input id="edit-current" type="number" min="0" step="1000">
           </div>
         </div>
-        <button class="goal-edit-save" type="submit">Simpan perubahan</button>
       </form>
 
       <div class="goal-modal-foot">
-        <button type="button" id="modal-edit-toggle" class="goal-link">Ubah target</button>
-        <button type="button" id="modal-delete" class="goal-link goal-link-danger">Hapus target</button>
+        <button type="button" id="modal-edit-toggle" class="goal-round-btn goal-round-ghost" aria-label="Ubah target" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+          </svg>
+        </button>
+        <button type="button" id="modal-delete" class="goal-round-btn goal-round-ghost" aria-label="Hapus target">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4h8v2"></path>
+            <path d="M19 6l-1 14H6L5 6"></path>
+            <path d="M10 11v6M14 11v6"></path>
+          </svg>
+        </button>
+        <button type="button" id="modal-primary" class="goal-pill-btn">Selesai</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Delete confirmation -->
+  <div class="goal-modal goal-modal-confirm" id="delete-modal" hidden>
+    <div class="goal-modal-backdrop" data-close-confirm></div>
+
+    <div class="goal-confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-title" tabindex="-1">
+      <button class="goal-close-btn" type="button" data-close-confirm aria-label="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+
+      <h2 class="goal-confirm-title" id="delete-title">Hapus Tabungan ini?</h2>
+
+      <button type="button" class="goal-pill-btn goal-pill-ghost" id="delete-cancel">Tidak</button>
+      <button type="button" class="goal-pill-btn" id="delete-confirm">Hapus</button>
     </div>
   </div>
 

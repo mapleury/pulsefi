@@ -286,9 +286,9 @@
 .goal-amounts strong { font-weight: 600; color: var(--goal-ink); }
 .goal-amounts span { font-weight: 400; color: var(--goal-muted); }
 
-/* ---------------- detail modal ---------------- */
+/* ---------------- modals ---------------- */
 
-.goal-modal { position: fixed; inset: 0; z-index: 80; }
+.goal-modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; }
 .goal-modal[hidden] { display: none; }
 
 .goal-modal-backdrop {
@@ -303,15 +303,11 @@
 
 @keyframes modal-fade { to { opacity: 1; } }
 
-.goal-modal-panel {
+.goal-modal-panel,
+.goal-confirm-panel {
   position: relative;
-  width: min(480px, calc(100% - 32px));
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-  margin: 24px auto;
-  padding: 28px 28px 24px;
-  border-radius: 30px;
-  background: linear-gradient(180deg, #f1f1f2 0%, #e8e8ea 100%);
+  background: #fff;
+  border-radius: 38px;
   box-shadow: 0 40px 90px -30px rgba(16, 15, 26, 0.55);
   opacity: 0;
   transform: translateY(34px);
@@ -319,7 +315,15 @@
   animation: goal-rise 0.55s cubic-bezier(0.22, 0.85, 0.28, 1) 0.05s forwards;
 }
 
-.goal-modal.is-closing .goal-modal-panel { animation: goal-sink 0.25s ease forwards; }
+.goal-modal-panel {
+  width: min(430px, calc(100% - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 34px 34px 30px;
+}
+
+.goal-modal.is-closing .goal-modal-panel,
+.goal-modal.is-closing .goal-confirm-panel { animation: goal-sink 0.25s ease forwards; }
 .goal-modal.is-closing .goal-modal-backdrop { animation: modal-fade 0.25s ease reverse forwards; }
 
 @keyframes goal-sink {
@@ -327,121 +331,161 @@
   to { opacity: 0; transform: translateY(18px); filter: blur(10px); }
 }
 
-.goal-modal-close {
+.goal-close-btn {
   position: absolute;
-  top: 20px;
-  right: 22px;
-  width: 34px;
-  height: 34px;
+  top: 26px;
+  right: 28px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: rgba(25, 23, 41, 0.07);
-  font-size: 20px;
-  line-height: 1;
-  color: #4a4a54;
+  background: none;
+  color: #b4b4bd;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.goal-modal-close:hover { background: rgba(25, 23, 41, 0.14); }
+.goal-close-btn svg { width: 100%; height: 100%; display: block; }
+.goal-close-btn:hover { color: #6c6c78; transform: rotate(90deg); }
 
-.goal-modal-date { font-size: 14px; color: #a3a3ab; }
+.goal-modal-date { font-size: 15px; color: #a3a3ab; letter-spacing: -0.01em; }
 
 .goal-modal-name {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 400;
-  font-size: 38px;
-  line-height: 1.1;
-  margin: 2px 0 14px;
+  font-size: 44px;
+  line-height: 1.05;
+  margin: 4px 0 16px;
   padding-right: 40px;
   overflow-wrap: anywhere;
 }
 
-.goal-progress-lg .goal-track { height: 8px; }
-.goal-panel-lg { margin-top: 20px; }
+.goal-progress-lg .goal-track { height: 9px; }
+.goal-progress-lg .goal-percent { font-size: 19px; }
 
-.goal-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin: 22px 0 20px;
+/* "100 Hari sebelum deadline, sisihkan Rp.30.000 perminggu." */
+.goal-pace {
+  margin: 22px 0 24px;
+  font-size: 17px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: #101010;
 }
 
-.goal-stats div { display: flex; flex-direction: column; gap: 5px; }
-.goal-stats dt { font-size: 11.5px; color: #8b8b95; letter-spacing: -0.01em; }
-.goal-stats dd { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
-
-.goal-topup label { display: block; font-size: 11.5px; color: #8b8b95; margin-bottom: 8px; }
-
-.goal-topup-row { display: flex; gap: 10px; }
-
-.goal-topup-row input {
-  flex: 1;
-  height: 44px;
-  border: 0;
-  border-radius: 14px;
-  background: #fff;
-  padding: 0 14px;
-  font: inherit;
-  font-size: 14px;
-  outline: none;
-  box-shadow: inset 0 0 0 1px rgba(25, 23, 41, 0.08);
+.goal-pace em {
+  font-style: italic;
+  font-weight: 500;
 }
 
-.goal-topup-row input:focus-visible { box-shadow: inset 0 0 0 2px #6d55e0; }
+.goal-pace strong {
+  font-weight: 700;
+  color: #241f4d;
+}
 
-.goal-topup-row button,
-.goal-edit-save {
-  height: 44px;
-  padding: 0 22px;
+/* top-up row: dark round + button then the field */
+.goal-topup { display: flex; align-items: center; gap: 14px; }
+.goal-topup[hidden] { display: none; }
+
+.goal-round-btn {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0;
   border: 0;
   border-radius: 999px;
-  background: var(--goal-dark);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease, color 0.25s ease;
+}
+
+.goal-round-btn svg { width: 22px; height: 22px; }
+.goal-round-btn:active { transform: scale(0.94); }
+
+.goal-round-dark { background: var(--goal-dark); color: #fff; box-shadow: 0 0 0 4px #ededee; }
+.goal-round-dark:hover { background: #2a2647; }
+
+.goal-round-ghost { background: #dcdce0; color: #3b3b45; }
+.goal-round-ghost:hover { background: #cfcfd5; }
+.goal-round-ghost[aria-pressed="true"] { background: var(--goal-dark); color: #fff; }
+
+.goal-topup input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: 0;
+  border-radius: 18px;
+  background: #d9d9de;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 15px;
+  color: #1c1c25;
+  outline: none;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.goal-topup input::placeholder { color: #8b8b95; }
+.goal-topup input:focus-visible { background: #e4e4e8; box-shadow: 0 0 0 2px #6d55e0; }
+
+/* edit form (revealed by the pencil) */
+.goal-edit { margin-top: 20px; }
+.goal-edit[hidden] { display: none; }
+.goal-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.goal-field-light label { color: #8b8b95; }
+.goal-field-light input { background: #ededf0; box-shadow: inset 0 0 0 1px rgba(25, 23, 41, 0.06); }
+.goal-field-light input:focus-visible { background: #f5f5f7; box-shadow: 0 0 0 2px #6d55e0; }
+
+.goal-modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.goal-pill-btn {
+  flex: 1;
+  height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: #171717;
   color: #fff;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
   transition: background 0.25s ease, transform 0.15s ease;
 }
 
-.goal-topup-row button:hover,
-.goal-edit-save:hover { background: #2a2647; }
-.goal-topup-row button:active,
-.goal-edit-save:active { transform: scale(0.98); }
+.goal-pill-btn:hover { background: #2c2c2c; }
+.goal-pill-btn:active { transform: scale(0.985); }
 
-.goal-edit { margin-top: 20px; }
-.goal-edit[hidden] { display: none; }
-.goal-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin-bottom: 16px; }
-.goal-edit-save { width: 100%; }
+.goal-pill-ghost {
+  background: transparent;
+  color: #101010;
+  border: 1px solid #c9c9ce;
+}
 
-.goal-field-light label { color: #8b8b95; }
-.goal-field-light input { background: #fff; box-shadow: inset 0 0 0 1px rgba(25, 23, 41, 0.08); }
+.goal-pill-ghost:hover { background: #f2f2f4; }
 
-.goal-modal-foot {
+/* delete confirmation */
+.goal-confirm-panel {
+  width: min(400px, calc(100% - 32px));
+  padding: 34px 30px 30px;
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(25, 23, 41, 0.08);
+  flex-direction: column;
+  gap: 14px;
 }
 
-.goal-link {
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 13.5px;
-  color: #4a4a54;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.goal-confirm-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 8px 0 12px;
+  padding-right: 40px;
 }
 
-.goal-link:hover { color: var(--goal-ink); }
-.goal-link-danger { color: #b3413d; }
-.goal-link-danger:hover { color: #8d302d; }
+.goal-confirm-panel .goal-pill-btn { flex: none; width: 100%; height: 56px; }
 
 /* ---------------- responsive ---------------- */
 
@@ -455,7 +499,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-rise],
-  .goal-modal-panel {
+  .goal-modal-panel,
+  .goal-confirm-panel {
     animation: none !important;
     opacity: 1;
     transform: none;

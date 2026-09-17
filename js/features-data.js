@@ -1,0 +1,61 @@
+// PulseFi — "Mengapa PulseFi?" feature accordion content.
+// Edit this array to add/remove/reorder feature items — features.js
+// renders the markup from this data, so no HTML needs to be touched.
+
+window.PULSEFI_FEATURES = [
+  {
+    number: '01',
+    eyebrow: 'Financial Twin',
+    category: 'Kenali Dirimu',
+    image: 'assets/feature-1.svg',
+    imageAlt: 'Ilustrasi Financial Twin',
+    headline: 'Uangmu punya pola. Kenali cara kerjanya.',
+    statNumber: '92%',
+    statLabel: 'pengguna lebih memahami kebiasaan finansialnya',
+    desc: 'Financial Twin membaca pola transaksi untuk menunjukkan bagaimana, kapan, dan mengapa kamu menggunakan uang.',
+  },
+  {
+    number: '02',
+    eyebrow: 'AI Insight',
+    category: 'Lebih dari Sekadar Angka',
+    image: 'assets/feature-2.svg',
+    imageAlt: 'Ilustrasi AI Insight',
+    headline: 'Temukan pola yang sering terlewat.',
+    statNumber: '87%',
+    statLabel: 'pengguna menemukan pola baru dalam pengeluaran',
+    desc: 'AI Insight mengubah data menjadi pemahaman tentang kebiasaan, pengeluaran impulsif, dan momen ketika kamu paling boros.',
+  },
+  {
+    number: '03',
+    eyebrow: 'What-If Simulator',
+    category: 'Lihat Kemungkinan',
+    image: 'assets/feature-3.svg',
+    imageAlt: 'Ilustrasi What-If Simulator',
+    headline: 'Uji keputusan sebelum menjalaninya.',
+    statNumber: '84%',
+    statLabel: 'pengguna lebih yakin mengambil keputusan finansial',
+    desc: 'Simulasikan perubahan kecil seperti mengurangi jajan atau menambah tabungan, lalu lihat dampaknya di masa depan.',
+  },
+  {
+    number: '04',
+    eyebrow: 'Habit Intervention',
+    category: 'Saatnya Bertindak',
+    image: 'assets/feature-4.svg',
+    imageAlt: 'Ilustrasi Habit Intervention',
+    headline: 'Ubah kebiasaan, satu langkah kecil.',
+    statNumber: '79%',
+    statLabel: 'pengguna berhasil memperbaiki setidaknya satu kebiasaan',
+    desc: 'PulseFi mengenali perubahan pola dan memberi dorongan yang relevan agar kamu bisa mengambil keputusan dengan lebih sadar.',
+  },
+  {
+    number: '05',
+    eyebrow: 'Transaction Tracker',
+    category: 'Semua Tercatat',
+    image: 'assets/feature-5.svg',
+    imageAlt: 'Ilustrasi Transaction Tracker',
+    headline: 'Semua transaksi, satu gambaran utuh.',
+    statNumber: '95%',
+    statLabel: 'pengguna lebih mudah memantau pengeluaran',
+    desc: 'Catat pemasukan dan pengeluaran dalam satu tampilan sederhana untuk memahami ke mana uangmu pergi.',
+  },
+];

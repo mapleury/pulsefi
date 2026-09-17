@@ -109,6 +109,53 @@ const PulseGoalStore = (function () {
     return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
   }
 
+  function rupiahDot(amount) {
+    return "Rp." + plainNumber(amount);
+  }
+
+  function midnight(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  // The line the design asks for: "100 Hari sebelum deadline, sisihkan
+  // Rp.30.000 perminggu." Days are counted from today to the deadline,
+  // the weekly figure is the remaining amount divided by the whole weeks
+  // left, rounded UP to the nearest Rp1.000 so the pace actually lands on
+  // the target rather than just under it.
+  function paceCopy(goal, proj) {
+    if (proj.remaining <= 0) {
+      return "Target ini sudah <strong>tercapai penuh.</strong> Kerja bagus.";
+    }
+    if (!goal.targetDate) {
+      return "Belum ada tenggat waktu. Sisa <strong>" + rupiahDot(proj.remaining) + "</strong> lagi untuk menyelesaikannya.";
+    }
+
+    const due = midnight(new Date(goal.targetDate));
+    if (isNaN(due.getTime())) {
+      return "Sisa <strong>" + rupiahDot(proj.remaining) + "</strong> lagi untuk menyelesaikan target ini.";
+    }
+
+    const days = Math.round((due - midnight(new Date())) / 86400000);
+
+    if (days < 0) {
+      return "<em>" + Math.abs(days) + " Hari</em> lewat dari deadline, sisa <strong>" +
+        rupiahDot(proj.remaining) + "</strong> belum terkumpul.";
+    }
+    if (days === 0) {
+      return "<em>Hari ini</em> deadline-nya, sisa <strong>" + rupiahDot(proj.remaining) + "</strong> belum terkumpul.";
+    }
+    if (days < 7) {
+      return "<em>" + days + " Hari</em> sebelum deadline, sisihkan <strong>" +
+        rupiahDot(proj.remaining) + "</strong> lagi.";
+    }
+
+    const perWeek = Math.ceil(proj.remaining / (days / 7) / 1000) * 1000;
+    return "<em>" + days + " Hari</em> sebelum deadline, sisihkan <strong>" +
+      rupiahDot(perWeek) + " perminggu.</strong>";
+  }
+
   function projectionFor(goal) {
     if (typeof PulseCalc !== "undefined" && PulseCalc.calculateGoalProjection) {
       return PulseCalc.calculateGoalProjection(goal);
@@ -249,8 +296,7 @@ const PulseGoalStore = (function () {
     els.modal.classList.remove("is-closing");
     els.modal.hidden = false;
     document.body.style.overflow = "hidden";
-    els.editForm.hidden = true;
-    els.editToggle.textContent = "Ubah target";
+    setEditMode(false);
 
     requestAnimationFrame(() => {
       els.modalFill.style.width = els.modalFill.dataset.width + "%";
@@ -268,19 +314,27 @@ const PulseGoalStore = (function () {
     els.modalPercent.textContent = percent + "%";
     els.modalFill.dataset.width = percent;
     els.modalFill.style.width = "0%";
-    els.modalCurrent.textContent = "Rp." + plainNumber(proj.current);
-    els.modalTarget.textContent = "/ " + plainNumber(proj.target);
-    els.modalRemaining.textContent = rupiah(proj.remaining);
-    els.modalMonths.textContent = goal.targetDate
-      ? (proj.remaining === 0 ? "Tercapai" : proj.months + " bulan")
-      : "Tanpa tenggat";
-    els.modalMonthly.textContent = proj.remaining === 0 ? "Selesai" : rupiah(proj.requiredMonthly);
+    els.modalPace.innerHTML = paceCopy(goal, proj);
 
     els.editName.value = goal.name || "";
     els.editTarget.value = Number(goal.targetAmount) || 0;
     els.editDate.value = goal.targetDate || "";
     els.editCurrent.value = Number(goal.currentAmount) || 0;
     els.topupInput.value = "";
+  }
+
+  function setEditMode(on) {
+    els.editForm.hidden = !on;
+    els.topupForm.hidden = on;
+    els.editToggle.setAttribute("aria-pressed", on ? "true" : "false");
+    els.editToggle.setAttribute("aria-label", on ? "Batalkan perubahan" : "Ubah target");
+    els.primary.textContent = on ? "Simpan Perubahan" : "Selesai";
+    if (on) els.editName.focus();
+  }
+
+  function refreshModal(id) {
+    fillModal(PulseGoalStore.find(id));
+    requestAnimationFrame(() => (els.modalFill.style.width = els.modalFill.dataset.width + "%"));
   }
 
   function closeModal() {
@@ -309,8 +363,7 @@ const PulseGoalStore = (function () {
     const next = Math.min(target, (Number(goal.currentAmount) || 0) + amount);
     PulseGoalStore.update(goal.id, { currentAmount: next });
 
-    fillModal(PulseGoalStore.find(goal.id));
-    requestAnimationFrame(() => (els.modalFill.style.width = els.modalFill.dataset.width + "%"));
+    refreshModal(goal.id);
     notify("Dana ditambahkan ke " + (goal.name || "target") + ".", "success");
     render();
     window.dispatchEvent(new CustomEvent("pulsefi:goals-changed"));
@@ -341,21 +394,35 @@ const PulseGoalStore = (function () {
       targetDate: els.editDate.value,
     });
 
-    fillModal(PulseGoalStore.find(goal.id));
-    requestAnimationFrame(() => (els.modalFill.style.width = els.modalFill.dataset.width + "%"));
-    els.editForm.hidden = true;
-    els.editToggle.textContent = "Ubah target";
+    refreshModal(goal.id);
+    setEditMode(false);
     notify("Target diperbarui.", "success");
     render();
     window.dispatchEvent(new CustomEvent("pulsefi:goals-changed"));
   }
 
+  function openDeleteConfirm() {
+    if (!PulseGoalStore.find(openGoalId)) return;
+    els.deleteModal.classList.remove("is-closing");
+    els.deleteModal.hidden = false;
+    requestAnimationFrame(() => els.deleteModal.querySelector(".goal-confirm-panel").focus());
+  }
+
+  function closeDeleteConfirm() {
+    if (els.deleteModal.hidden) return;
+    els.deleteModal.classList.add("is-closing");
+    setTimeout(() => {
+      els.deleteModal.hidden = true;
+      els.deleteModal.classList.remove("is-closing");
+    }, 240);
+  }
+
   function handleDelete() {
     const goal = PulseGoalStore.find(openGoalId);
     if (!goal) return;
-    if (!window.confirm('Hapus target "' + (goal.name || "tanpa nama") + '"?')) return;
 
     PulseGoalStore.remove(goal.id);
+    closeDeleteConfirm();
     closeModal();
     notify("Target dihapus.", "default");
     render();
@@ -379,11 +446,10 @@ const PulseGoalStore = (function () {
     els.modalName = document.getElementById("modal-name");
     els.modalPercent = document.getElementById("modal-percent");
     els.modalFill = document.getElementById("modal-fill");
-    els.modalCurrent = document.getElementById("modal-current");
-    els.modalTarget = document.getElementById("modal-target");
-    els.modalRemaining = document.getElementById("modal-remaining");
-    els.modalMonths = document.getElementById("modal-months");
-    els.modalMonthly = document.getElementById("modal-monthly");
+    els.modalPace = document.getElementById("modal-pace");
+    els.primary = document.getElementById("modal-primary");
+
+    els.deleteModal = document.getElementById("delete-modal");
 
     els.topupForm = document.getElementById("goal-topup-form");
     els.topupInput = document.getElementById("goal-topup");
@@ -394,27 +460,39 @@ const PulseGoalStore = (function () {
     els.editCurrent = document.getElementById("edit-current");
     els.editToggle = document.getElementById("modal-edit-toggle");
     els.deleteBtn = document.getElementById("modal-delete");
+    els.deleteCancel = document.getElementById("delete-cancel");
+    els.deleteConfirm = document.getElementById("delete-confirm");
   }
 
   function bind() {
     els.form.addEventListener("submit", handleCreate);
     els.topupForm.addEventListener("submit", handleTopup);
     els.editForm.addEventListener("submit", handleEdit);
-    els.deleteBtn.addEventListener("click", handleDelete);
+    els.deleteBtn.addEventListener("click", openDeleteConfirm);
+    els.deleteCancel.addEventListener("click", closeDeleteConfirm);
+    els.deleteConfirm.addEventListener("click", handleDelete);
 
-    els.editToggle.addEventListener("click", () => {
-      const showing = els.editForm.hidden;
-      els.editForm.hidden = !showing;
-      els.editToggle.textContent = showing ? "Tutup ubah target" : "Ubah target";
-      if (showing) els.editName.focus();
+    els.editToggle.addEventListener("click", () => setEditMode(els.editForm.hidden));
+
+    // The dark pill is "Selesai" while viewing and "Simpan Perubahan"
+    // while editing, so it always does the obvious thing.
+    els.primary.addEventListener("click", () => {
+      if (els.editForm.hidden) closeModal();
+      else els.editForm.requestSubmit();
     });
 
     els.modal.querySelectorAll("[data-close]").forEach((el) => {
       el.addEventListener("click", closeModal);
     });
 
+    els.deleteModal.querySelectorAll("[data-close-confirm]").forEach((el) => {
+      el.addEventListener("click", closeDeleteConfirm);
+    });
+
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeModal();
+      if (e.key !== "Escape") return;
+      if (!els.deleteModal.hidden) closeDeleteConfirm();
+      else closeModal();
     });
 
     // Sidebar collapse, same behaviour as the other pages. Skipped when
