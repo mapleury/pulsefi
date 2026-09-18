@@ -1,6 +1,4 @@
-<div align="center">
-
-<div align="center"> <img src="assets/pulsefi-title.svg" alt="PulseFi" width="800"/>
+<img src="assets/pulsefi-title.svg" alt="PulseFi" width="800"/>
 
 ### Kebiasaan Baik, Finansial Naik
 
@@ -9,8 +7,6 @@
 [![Status](https://img.shields.io/badge/status-prototype-purple)](#13-keterbatasan-teknis-saat-ini)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Made with](https://img.shields.io/badge/made%20with-HTML%20%7C%20CSS%20%7C%20JS-black)](#teknologi)
-
-</div>
 
 ---
 
@@ -40,7 +36,7 @@
 
 ## Tentang Proyek
 
-<div align="center"> <img src="assets/pulsefi-mockup.svg" alt="PulseFi Mockup" width="800"/> </div>
+<img src="assets/pulsefi-mockup.svg" alt="PulseFi Mockup" width="800"/>
 
 **PulseFi** adalah aplikasi *personal finance* dan *habit-tracking* berbasis browser yang bertujuan membantu pengguna mengelola keuangan pribadi mereka secara lebih sadar dan konsisten. Antarmuka aplikasi sepenuhnya menggunakan Bahasa Indonesia.
 
@@ -651,8 +647,4 @@ Proyek ini dilisensikan di bawah [MIT License](LICENSE) — lihat file LICENSE u
 
 ---
 
-<div align="center">
-
 **PulseFi** — Kebiasaan Baik, Finansial Naik
-
-</div>
