@@ -1,6 +1,6 @@
 <div align="center">
 
-# PulseFi
+<div align="center"> <img src="assets/pulsefi-title.svg" alt="PulseFi" width="800"/>
 
 ### Kebiasaan Baik, Finansial Naik
 
@@ -39,6 +39,8 @@
 ---
 
 ## Tentang Proyek
+
+<div align="center"> <img src="assets/pulsefi-mockup.svg" alt="PulseFi Mockup" width="800"/> </div>
 
 **PulseFi** adalah aplikasi *personal finance* dan *habit-tracking* berbasis browser yang bertujuan membantu pengguna mengelola keuangan pribadi mereka secara lebih sadar dan konsisten. Antarmuka aplikasi sepenuhnya menggunakan Bahasa Indonesia.
 
