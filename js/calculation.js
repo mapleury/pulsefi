@@ -340,3 +340,5 @@ const PulseCalc = (function () {
     monthlyOverviewSeries,
   };
 })();
+
+// up to 300 line

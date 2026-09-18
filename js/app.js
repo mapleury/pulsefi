@@ -1,5 +1,3 @@
-
-
 const PulseUtils = (function () {
   function formatCurrency(amount) {
     const n = Math.round(Number(amount) || 0);
@@ -90,10 +88,14 @@ const PulseUtils = (function () {
       });
     }
 
-    const path = window.location.pathname.split("/").pop() || "dashboard.html";
+    let path = window.location.pathname;
+    if (!path.endsWith("/")) path += "/";
+    if (path === "/") path = "/dashboard/";
+    
     document.querySelectorAll(".nav-links a").forEach((a) => {
-      const href = a.getAttribute("href");
-      if (href === path) a.classList.add("nav-active");
+      let href = a.getAttribute("href");
+      if (href && !href.startsWith("/")) href = "/" + href;
+      if (href === path || href + "/" === path) a.classList.add("nav-active");
     });
   }
 
@@ -125,7 +127,7 @@ const PulseUtils = (function () {
 
   function redirectIfNeedsOnboarding() {
     if (requiresOnboarding()) {
-      window.location.href = "index.html#onboarding";
+      window.location.href = "/#onboarding";
       return true;
     }
     return false;
