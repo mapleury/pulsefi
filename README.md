@@ -88,7 +88,7 @@ Charts         : Custom chart rendering (chart.js — modul internal proyek)
 
 ## 1. Landing Page
 
-**File:** `index.html`
+**Folder:** `index.html`
 
 Landing page bersifat promosional dan **tidak terhubung ke backend apa pun**.
 
@@ -124,7 +124,7 @@ Landing page bersifat promosional dan **tidak terhubung ke backend apa pun**.
 
 ## 2. Login dan Signup
 
-**File:** `login.html`
+**Folder:** `login.html`
 
 ### Fitur
 
@@ -155,7 +155,7 @@ Ini **bukan sistem autentikasi sungguhan**. Akun disimpan langsung di browser st
 
 ## 3. Dashboard
 
-**File:** `dashboard.html`
+**Folder:** `dashboard.html`
 
 Halaman utama setelah login, menampilkan ringkasan kondisi finansial pengguna.
 
@@ -196,7 +196,7 @@ Animasi *financial pulse* akan **berdetak lebih cepat saat skor rendah** dan **l
 
 ## 4. Transactions
 
-**File:** `transactions.html`
+**Folder:** `transactions.html`
 
 ### Fitur
 
@@ -252,7 +252,7 @@ Setiap transaksi disimpan dengan struktur berikut:
 
 ## 5. Savings Goals
 
-**File:** `goals.html`
+**Folder:** `goals.html`
 
 ### Fitur
 
@@ -291,7 +291,7 @@ Setiap transaksi disimpan dengan struktur berikut:
 
 ## 6. Financial Insights
 
-**File:** `insights.html`
+**Folder:** `insights.html`
 
 Halaman insight menampilkan analisis mendalam terhadap perilaku finansial pengguna, sepenuhnya **berbasis aturan (rule-based)** tanpa layanan atau API AI eksternal.
 
@@ -380,7 +380,7 @@ Modal akan ditutup untuk hari tersebut ketika pengguna:
 
 ## 8. What-If Simulator
 
-**File:** `simulator.html`
+**Folder:** `simulator.html`
 
 Simulator ini menggabungkan pelacakan kebiasaan dengan simulasi finansial, membantu pengguna membandingkan perilaku finansial saat ini dengan skenario hipotetis.
 
@@ -410,7 +410,7 @@ Logika utama berada di `js/simulator.js`.
 
 ## 9. Shared Storage
 
-**File:** `storage.js`
+**Folder:** `storage.js`
 
 Lapisan data pusat (central data layer) yang mengelola seluruh data aplikasi, meliputi:
 
@@ -431,7 +431,7 @@ Lapisan data pusat (central data layer) yang mengelola seluruh data aplikasi, me
 
 ## 10. Shared Utilities
 
-**File:** `app.js`
+**Folder:** `app.js`
 
 Menyediakan fungsi-fungsi bantu lintas halaman:
 
@@ -507,14 +507,15 @@ Preferensi sidebar collapsed disimpan di `localStorage`.
 ```
 project-root/
 ├── index.html                 # Landing page
-├── login.html                 # Login & Signup
-├── dashboard.html              # Dashboard utama
-├── transactions.html           # Manajemen transaksi
-├── goals.html                  # Savings goals
-├── insights.html                # Financial insights
-├── simulator.html               # What-if simulator
-├── sidebar.html                 # (prototipe standalone)
-├── check-in-modal.html          # (prototipe standalone)
+├── login/                     # Login & Signup
+├── dashboard/                 # Dashboard utama
+├── transactions/              # Manajemen transaksi
+├── goals/                     # Savings goals
+├── insights/                  # Financial insights
+├── simulator/                 # What-if simulator
+├── sidebar/                   # (prototipe standalone)
+├── check-in-modal/            # (prototipe standalone)
+├── hero/                      # (prototipe standalone)
 ├── js/
 │   ├── navbar.js
 │   ├── hero.js
