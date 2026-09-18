@@ -125,7 +125,7 @@ const PulseAuth = (function () {
 
   function redirectAfterAuth() {
     setTimeout(() => {
-window.location.href = "/dashboard.html";
+window.location.href = "/dashboard/";
     }, 500);
   }
 

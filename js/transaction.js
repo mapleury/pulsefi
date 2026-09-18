@@ -3,7 +3,6 @@
 (function () {
   function init() {
     if (!document.getElementById("tx-page")) return;
-    if (PulseUtils.redirectIfNeedsOnboarding()) return;
 
     const bodyEl = document.getElementById("chart-body");
     if (!bodyEl) return;

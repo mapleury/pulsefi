@@ -147,7 +147,7 @@ const PulseSidebar = (function () {
     }
 
     if (notCancelled) {
-      window.location.href = "index.html";
+      window.location.href = "/";
     }
   }
   function ensureSignOutOverlay(profileBtn) {
@@ -225,7 +225,7 @@ const PulseSidebar = (function () {
       });
     }
 
-    const current = window.location.pathname.split("/").pop() || "dashboard.html";
+    const current = window.location.pathname.split("/").pop() || "/dashboard/";
     document.querySelectorAll(".nav-item").forEach((item) => {
       setActive(item, item.getAttribute("href") === current);
     });
