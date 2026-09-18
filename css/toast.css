@@ -1,9 +1,4 @@
-/* =========================================================
-   PulseFi — Notification toasts
-   Overrides/extends the plain .toast markup produced by
-   PulseUtils.toast() in app.js — no JS changes needed, this file
-   just gives it a proper look consistent with the rest of the app.
-   ========================================================= */
+
 
 .toast-container {
   position: fixed;

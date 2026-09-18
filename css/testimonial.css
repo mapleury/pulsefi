@@ -1,10 +1,8 @@
-/* =========================================================
-  PulseFi — Testimonial carousel
-  ========================================================= */
+
 
 .testimonial-section {
   background: #ffffff;
-  padding: clamp(48px, 8vw, 100px) clamp(32px, 8vw, 120px) clamp(96px, 14vw, 180px); /* extra bottom room before the footer starts */
+  padding: clamp(48px, 8vw, 100px) clamp(32px, 8vw, 120px) clamp(96px, 14vw, 180px); 
 }
 
 .testimonial-inner {
@@ -41,10 +39,10 @@
   letter-spacing: -0.05em;
   line-height: 1.2;
   font-size: clamp(1.6rem, 3.4vw, 2.8rem);
-  min-height: 3.6em; /* reserves space so layout doesn't jump between short/long quotes */
+  min-height: 3.6em; 
 }
 
-/* each word stays intact when wrapping; each letter animates individually */
+
 .testimonial-quote .word {
   display: inline-block;
   white-space: nowrap;
@@ -66,7 +64,7 @@
   }
 }
 
-/* once everything has finished animating in, the whole quote settles to dark ink */
+
 .testimonial-quote.is-settled .letter {
   color: #191729;
 }
@@ -95,7 +93,7 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  background-color: #d9d9d9; /* visible briefly while the photo loads */
+  background-color: #d9d9d9; 
   background-size: cover;
   background-position: center;
   flex-shrink: 0;

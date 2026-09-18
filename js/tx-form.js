@@ -1,12 +1,4 @@
-/*
- tx-form.js
- ----------
- Controller for the "Catat Transaksi" panel: the income/expense
- segmented toggle, category/amount/date/description fields, and
- add vs. edit submission. Every successful write fires a
- "pulsefi:tx-changed" event on window so the list, chart, and insight
- modules can refresh themselves without this file knowing they exist.
-*/
+
 
 const PulseTxForm = (function () {
   let editingId = null;

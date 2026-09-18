@@ -1,11 +1,4 @@
-/*
-  goals.css
-  ---------
-  Everything the Tabungan page needs on top of style.css: the dark
-  "Target Baru" form card, the light goal cards with the goal-bg
-  decor panel, and the detail modal. Scoped under #goals-page so it
-  can never leak into the other pages.
-*/
+
 
 #goals-page {
   --goal-ink: #101010;
@@ -22,7 +15,7 @@
   color: var(--goal-ink);
 }
 
-/* Fallback shell in case style.css is loaded later than this file. */
+
 #goals-page .app-shell {
   display: flex;
   align-items: flex-start;
@@ -37,10 +30,12 @@
 }
 
 .goals-title {
-  font-size: 26px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin: 8px 0 34px 8px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -2px;
+  margin: 0 0 30px;
+  color: var(--ink);
 }
 
 .goals-grid {
@@ -56,7 +51,7 @@
   font-size: 14px;
 }
 
-/* ---------------- entrance: blur + slide up ---------------- */
+
 
 [data-rise] {
   opacity: 0;
@@ -70,7 +65,7 @@
   to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-/* ---------------- Target Baru (dark card) ---------------- */
+
 
 .goal-form-card {
   background: var(--goal-dark);
@@ -157,7 +152,7 @@
 .goal-submit:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.6); }
 .goal-submit:active { transform: scale(0.985); }
 
-/* ---------------- goal card ---------------- */
+
 
 .goal-card {
   position: relative;
@@ -246,7 +241,7 @@
   transition: width 0.9s cubic-bezier(0.22, 0.85, 0.28, 1);
 }
 
-/* decor panel (goal-bg.svg) */
+
 
 .goal-panel {
   position: relative;
@@ -285,13 +280,12 @@
 .goal-amounts strong { font-weight: 600; color: var(--goal-ink); }
 .goal-amounts span { font-weight: 400; color: var(--goal-muted); }
 
-/* ---------------- modals ---------------- */
+
 
 .goal-modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; }
 .goal-modal[hidden] { display: none; }
 
-/* Only one modal visible at a time — hide the detail modal
-   while the delete-confirmation modal is open over it. */
+
 #goal-modal:has(~ #delete-modal:not([hidden])) {
   display: none;
 }
@@ -369,7 +363,7 @@
 .goal-progress-lg .goal-track { height: 9px; }
 .goal-progress-lg .goal-percent { font-size: 19px; }
 
-/* "100 Hari sebelum deadline, sisihkan Rp.30.000 perminggu." */
+
 .goal-pace {
   margin: 22px 0 24px;
   font-size: 17px;
@@ -388,7 +382,7 @@
   color: #241f4d;
 }
 
-/* top-up row: dark round + button then the field */
+
 .goal-topup { display: flex; align-items: center; gap: 14px; }
 .goal-topup[hidden] { display: none; }
 
@@ -433,7 +427,7 @@
 .goal-topup input::placeholder { color: #8b8b95; }
 .goal-topup input:focus-visible { background: #e4e4e8; box-shadow: 0 0 0 2px #6d55e0; }
 
-/* edit form (revealed by the pencil) */
+
 .goal-edit { margin-top: 20px; padding: 0 10px; }
 .goal-edit[hidden] { display: none; }
 .goal-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; justify-content: left; }
@@ -475,7 +469,7 @@
 
 .goal-pill-ghost:hover { background: #f2f2f4; }
 
-/* delete confirmation */
+
 .goal-confirm-panel {
   width: min(400px, calc(100% - 32px));
   padding: 34px 30px 30px;
@@ -494,7 +488,7 @@
 
 .goal-confirm-panel .goal-pill-btn { flex: none; width: 100%; height: 56px; }
 
-/* ---------------- responsive ---------------- */
+
 
 @media (max-width: 720px) {
   .goals-grid { grid-template-columns: 1fr; gap: 20px; }

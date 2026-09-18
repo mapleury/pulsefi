@@ -1,15 +1,4 @@
-/*
- insights.js
- -----------
- Two rule-based, scoring-driven engines. There is no external AI API
- call anywhere here, and neither module ever touches the DOM or builds
- HTML — every function returns plain data. If a rule's condition isn't
- met by the real data, that insight or intervention simply isn't
- included (no fake/placeholder content is ever produced).
 
- PulseInsights       -> "AI Insight": what happened, described in words.
- PulseInterventions  -> "Habit Intervention": small, specific next steps.
-*/
 
 const PulseInsights = (function () {
   function formatPercent(n) {
@@ -23,8 +12,6 @@ const PulseInsights = (function () {
 
     const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
     const expenses = transactions.filter((t) => t.type === "expense");
-
-    // 1. Trend: recent 14 days vs previous 14 days, overall
     if (patterns.previousTotal > 0 && Math.abs(patterns.trendPercent) >= 10) {
       const rising = patterns.trendPercent > 0;
       insights.push({
@@ -36,8 +23,6 @@ const PulseInsights = (function () {
           : `Total pengeluaranmu turun ${formatPercent(patterns.trendPercent)} dibanding 14 hari sebelumnya. Perubahan kecil ini cukup terasa.`,
       });
     }
-
-    // 2. Category-level spikes: compare each category recent vs previous
     const catRecent = {};
     const catPrevious = {};
     const { recent, previous } = PulseCalc.splitByRecency(expenses, 14);
@@ -73,8 +58,6 @@ const PulseInsights = (function () {
         });
       }
     });
-
-    // 3. Repeated small purchases (e.g. coffee-like habits)
     const smallRepeats = {};
     expenses.forEach((t) => {
       const key = t.category + "|" + (t.description || "").toLowerCase().trim();
@@ -94,8 +77,6 @@ const PulseInsights = (function () {
           text: `Kamu tercatat melakukan transaksi "${(r.label || r.category)}" sebanyak ${r.count} kali baru-baru ini, dengan total sekitar ${PulseUtils.formatCurrency(r.total)}. Ini pola yang cukup konsisten.`,
         });
       });
-
-    // 4. Weekend vs weekday
     if (patterns.weekendAvg > 0 && patterns.weekdayAvg > 0) {
       const diff = ((patterns.weekendAvg - patterns.weekdayAvg) / patterns.weekdayAvg) * 100;
       if (diff >= 30) {
@@ -107,8 +88,6 @@ const PulseInsights = (function () {
         });
       }
     }
-
-    // 5. High-frequency small transactions
     if (patterns.frequency >= 1.5) {
       insights.push({
         id: "frequency",
@@ -117,8 +96,6 @@ const PulseInsights = (function () {
         text: `Kamu rata-rata melakukan sekitar ${patterns.frequency.toFixed(1)} transaksi pengeluaran per hari aktif. Transaksi kecil yang sering bisa menambah pengeluaran tanpa terasa.`,
       });
     }
-
-    // 6. Large single purchases
     const avg = patterns.avgTx;
     const largeTx = expenses.filter((t) => avg > 0 && Number(t.amount) >= avg * 3).sort((a, b) => Number(b.amount) - Number(a.amount))[0];
     if (largeTx) {
@@ -129,8 +106,6 @@ const PulseInsights = (function () {
         text: `Transaksi "${largeTx.description || largeTx.category}" senilai ${PulseUtils.formatCurrency(Number(largeTx.amount))} jauh di atas rata-rata transaksimu (${PulseUtils.formatCurrency(avg)}). Wajar sesekali, tapi baik untuk dipantau bila sering terjadi.`,
       });
     }
-
-    // 7. Saving rate trend
     if (patterns.savingRate < 0) {
       insights.push({
         id: "saving-negative",
@@ -146,8 +121,6 @@ const PulseInsights = (function () {
         text: `Kamu berhasil menyisihkan sekitar ${Math.round(patterns.savingRate * 100)}% dari total pemasukanmu periode ini. Pertahankan ritme ini.`,
       });
     }
-
-    // 8. Spending concentration (top category share)
     if (patterns.breakdown.length > 0 && patterns.expenseTotal > 0) {
       const topShare = (patterns.breakdown[0].amount / patterns.expenseTotal) * 100;
       if (topShare >= 40) {
@@ -159,8 +132,6 @@ const PulseInsights = (function () {
         });
       }
     }
-
-    // 9. Recurring / subscription-like burden
     if (patterns.recurringCount >= 3) {
       insights.push({
         id: "recurring",
@@ -169,8 +140,6 @@ const PulseInsights = (function () {
         text: `Ada sekitar ${patterns.recurringCount} pola pengeluaran yang berulang dengan nominal serupa, seperti langganan atau kebiasaan tetap. Ini membentuk beban dasar bulananmu.`,
       });
     }
-
-    // 10. Goal progress relevance
     if (goals && goals.length > 0) {
       goals.forEach((g) => {
         const proj = PulseCalc.calculateGoalProjection(g);
@@ -184,9 +153,6 @@ const PulseInsights = (function () {
         }
       });
     }
-
-    // Sort so warnings surface first, then neutral, then positive — this
-    // keeps the most actionable items at the top of the list.
     const order = { warning: 0, neutral: 1, positive: 2 };
     insights.sort((a, b) => order[a.tone] - order[b.tone]);
 
@@ -196,14 +162,7 @@ const PulseInsights = (function () {
   return { generateInsights };
 })();
 
-/*
- PulseInterventions
- -------------------
- Reads the same behavioural signals as PulseInsights but turns them into
- small, concrete, non-judgmental next actions instead of observations.
- Each intervention can be turned into a tracked habit commitment via
- PulseStorage.addHabit.
-*/
+
 const PulseInterventions = (function () {
   function generateInterventions(transactions, goals) {
     const interventions = [];
@@ -211,8 +170,6 @@ const PulseInterventions = (function () {
 
     const patterns = PulseCalc.analyzeSpendingPatterns(transactions);
     const expenses = transactions.filter((t) => t.type === "expense");
-
-    // Food spending rising
     const { recent, previous } = PulseCalc.splitByRecency(expenses, 14);
     const foodRecent = recent.filter((t) => t.category === "Makanan").reduce((s, t) => s + Number(t.amount), 0);
     const foodPrevious = previous.filter((t) => t.category === "Makanan").reduce((s, t) => s + Number(t.amount), 0);
@@ -225,8 +182,6 @@ const PulseInterventions = (function () {
         target: 1,
       });
     }
-
-    // Savings slowing down
     if (patterns.savingRate < 0.1) {
       interventions.push({
         id: "saving-slow",
@@ -236,8 +191,6 @@ const PulseInterventions = (function () {
         target: 1,
       });
     }
-
-    // High weekend spending
     if (patterns.weekendAvg > 0 && patterns.weekdayAvg > 0) {
       const diff = ((patterns.weekendAvg - patterns.weekdayAvg) / patterns.weekdayAvg) * 100;
       if (diff >= 30) {
@@ -250,8 +203,6 @@ const PulseInterventions = (function () {
         });
       }
     }
-
-    // High-frequency small transactions
     if (patterns.frequency >= 1.8) {
       interventions.push({
         id: "frequency-pause",
@@ -261,8 +212,6 @@ const PulseInterventions = (function () {
         target: 1,
       });
     }
-
-    // Recurring / subscription burden
     if (patterns.recurringCount >= 3) {
       interventions.push({
         id: "review-subscription",
@@ -272,8 +221,6 @@ const PulseInterventions = (function () {
         target: 1,
       });
     }
-
-    // Concentrated spending category
     if (patterns.breakdown.length > 0 && patterns.expenseTotal > 0) {
       const top = patterns.breakdown[0];
       const topShare = (top.amount / patterns.expenseTotal) * 100;
@@ -287,8 +234,6 @@ const PulseInterventions = (function () {
         });
       }
     }
-
-    // Goal behind schedule
     if (goals && goals.length > 0) {
       goals.forEach((g) => {
         const proj = PulseCalc.calculateGoalProjection(g);

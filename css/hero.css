@@ -1,7 +1,4 @@
-/* =========================================================
-  PulseFi — Hero Section
-  Vanilla CSS layer that Tailwind utility classes sit on top of.
-  ========================================================= */
+
 
 :root {
   --ink: #14161a;
@@ -23,7 +20,7 @@ html {
 body {
   margin: 0;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  font-weight: 500; /* Inter Medium as the base weight site-wide */
+  font-weight: 500; 
 }
 
 img {
@@ -31,19 +28,13 @@ img {
   display: block;
 }
 
-/* ---------------------------------------------------------
-  Outer page padding — generous space around the hero card
-  so `assets/hero-frame.svg` overlay (or the card's own
-  rounded edges) always has breathing room.
-  --------------------------------------------------------- */
+
 .page-pad {
   padding: clamp(12px, 3vw, 28px);
   background: #ffffff;
 }
 
-/* ---------------------------------------------------------
-  Hero shell: the big rounded dark card
-  --------------------------------------------------------- */
+
 .hero-shell {
   position: relative;
   overflow: hidden;
@@ -54,7 +45,7 @@ img {
 
 @media (min-width: 769px) {
   .hero-shell {
-    aspect-ratio: 2531 / 1486; /* matches hero-frame.svg exactly */
+    aspect-ratio: 2531 / 1486; 
     height: auto;
   }
 }
@@ -71,19 +62,13 @@ img {
   user-select: none;
 }
 
-/* hero-frame.svg is a white matte with a notched-rounded-rect window
-  cut out of its middle. It sits ABOVE everything, painted the same
-  white as .page-pad's background, so it visually "erases" the
-  hero-shell's square corners and leaves only the notched window
-  showing. Hidden below 1024px — see the responsive section at the
-  bottom of this file — where the hero's aspect ratio no longer
-  matches the frame art closely enough to look right. */
+
 .hero-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill; /* non-uniform stretch = always matches the box exactly, no gaps, no bleed */
+  object-fit: fill; 
   display: block;
   z-index: 50;
   pointer-events: none;
@@ -99,26 +84,21 @@ img {
   padding: clamp(20px, 3vw, 36px) var(--hero-side-pad) clamp(28px, 4vw, 56px);
 }
 
-/* ---------------------------------------------------------
-  Floating pill nav (desktop) — only the pill itself is fixed
-  and blurred (not a full-width bar). Starts lower on the page,
-  and slides up to sit right at the top edge once the hero has
-  been scrolled past. Dark-on-light swap happens via .scrolled.
-  --------------------------------------------------------- */
+
 .floating-nav {
   position: fixed;
-  top: 96px; /* resting position while the hero is still in view */
+  top: 96px; 
   left: 50%;
   transform: translateX(-50%);
-  z-index: 200; /* above .hero-frame (50) and everything else */
+  z-index: 200; 
   transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .floating-nav.scrolled {
-  top: 20px; /* slides up to sit near the top edge once past the hero */
+  top: 20px; 
 }
 
-/* only the pill itself carries the blur/tint — no wide background bar */
+
 .floating-nav.scrolled .navbar-glass {
   background: rgba(20, 22, 26, 0.06);
   border-color: rgba(20, 22, 26, 0.12);
@@ -138,9 +118,7 @@ img {
   background: rgba(20, 22, 26, 0.08);
 }
 
-/* "Mulai" CTA: white pill reads fine over the dark hero, but once the
-  page has scrolled onto a white section a white-on-white pill has no
-  contrast — flip it to a solid black pill with white text instead. */
+
 .floating-nav.scrolled .navbar-glass a.nav-cta {
   background: #14161a;
   color: #ffffff;
@@ -152,8 +130,7 @@ img {
   opacity: 0.85;
 }
 
-/* --- logo + mobile burger, inside the hero itself (desktop decorative
-  header; the interactive mobile version lives in .site-navbar below) --- */
+
 .hero-nav-row {
   display: flex;
   align-items: center;
@@ -310,22 +287,14 @@ img {
   display: flex;
 }
 
-/* ---------------------------------------------------------
-  Mobile sticky navbar — a separate, always-fixed bar (logo +
-  burger) that lives OUTSIDE .hero-shell so it isn't clipped by
-  the shell's overflow:hidden / scale transform. Hidden and
-  non-interactive until the hero has been scrolled past, then
-  fades in and stays pinned to the top — the mobile equivalent
-  of .floating-nav's desktop behaviour. Only used below 768px;
-  see the responsive section for the breakpoint switch.
-  --------------------------------------------------------- */
+
 .site-navbar {
   display: none;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 200; /* above .hero-frame (50) and everything else */
+  z-index: 200; 
   padding: 14px var(--hero-side-pad);
 }
 
@@ -342,8 +311,7 @@ img {
   -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
-/* the logo SVG is white by default (for the dark hero) — flip it dark
-  once the sticky bar is showing over a light section */
+
 .site-navbar.scrolled .logo-icon {
   filter: brightness(0);
 }
@@ -357,9 +325,7 @@ img {
   background: #14161a;
 }
 
-/* the dropdown menu needs a light-background variant here — the base
-  .mobile-menu styling above is glass-on-dark and would be invisible
-  on a white sticky bar */
+
 .site-navbar .mobile-menu {
   background: rgba(20, 22, 26, 0.04);
   border-color: rgba(20, 22, 26, 0.1);
@@ -374,9 +340,7 @@ img {
   color: #ffffff;
 }
 
-/* ---------------------------------------------------------
-  Hero body: copy (left) + visual (right)
-  --------------------------------------------------------- */
+
 .hero-inner {
   flex: 1;
   display: flex;
@@ -397,11 +361,11 @@ img {
 
 .hero-title {
   margin: 0;
-  margin-top: clamp(28px, 6vw, 64px); /* space from the logo/burger row above */
+  margin-top: clamp(28px, 6vw, 64px); 
   color: #ffffff;
   margin-left: 30px;
-  font-weight: 500; /* Inter Medium */
-  letter-spacing: -0.07em; /* "-7" tight tracking — tweak here if you meant -7px instead */
+  font-weight: 500; 
+  letter-spacing: -0.07em; 
   line-height: 1.06;
   font-size: clamp(2.1rem, 4.6vw, 4.1rem);
 }
@@ -456,9 +420,7 @@ img {
   width: auto;
 }
 
-/* ---------------------------------------------------------
-  Visual: card stack + feature list
-  --------------------------------------------------------- */
+
 .hero-visual {
   position: relative;
   flex: 1;
@@ -504,8 +466,7 @@ img {
   z-index: 3;
 }
 
-/* Once the load-in animation finishes, main.js adds .settled so the
-  animation stops holding the transform, freeing it up for :hover. */
+
 .card.settled {
   animation: none;
   opacity: 1;
@@ -534,9 +495,7 @@ img {
   margin-top: 310px;
 }
 
-/* ---------------------------------------------------------
-  Load-in animations
-  --------------------------------------------------------- */
+
 @keyframes slideBlurUp {
   from {
     opacity: 0;
@@ -644,9 +603,7 @@ img {
   }
 }
 
-/* ---------------------------------------------------------
-  Responsive
-  --------------------------------------------------------- */
+
 @media (max-width: 1024px) {
   .hero-copy {
     width: 52%;
@@ -658,10 +615,7 @@ img {
     justify-content: center;
   }
 
-  /* hero-frame's window insets are tuned for the wide desktop aspect
-    ratio; below tablet width the hero card is a different shape, so
-    the frame no longer lines up — hide it and keep the shell's own
-    rounded corners instead. */
+  
   .hero-frame {
     display: none;
   }
@@ -669,7 +623,7 @@ img {
 
 @media (max-width: 768px) {
   .floating-nav {
-    display: none; /* .site-navbar (fixed, sticky-on-scroll) takes over below 768px */
+    display: none; 
   }
 
   .site-navbar {
@@ -707,7 +661,7 @@ img {
   }
 
   .hero-users {
-    display: none; /* per spec: hide user-count on small widths */
+    display: none; 
   }
 
   .hero-visual {
@@ -716,7 +670,7 @@ img {
   }
 
   .detail-hero-img {
-    display: none; /* per spec: hide detail-hero on small widths */
+    display: none; 
   }
 
   .card-stack {
@@ -730,18 +684,10 @@ img {
   }
 }
 
-/* Frame overlay + tight hero-content padding only apply at wide
-  viewports, where the hero's aspect ratio is close to the frame
-  art's own (2618x1600) — see the max-width:1024px block above for
-  the mobile/tablet hidden state.
 
-  hero-frame.svg's transparent window sits at fixed insets of
-  ~6.2% left / ~5.3% top / ~5.4% right / ~15.4% bottom (of the shell
-  box) — .hero-content's padding is bumped to clear those insets so
-  no text/buttons/cards end up hidden under the frame's white border. */
 @media (min-width: 769px) {
   .hero-content {
-    min-height: 0; /* aspect-ratio on .hero-shell now controls height, not this */
+    min-height: 0; 
     padding-left: 4.353%;
     padding-right: 4.199%;
     padding-top: 4.035%;
@@ -751,7 +697,7 @@ img {
 
 .hero-scroll-wrap {
   position: relative;
-  height: 110vh; /* extra room to scroll through while it shrinks */
+  height: 110vh; 
 }
 
 .hero-scroll-wrap .page-pad {

@@ -1,6 +1,3 @@
-// PulseFi — "Mengapa PulseFi?" feature accordion content.
-// Edit this array to add/remove/reorder feature items — features.js
-// renders the markup from this data, so no HTML needs to be touched.
 
 window.PULSEFI_FEATURES = [
   {

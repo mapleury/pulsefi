@@ -6,14 +6,14 @@
   <title>Dashboard — PulseFi</title>
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- Import Inter Font -->
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -37,7 +37,7 @@
     }
   </script>
   <style>
-    /* Structural & Collapse Transitions */
+    
     #sidebar {
       transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -91,12 +91,10 @@
 </head>
 <body id="dashboard-page" class="bg-[#eef0f5] p-6 font-sans antialiased flex items-start gap-6">
 
-  <!-- Sidebar Component -->
+  
   <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
     <script>
-      // Runs the instant #sidebar is parsed, before the browser paints
-      // it — restores the collapsed state synchronously so there's no
-      // expanded-then-collapsed flash on page load.
+
       try {
         if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
           document.currentScript.parentElement.classList.add("collapsed");
@@ -104,23 +102,23 @@
       } catch (e) {}
     </script>
 
-    <!-- Collapse Toggle Button -->
+    
     <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
       </svg>
     </button>
 
-    <!-- Logo Section -->
+    
     <div class="mb-12 px-6 flex items-center h-8">
       <img src="assets/pulsefi-logo.svg" alt="PulseFi Logo" class="ml-2 h-6 w-auto object-contain shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300">
       <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
     </div>
 
-    <!-- Navigation Links -->
+    
     <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
 
-      <!-- Dashboard (Active) -->
+      
       <a href="dashboard.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
@@ -132,7 +130,7 @@
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
       </a>
 
-      <!-- Transaksi -->
+      
       <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
@@ -143,7 +141,7 @@
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
       </a>
 
-      <!-- Tabungan -->
+      
       <a href="goals.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
@@ -152,29 +150,29 @@
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
       </a>
 
-      <!-- Kebiasaan -->
+      
       <a href="insights.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
           <path d="M22 4L12 14.01l-3-3"></path>
         </svg>
-        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
       </a>
 
-      <!-- Pola Finansial -->
+      
       <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
           <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           <path d="M12 3v9h9"></path>
         </svg>
-        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
       </a>
 
     </nav>
 
-    <!-- User Profile Section -->
+    
     <div class="mt-auto px-4 w-full">
       <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
         <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
@@ -198,7 +196,7 @@
 
     <div class="layout">
 
-      <!-- pair-a: Financial Pulse + Rata-rata Transaksi, side by side -->
+      
       <div class="group group--pair-a">
 
         <div class="card card-pulse" data-reveal>
@@ -222,7 +220,7 @@
 
       </div>
 
-      <!-- tall: Grafik Transaksi, spans the height of pair-a + pair-b -->
+      
       <div class="group group--tall">
         <div class="card card-chart" data-reveal>
           <div class="chart-head">
@@ -242,7 +240,7 @@
         </div>
       </div>
 
-      <!-- pair-b: Konteks Keseluruhan (wide) + AI Insight (narrow) -->
+      
       <div class="group group--pair-b">
 
         <div class="card card-context" data-reveal>
@@ -272,7 +270,7 @@
 
       </div>
 
-      <!-- full: Financial Twin banner -->
+      
       <div class="group group--full">
         <div class="card card-twin" data-reveal>
           <img src="assets/financial-twin.svg" alt="" class="twin-bg">
@@ -307,6 +305,7 @@
   <script src="js/sidebar.js"></script>
   <script src="js/calculation.js"></script>
   <script src="js/insights.js"></script>
+  <script src="js/checkin.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/dashboard.js"></script>
   <script>
@@ -370,15 +369,14 @@
 </script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Swap the placeholder name for whoever's actually logged in.
       const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
       if (session) {
-        document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
+        const account = typeof PulseAuth.getCurrentAccount === "function" ? PulseAuth.getCurrentAccount() : null;
+        const displayName = (account && account.name) ? account.name : session;
+        document.querySelectorAll('.user-name').forEach((el) => (el.textContent = displayName));
         const greetingEl = document.getElementById('greeting-name');
-        if (greetingEl) greetingEl.textContent = session;
+        if (greetingEl) greetingEl.textContent = displayName;
       } else {
-        // No active session — send them back to log in rather than
-        // silently showing the dashboard as a nameless guest.
         window.location.href = "login.html";
       }
     });

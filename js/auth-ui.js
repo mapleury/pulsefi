@@ -1,15 +1,8 @@
-/*
-  auth-ui.js
-  ----------
-  UI-only state for the login/signup form: password visibility toggle,
-  and the smooth text-swap between "login" and "signup" copy. Holds no
-  business logic — auth.js reads PulseAuthUI.getMode() to decide what
-  the submit button should actually do.
-*/
+
 
 const PulseAuthUI = (function () {
   const els = {};
-  let mode = "login"; // "login" | "signup"
+  let mode = "login";
 
   const ICON_PATHS = {
     off: `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />`,
@@ -39,6 +32,7 @@ const PulseAuthUI = (function () {
     els.submitBtn = document.getElementById("auth-submit-btn");
     els.pemasukanContainer = document.getElementById("pemasukan-container");
         els.nameContainer = document.getElementById("name-container");
+    els.pageContainer = document.getElementById("page-container");
     els.togglePasswordBtn = document.getElementById("toggle-password-btn");
     els.passwordInput = document.getElementById("password-input");
     els.eyeIcon = document.getElementById("eye-icon");
@@ -75,7 +69,6 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
 
   function showMessage(text, tone) {
     if (!els.message) {
-      // Fallback for pages that somehow don't have the markup — better than a silent failure.
       alert(text);
       return;
     }
@@ -86,8 +79,6 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
       "flex items-start gap-2.5 rounded-2xl px-4 py-3 mb-5 text-[13px] font-medium leading-snug transition-all duration-300 ease-out " + t.classes;
     els.messageIcon.innerHTML = t.icon;
     els.messageText.textContent = text;
-
-    // force reflow so the transition plays even if a message was already visible
     els.message.classList.add("opacity-0", "-translate-y-1");
     void els.message.offsetWidth;
     requestAnimationFrame(() => {
@@ -96,7 +87,6 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
 
     clearTimeout(messageTimer);
     if (tone !== "success") {
-      // errors/warnings stay a bit longer so they're easy to actually read
       messageTimer = setTimeout(hideMessage, 6000);
     }
   }
@@ -134,11 +124,12 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
       applyCopy(next);
       els.pemasukanContainer.classList.toggle("expanded", next === "signup");
       if (els.nameContainer) els.nameContainer.classList.toggle("expanded", next === "signup");
+      if (els.pageContainer) els.pageContainer.classList.toggle("mode-signup", next === "signup");
       fadeEls.forEach((el) => el && (el.style.opacity = "1"));
       if (els.form) {
         els.form.dispatchEvent(new CustomEvent("authmodechange", { detail: { mode } }));
       }
-    }, 200); // matches the .fade-text CSS transition duration
+    }, 200);
   }
 
   function bindModeToggle() {
@@ -156,7 +147,8 @@ classes: "bg-[#C9DEBB] text-[#697D5B]",
     bindPasswordToggle();
     bindModeToggle();
     bindMessageClose();
-    applyCopy(mode); // syncs the submit button label on first load
+    applyCopy(mode);
+    if (els.pageContainer) els.pageContainer.classList.toggle("mode-signup", mode === "signup");
   }
 
   document.addEventListener("DOMContentLoaded", init);

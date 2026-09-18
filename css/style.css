@@ -1,16 +1,9 @@
-/*
- style.css
- ---------
- PulseFi dashboard visual system. Tokens first, then layout, then
- component styles, then responsive rules. Everything reads its data
- from js/dashboard.js and js/chart.js — this file only concerns
- appearance.
-*/
+
 
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* ---- color tokens ---- */
+  
   --bg-page: #F6F7FB;
   --ink: #191729;
   --ink-soft: #57545F;
@@ -35,19 +28,19 @@
 
   --signal-badge: #15131C;
 
-  /* ---- radii ---- */
+  
   --r-xl: 38px;
   --r-lg: 24px;
   --r-md: 18px;
   --r-pill: 999px;
 
-  /* ---- type ---- */
+  
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
 
   --shadow-card: 0 1px 2px rgba(21, 19, 28, 0.03), 0 10px 24px -18px rgba(21, 19, 28, 0.18);
 
-  /* ---- layout ---- */
+  
   --gap-outer: 20px;
 }
 
@@ -79,11 +72,11 @@ a { color: inherit; text-decoration: none; }
   font-size: 3px;
   font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 
-/* ================= header ================= */
+
 
 .site-header {
   max-width: 1180px;
@@ -147,7 +140,7 @@ a { color: inherit; text-decoration: none; }
   .nav-links a:hover { background: var(--bg-page); }
 }
 
-/* ================= generic buttons ================= */
+
 
 .btn {
   display: inline-flex;
@@ -166,7 +159,7 @@ a { color: inherit; text-decoration: none; }
 .btn-primary:hover { opacity: 0.85; }
 .btn-primary:active { transform: translateY(1px); }
 
-/* ================= layout shell ================= */
+
 
 .dash-wrap {
   max-width: 1180px;
@@ -193,19 +186,8 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 
-/* ---------------------------------------------------------------
-   Dashboard card grid — a two-column grid with named areas:
 
-     pair-a  tall
-     pair-b  tall
-     full    full
 
-   "tall" spans both card rows on the right, matching the height
-   of pair-a + pair-b combined. "full" spans the entire width
-   underneath. Each "group" is a flex row/column that lays out its
-   own cards edge to edge with a shared gap — no absolute
-   positioning or negative margins needed.
---------------------------------------------------------------- */
 
 .layout {
   display: grid;
@@ -228,22 +210,22 @@ a { color: inherit; text-decoration: none; }
   gap: var(--gap-outer);
 }
 
-/* pair-a: Financial Pulse + Rata-rata Transaksi, roughly equal width */
+
 .group--pair-a > .card { flex: 1; min-width: 0; }
 
-/* pair-b: Konteks Keseluruhan (wide) + AI Insight (narrow) */
+
 .group--pair-b > .card { min-width: 0; }
 .group--pair-b > .card-context { flex: 2.3; }
 .group--pair-b > .card-signal  { flex: 1; }
 
-/* tall: Grafik Transaksi fills the whole right-hand column */
+
 .group--tall { flex-direction: column; }
 .group--tall > .card { flex: 1; width: 100%; height: 100%; }
 
-/* full: Financial Twin banner spans the full width */
+
 .group--full > .card { flex: 1; width: 100%; }
 
-/* ================= base card ================= */
+
 
 .card {
   border-radius: var(--r-xl);
@@ -252,7 +234,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 
-/* ================= financial pulse card ================= */
+
 
 .card-pulse {
   background: radial-gradient(120% 140% at 20% 0%, var(--pulse-1) 0%, var(--pulse-2) 70%);
@@ -325,7 +307,7 @@ a { color: inherit; text-decoration: none; }
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* ================= avg transaction card ================= */
+
 
 .card-avg {
   background: linear-gradient(145deg, var(--avg-1) 0%, var(--avg-2) 100%);
@@ -358,7 +340,7 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 
-/* ================= grafik transaksi card ================= */
+
 
 .card-chart {
   background: #e0e0e09a;
@@ -452,7 +434,7 @@ a { color: inherit; text-decoration: none; }
 .chart-nav-btn:active { transform: scale(0.92); }
 .chart-nav-btn:disabled { opacity: 0.35; cursor: default; }
 
-/* -- bar chart (mingguan) -- */
+
 
 .bar-chart {
   display: flex;
@@ -506,7 +488,7 @@ a { color: inherit; text-decoration: none; }
 
 .bar-col.is-active .bar-label { color: var(--ink); font-weight: 600; }
 
-/* -- line chart (bulanan) -- */
+
 
 .line-chart-svg { width: 100%; height: 100%; overflow: visible; display: block; }
 
@@ -554,7 +536,7 @@ a { color: inherit; text-decoration: none; }
 
 .line-chart-labels span.is-active { color: var(--ink); font-weight: 600; }
 
-/* -- shared tooltip -- */
+
 
 .chart-tooltip {
   position: fixed;
@@ -574,7 +556,7 @@ a { color: inherit; text-decoration: none; }
 
 .chart-tooltip.is-visible { opacity: 1; }
 
-/* ================= konteks keseluruhan ================= */
+
 
 .card-context {
   background: transparent;
@@ -593,7 +575,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.05em;
-  margin: 0;
+  margin-bottom: 10px;
 }
 
 .context-grid {
@@ -613,14 +595,14 @@ a { color: inherit; text-decoration: none; }
 .context-item:last-child { border-right: none; }
 
 .context-item strong {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.02em;
   font-family: var(--font-serif);
   color: var(--ink);
 }
 
-/* ================= AI insight signal card ================= */
+
 
 .card-signal {
   background: #e0e0e09a;
@@ -658,13 +640,13 @@ a { color: inherit; text-decoration: none; }
 .card-signal .label-caps { margin-top: 4px; }
 
 .signal-text {
-  font-size: 8px;
+  font-size: 6px;
   color: var(--ink-soft);
-  line-height: 1.3;
+  line-height: 1.1;
   margin: 0;
 }
 
-/* ================= financial twin card ================= */
+
 
 .card-twin {
   padding: 0;
@@ -779,7 +761,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink-soft);
 }
 
-/* ================= reveal-on-scroll helper ================= */
+
 
 [data-reveal] {
   opacity: 0;
@@ -788,7 +770,7 @@ a { color: inherit; text-decoration: none; }
 }
 [data-reveal].reveal-visible { opacity: 1; transform: translateY(0); }
 
-/* ================= toasts ================= */
+
 
 .toast-container {
   position: fixed;
@@ -813,10 +795,10 @@ a { color: inherit; text-decoration: none; }
 .toast-visible { opacity: 1; transform: translateY(0); }
 .toast-success { background: #21492F; }
 
-/* ================= responsive ================= */
+
 
 @media (max-width: 980px) {
-  /* stack everything into one column: pair-a, tall, pair-b, full */
+  
   .layout {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -854,12 +836,7 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* ======================================================================
-   TRANSACTIONS PAGE + SIDEBAR SHELL
-   Everything below supports transactions.html: the collapsible sidebar
-   shell, the dark "Catat Transaksi" form, the filterable/grouped list,
-   and the compact chart + tip cards in the right column.
-   ====================================================================== */
+
 
 :root {
   --list-bg: #EAEAF0;
@@ -868,7 +845,7 @@ a { color: inherit; text-decoration: none; }
   --r-2xl: 32px;
 }
 
-/* ---- app shell (sidebar + main content) ---- */
+
 
 .app-shell {
   display: flex;
@@ -882,16 +859,16 @@ a { color: inherit; text-decoration: none; }
 .tx-main {
   flex: 1;
   min-width: 0;
-  padding: 8px 8px 48px;
+  padding: 24px 32px 0;
 }
 
 .tx-page-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 400;
-  font-size: 42px;
-  letter-spacing: -1px;
+  font-size: 25px;
+  letter-spacing: -2px;
+  margin: 0 0 30px;
   color: var(--ink);
-  margin: 4px 0 32px;
 }
 
 .sidebar-toggle-btn {
@@ -925,7 +902,7 @@ a { color: inherit; text-decoration: none; }
 
 .sidebar-backdrop.is-visible { opacity: 1; pointer-events: auto; }
 
-/* ---- transaction layout grid ---- */
+
 
 .tx-layout {
   display: grid;
@@ -942,7 +919,7 @@ a { color: inherit; text-decoration: none; }
   gap: 20px;
 }
 
-/* ---- dark "Catat Transaksi" form panel ---- */
+
 
 .tx-form-panel {
   background: var(--ink);
@@ -953,9 +930,9 @@ a { color: inherit; text-decoration: none; }
 
 .tx-form-panel h2 {
   font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 24px;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: -0.01em;
   margin: 0 0 24px;
   color: var(--white);
 }
@@ -1073,12 +1050,12 @@ a { color: inherit; text-decoration: none; }
 
 .tx-cancel-btn:hover { background: rgba(255, 255, 255, 0.14); }
 
-/* ---- filters row ---- */
+
 
 .tx-filters {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
@@ -1137,9 +1114,9 @@ a { color: inherit; text-decoration: none; }
   background: var(--white);
   border: none;
   border-radius: var(--r-pill);
-  padding: 10px 34px 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
+  padding: 10px 27px 10px 16px;
+  font-size: 6px;
+  font-weight: 300;
   font-family: inherit;
   letter-spacing: inherit;
   color: var(--ink);
@@ -1154,7 +1131,7 @@ a { color: inherit; text-decoration: none; }
 
 .filter-pill:hover { box-shadow: 0 1px 2px rgba(21,19,28,0.05), 0 12px 26px -16px rgba(21,19,28,0.28); }
 
-/* ---- transaction list ---- */
+
 
 .tx-list-shell {
   background: var(--list-bg);
@@ -1273,7 +1250,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px;
 }
 
-/* ---- mini chart card (light variant for this page) ---- */
+
 
 .card-chart-mini { background: var(--list-bg); }
 
@@ -1286,7 +1263,7 @@ a { color: inherit; text-decoration: none; }
 
 .card-chart-mini .chart-body { min-height: 150px; }
 
-/* ---- "Selalu Ingat!" tip card ---- */
+
 
 .tx-tip-card {
   background: var(--list-bg);
@@ -1300,8 +1277,8 @@ a { color: inherit; text-decoration: none; }
 .tx-tip-headline {
   font-family: var(--font-sans);
   font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 6px 0 8px;
   color: var(--ink);
 }
@@ -1313,7 +1290,7 @@ a { color: inherit; text-decoration: none; }
   margin: 0;
 }
 
-/* ---- responsive ---- */
+
 
 @media (max-width: 1080px) {
   .tx-layout { grid-template-columns: 280px minmax(0, 1fr); }

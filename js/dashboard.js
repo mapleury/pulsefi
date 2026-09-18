@@ -1,21 +1,4 @@
-/*
- dashboard.js
- ------------
- Page controller for dashboard.html. Reads transactions/goals/profile
- from PulseStorage, runs them through PulseCalc/PulseInsights, and
- renders every card in the redesigned single-screen dashboard:
 
-   1. Greeting
-   2. Financial Pulse (score + heartbeat)
-   3. Rata Rata Transaksi (signed average for the current window)
-   4. Grafik Transaksi (delegated entirely to PulseChart)
-   5. Konteks Keseluruhan (income / expense / balance)
-   6. AI Insight signal (most urgent thing happening right now)
-   7. Financial Twin
-
- Every render function takes plain data and touches only its own
- corner of the DOM — nothing here returns HTML strings.
-*/
 
 (function () {
   function init() {
@@ -34,16 +17,12 @@
     initChart(transactions);
   }
 
-  // ---------------- 1. greeting ----------------
-
   function renderGreeting(profile) {
     const nameEl = document.getElementById("greeting-name");
     if (!nameEl) return;
     const name = profile && profile.name ? profile.name : "kamu";
     nameEl.textContent = name;
   }
-
-  // ---------------- 2. financial pulse ----------------
 
   function renderFinancialPulse(transactions, goals) {
     const scoreEl = document.getElementById("pulse-score");
@@ -57,15 +36,12 @@
     if (statusEl) statusEl.textContent = result.label || "Belum ada data";
     if (waveHost) renderPulseWave(waveHost, result.score);
   }
-
-  // Heartbeat-style SVG line. A higher score produces a calmer, more even
-  // rhythm; a lower score produces a sharper, more irregular rhythm.
    function renderPulseWave(host, score) {
     const width = 240;
     const height = 40;
     const unitW = 30;
     const beats = 8;
-    const patternW = unitW * beats; // 240 — exactly one loop width
+    const patternW = unitW * beats;
 
     function beatPath(startX) {
       const mid = height / 2;
@@ -122,8 +98,6 @@
     defs.appendChild(mask);
 
     svg.appendChild(defs);
-
-    // static wrapper carries the fixed fade mask; the inner group scrolls
     const staticG = document.createElementNS(svgNS, "g");
     staticG.setAttribute("mask", "url(#ecg-mask)");
 
@@ -141,9 +115,6 @@
     staticG.appendChild(track);
     svg.appendChild(staticG);
     host.appendChild(svg);
-
-    // Below 60, the beat quickens toward a racing 1.6s loop.
-    // At or above 60, it settles into a calm, standard 4.5s loop.
     const STANDARD_DURATION = 4.5;
     const FASTEST_DURATION = 1.6;
     const THRESHOLD = 60;
@@ -156,8 +127,6 @@
     if (card) card.classList.toggle("is-racing", score < THRESHOLD * 0.4);
   }
 
-  // ---------------- 3. rata rata transaksi ----------------
-
   function renderAvgCard(transactions) {
     const valueEl = document.getElementById("avg-value");
     if (!valueEl) return;
@@ -165,20 +134,12 @@
     valueEl.textContent = PulseUtils.formatCurrencySigned(avg);
   }
 
-  // ---------------- 5. konteks keseluruhan ----------------
-
   function renderContext(transactions) {
     const t = PulseCalc.totals(transactions);
     setText("overview-income", PulseUtils.formatCurrency(t.income));
     setText("overview-expense", PulseUtils.formatCurrency(t.expense));
     setText("overview-balance", PulseUtils.formatCurrency(t.balance));
   }
-
-  // ---------------- 6. AI insight signal ----------------
-  // Surfaces whichever single thing is most worth the user's attention
-  // right now: an under-filled savings goal takes priority (it is the
-  // most actionable, deadline-bound signal); otherwise the top-ranked
-  // PulseInsights entry (warnings sort first) fills the same slot.
 
   function computePrimaryAlert(transactions, goals) {
     if (goals && goals.length > 0) {
@@ -221,8 +182,6 @@
     if (badgeEl) badgeEl.textContent = alert.urgent ? "!" : "\u2713";
   }
 
-  // ---------------- 7. financial twin ----------------
-
   function renderTwin(transactions) {
     const titleEl = document.getElementById("twin-title");
     const descEl = document.getElementById("twin-desc");
@@ -240,8 +199,6 @@
       .join(" ");
   }
 
-  // ---------------- 4. grafik transaksi ----------------
-
   function initChart(transactions) {
     const bodyEl = document.getElementById("chart-body");
     if (!bodyEl) return;
@@ -254,8 +211,6 @@
     });
     chart.render();
   }
-
-  // ---------------- helpers ----------------
 
   function setText(id, value) {
     const el = document.getElementById(id);

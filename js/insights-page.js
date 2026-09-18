@@ -1,16 +1,6 @@
-/*
-  insights-page.js
-  ----------------
-  Page controller for insights.html ("Pola Finansial"). Reads the
-  user's real transactions/goals from PulseStorage and renders every
-  number/label from PulseCalc, PulseInsights, and PulseInterventions —
-  nothing on this page is hardcoded sample data.
-*/
+
 
 (function () {
-  // Localized display names for PulseCalc.classifyFinancialTwin()'s
-  // English keys — same underlying real classification, just the
-  // product's Indonesian copy layered on top.
   const TWIN_DISPLAY_TITLES = {
     "cautious-saver": "Si Penabung Berhati-hati",
     "weekend-spender": "Si Pemburu Akhir Pekan",
@@ -35,9 +25,6 @@
     const result = PulseCalc.calculateFinancialScore(transactions, goals);
     document.getElementById("pulse-score").textContent = result.score;
     document.getElementById("pulse-status").textContent = result.label;
-    // Heartbeat speed/erratic-vs-steady behavior is driven entirely by the
-    // inline ECG script in insights.html, which watches #pulse-score via
-    // MutationObserver — setting textContent above is all this needs to do.
   }
 
 
@@ -69,8 +56,6 @@
         </div>`
       )
       .join("");
-
-    // animate widths in after paint, so the fill transition actually plays
     requestAnimationFrame(() => {
       container.querySelectorAll(".category-bar-fill").forEach((el) => {
         el.style.width = el.dataset.width + "%";
@@ -125,9 +110,6 @@
         </li>`
       )
       .join("");
-
-    // Turn an intervention into a tracked habit on click (real write to
-    // PulseStorage, not a cosmetic toggle) — then disable that pill.
     list.querySelectorAll(".action-pill").forEach((btn, i) => {
       btn.addEventListener("click", () => {
         const item = interventions[i];

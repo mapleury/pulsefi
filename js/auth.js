@@ -1,16 +1,4 @@
-/*
-  auth.js
-  -------
-  Client-side account handling for the login/signup form. This is a
-  no-backend demo, so accounts live in localStorage — swap PulseAuth's
-  internals for real API calls whenever a backend exists; nothing
-  outside this file needs to change.
 
-  On success, routing hands off to the same onboarding check used
-  elsewhere in the app (PulseUtils.requiresOnboarding, from app.js):
-  a brand-new signup always needs onboarding; a returning login may or
-  may not, depending on whether they finished it last time.
-*/
 
 const PulseAuth = (function () {
   const ACCOUNTS_KEY = "pulsefi_accounts_v1";
@@ -28,7 +16,7 @@ const PulseAuth = (function () {
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
   }
 
-  function signUp(email, password, monthlyIncome) {
+  function signUp(name, email, password, monthlyIncome) {
     const accounts = readAccounts();
     const key = email.trim().toLowerCase();
 
@@ -36,15 +24,17 @@ const PulseAuth = (function () {
       return { ok: false, error: "Email ini sudah terdaftar. Coba login." };
     }
 
-    accounts[key] = { email: key, password, monthlyIncome, createdAt: Date.now() };
+    accounts[key] = {
+      name: name.trim(),
+      email: key,
+      password,
+      monthlyIncome,
+      createdAt: Date.now(),
+    };
     writeAccounts(accounts);
     setSession(key);
-
-    // Hand the stated income to PulseStorage (if that module is loaded
-    // on this page) so index.html's onboarding form can pick up where
-    // this one left off, instead of asking for it a second time.
     if (typeof PulseStorage !== "undefined" && PulseStorage.saveProfile) {
-      PulseStorage.saveProfile({ monthlyIncome });
+      PulseStorage.saveProfile({ name: name.trim(), monthlyIncome });
     }
 
     return { ok: true };
@@ -60,6 +50,10 @@ const PulseAuth = (function () {
     }
 
     setSession(key);
+    if (typeof PulseStorage !== "undefined" && PulseStorage.saveProfile && account.name) {
+      PulseStorage.saveProfile({ name: account.name });
+    }
+
     return { ok: true };
   }
 
@@ -71,11 +65,18 @@ const PulseAuth = (function () {
     return sessionStorage.getItem(SESSION_KEY);
   }
 
+  function getCurrentAccount() {
+    const email = getSession();
+    if (!email) return null;
+    const accounts = readAccounts();
+    return accounts[email] || null;
+  }
+
   function logout() {
     sessionStorage.removeItem(SESSION_KEY);
   }
 
-  return { signUp, login, logout, getSession };
+  return { signUp, login, logout, getSession, getCurrentAccount };
 })();
 
 (function () {
@@ -99,9 +100,17 @@ const PulseAuth = (function () {
 
     let result;
     if (mode === "signup") {
+      const nameInput = document.getElementById("name-input");
+      const name = nameInput ? nameInput.value.trim() : "";
+
+      if (!name) {
+        notify("Isi nama lengkap terlebih dahulu.", "warning");
+        return;
+      }
+
       const incomeInput = document.getElementById("pemasukan-input");
       const monthlyIncome = incomeInput ? Number(incomeInput.value) || 0 : 0;
-      result = PulseAuth.signUp(email, password, monthlyIncome);
+      result = PulseAuth.signUp(name, email, password, monthlyIncome);
     } else {
       result = PulseAuth.login(email, password);
     }
@@ -115,20 +124,16 @@ const PulseAuth = (function () {
   }
 
   function redirectAfterAuth() {
-    // Per current product decision: every login/signup goes straight to
-    // the dashboard, regardless of onboarding state. If onboarding gets
-    // reintroduced as a gate later, swap this back to check
-    // PulseUtils.requiresOnboarding() and branch to index.html.
     setTimeout(() => {
 window.location.href = "/dashboard.html";
-    }, 500); // short pause so the success toast is actually visible before navigating
+    }, 500);
   }
 
   function notify(message, tone) {
     if (typeof PulseAuthUI !== "undefined" && PulseAuthUI.showMessage) {
       PulseAuthUI.showMessage(message, tone);
     } else if (typeof PulseUtils !== "undefined" && PulseUtils.toast) {
-      PulseUtils.toast(message, tone); // fallback if auth-ui.js isn't loaded for some reason
+      PulseUtils.toast(message, tone);
     } else {
       alert(message);
     }

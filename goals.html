@@ -28,8 +28,7 @@
     }
   </script>
   <style>
-    /* Sidebar-specific structural rules that only make sense paired with
-       the Tailwind utility classes on aside#sidebar below. */
+    
     #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease; }
     .nav-text, .logo-text, .user-name {
       transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
@@ -44,6 +43,7 @@
     #sidebar.collapsed .nav-icon { margin-left: 0; margin-right: 0; }
     #sidebar.collapsed .nav-dot { left: 8px; }
     #sidebar.collapsed .user-profile-btn { padding-left: 0; padding-right: 0; justify-content: center; background: transparent; }
+ 
     #sidebar.collapsed #collapse-btn svg { transform: rotate(180deg); }
     .nav-dot { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease; }
     .nav-icon { stroke: #828282; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease; }
@@ -58,9 +58,16 @@
 
   <div class="app-shell">
 
-    <aside id="sidebar" class="w-[260px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0">
+ <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+    <script>
+    try {
+      if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
+        document.currentScript.parentElement.classList.add("collapsed");
+      }
+    } catch (e) {}
+  </script>
 
-      <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10" aria-label="Ciutkan sidebar">
+    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
         <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
         </svg>
@@ -101,14 +108,13 @@
           </svg>
           <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
         </a>
-
         <a href="insights.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
           <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
           <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
             <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
             <path d="M22 4L12 14.01l-3-3"></path>
           </svg>
-          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
         </a>
 
         <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
@@ -117,7 +123,7 @@
             <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             <path d="M12 3v9h9"></path>
           </svg>
-          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+          <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
         </a>
 
       </nav>
@@ -140,7 +146,7 @@
 
       <div class="goals-grid" id="goals-grid">
 
-        <!-- Target Baru -->
+        
         <section class="goal-form-card" data-rise>
           <div class="goal-form-head">
             <h2>Target Baru</h2>
@@ -172,7 +178,7 @@
           </form>
         </section>
 
-        <!-- Goal cards are injected here by js/goals.js -->
+        
 
       </div>
 
@@ -181,7 +187,7 @@
 
   </div>
 
-  <!-- Detail modal -->
+  
   <div class="goal-modal" id="goal-modal" hidden>
     <div class="goal-modal-backdrop" data-close></div>
 
@@ -252,7 +258,7 @@
     </div>
   </div>
 
-  <!-- Delete confirmation -->
+  
   <div class="goal-modal goal-modal-confirm" id="delete-modal" hidden>
     <div class="goal-modal-backdrop" data-close-confirm></div>
 

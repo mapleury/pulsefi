@@ -1,11 +1,4 @@
-/*
- tx-insight.js
- -------------
- Controller for the small "Selalu Ingat!" tip card. Reads the user's
- real category breakdown via PulseCalc and surfaces whichever category
- is eating the biggest share of their income (or expense total, if
- there's no income on record yet) as one concrete, actionable line.
-*/
+
 
 const PulseTxInsight = (function () {
   function computeTip(transactions) {

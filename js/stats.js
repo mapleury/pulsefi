@@ -1,5 +1,3 @@
-// PulseFi — Stats section scroll-triggered entrance
-// Vanilla JS, no dependencies.
 
 document.addEventListener('DOMContentLoaded', () => {
   const section = document.querySelector('.stats-section');
@@ -10,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           section.classList.add('in-view');
-          observer.unobserve(section); // play once, don't replay on re-scroll
+          observer.unobserve(section);
         }
       });
     },

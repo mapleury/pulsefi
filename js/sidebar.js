@@ -1,14 +1,4 @@
-/*
- sidebar.js
- ----------
- Controller for the collapsible left sidebar (aside#sidebar). Handles:
-   - highlighting the nav item that matches the current page
-   - the desktop collapse/expand toggle
-   - the mobile off-canvas open/close toggle
 
- Pure DOM wiring, no PulseStorage/PulseCalc dependency, so it can be
- dropped into any page that includes the sidebar markup.
-*/
 
 const PulseSidebar = (function () {
   const MOBILE_BREAKPOINT = 900;
@@ -26,15 +16,8 @@ const PulseSidebar = (function () {
     try {
       localStorage.setItem(COLLAPSE_STORAGE_KEY, collapsed ? "true" : "false");
     } catch (e) {
-      // localStorage unavailable (private mode, etc.) — state just won't persist.
     }
   }
-
-  // Injects the mobile off-canvas behavior as its own stylesheet, once,
-  // so no page needs matching CSS in style.css for this to work. Uses
-  // an #sidebar ID selector so it reliably overrides the Tailwind
-  // width/height utility classes some pages (like dashboard.html) put
-  // directly on the sidebar markup.
   function injectMobileStyles() {
     if (document.getElementById("pulse-sidebar-mobile-styles")) return;
     const style = document.createElement("style");
@@ -89,32 +72,122 @@ const PulseSidebar = (function () {
     `;
     document.head.appendChild(style);
   }
+  function injectProfileMenuStyles() {
+    if (document.getElementById("pulse-sidebar-profile-styles")) return;
+    const style = document.createElement("style");
+    style.id = "pulse-sidebar-profile-styles";
+    style.textContent = `
+      .user-profile-btn {
+        position: relative;
+        cursor: pointer;
+      }
+      .profile-signout-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 10px);
+        background: #fff;
+        border: 1px solid #13111a56;
+        border-radius: 24px;
+        box-shadow: 0 12px 32px -10px rgba(16, 16, 16, 0.18), 0 2px 8px -2px rgba(16, 16, 16, 0.08);
+        padding: 6px;
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+        pointer-events: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        z-index: 50;
+      }
+      .user-profile-btn.menu-open .profile-signout-menu {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+      #sidebar.collapsed .profile-signout-menu {
+        left: 0;
+        right: auto;
+        width: 160px;
+      }
+      .profile-signout-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 18px;
+        background: transparent;
+        border: none;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .profile-signout-item:hover {
+        background: #fef2f2;
+      }
+      .profile-signout-item svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  function handleSignOut() {
+    const confirmed = window.confirm("Keluar dari akun ini?");
+    if (!confirmed) return;
 
-  // Reuses a page's own #sidebar-toggle / #sidebar-backdrop if present
-  // (e.g. transactions.html already has them), otherwise builds them,
-  // so the drawer works even on pages that never added this markup.
-  function ensureMobileControls() {
-    let toggle = document.getElementById("sidebar-toggle");
-    if (!toggle) {
-      toggle = document.createElement("button");
-      toggle.id = "sidebar-toggle";
-      toggle.type = "button";
-      toggle.setAttribute("aria-label", "Buka menu");
-      toggle.innerHTML =
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
-      document.body.appendChild(toggle);
+    const event = new CustomEvent("pulsefi:sign-out", { cancelable: true });
+    const notCancelled = window.dispatchEvent(event);
+
+    if (window.PulseStorage && typeof PulseStorage.signOut === "function") {
+      PulseStorage.signOut();
     }
-    toggle.classList.add("pulse-sidebar-toggle-btn");
 
-    let backdrop = document.getElementById("sidebar-backdrop");
-    if (!backdrop) {
-      backdrop = document.createElement("div");
-      backdrop.id = "sidebar-backdrop";
-      document.body.appendChild(backdrop);
+    if (notCancelled) {
+      window.location.href = "index.html";
     }
-    backdrop.classList.add("pulse-sidebar-backdrop");
+  }
+  function ensureSignOutOverlay(profileBtn) {
+    if (!profileBtn || profileBtn.querySelector(".profile-signout-menu")) return;
 
-    return { toggle, backdrop };
+    const menu = document.createElement("div");
+    menu.className = "profile-signout-menu";
+    menu.setAttribute("role", "menu");
+
+    const signOutBtn = document.createElement("button");
+    signOutBtn.type = "button";
+    signOutBtn.className = "profile-signout-item";
+    signOutBtn.setAttribute("role", "menuitem");
+    signOutBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span>Keluar</span>
+    `;
+
+    const closeMenu = () => profileBtn.classList.remove("menu-open");
+
+    signOutBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeMenu();
+      handleSignOut();
+    });
+
+    menu.appendChild(signOutBtn);
+    profileBtn.appendChild(menu);
+    profileBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileBtn.classList.toggle("menu-open");
+    });
+    document.addEventListener("click", () => closeMenu());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
   }
 
   function setActive(item, active) {
@@ -141,10 +214,7 @@ const PulseSidebar = (function () {
     if (!sidebar) return;
 
     injectMobileStyles();
-
-     // Restore last collapse state immediately, before the user sees
-    // anything, so navigating between pages doesn't flash expanded
-    // then snap collapsed.
+    injectProfileMenuStyles();
     if (getStoredCollapsed()) sidebar.classList.add("collapsed");
 
     const collapseBtn = document.getElementById("collapse-btn");
@@ -160,11 +230,18 @@ const PulseSidebar = (function () {
       setActive(item, item.getAttribute("href") === current);
     });
 
-    const nameEl = document.getElementById("sidebar-user-name");
-    if (nameEl && window.PulseStorage) {
-      const profile = PulseStorage.getProfile();
-      if (profile && profile.name) nameEl.textContent = profile.name;
-    }
+const nameEl = document.getElementById("sidebar-user-name");
+if (nameEl) {
+  const profile = window.PulseStorage ? PulseStorage.getProfile() : null;
+  const account = typeof PulseAuth !== "undefined" && PulseAuth.getCurrentAccount
+    ? PulseAuth.getCurrentAccount()
+    : null;
+  const displayName = (profile && profile.name) || (account && account.name);
+  if (displayName) nameEl.textContent = displayName;
+}
+
+    const profileBtn = sidebar.querySelector(".user-profile-btn");
+    ensureSignOutOverlay(profileBtn);
 
     const { toggle: mobileToggle, backdrop } = ensureMobileControls();
     const closeDrawer = () => {
@@ -177,15 +254,35 @@ const PulseSidebar = (function () {
     });
     backdrop.addEventListener("click", closeDrawer);
     sidebar.querySelectorAll(".nav-item").forEach((item) => item.addEventListener("click", closeDrawer));
-
-    // If the viewport crosses back to desktop while the drawer is open,
-    // or the desktop collapse state is stale, don't leave it stuck.
     window.addEventListener("resize", () => {
       if (window.innerWidth > MOBILE_BREAKPOINT) closeDrawer();
     });
   }
+  function ensureMobileControls() {
+    let toggle = document.getElementById("sidebar-toggle");
+    if (!toggle) {
+      toggle = document.createElement("button");
+      toggle.id = "sidebar-toggle";
+      toggle.type = "button";
+      toggle.setAttribute("aria-label", "Buka menu");
+      toggle.innerHTML =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
+      document.body.appendChild(toggle);
+    }
+    toggle.classList.add("pulse-sidebar-toggle-btn");
+
+    let backdrop = document.getElementById("sidebar-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "sidebar-backdrop";
+      document.body.appendChild(backdrop);
+    }
+    backdrop.classList.add("pulse-sidebar-backdrop");
+
+    return { toggle, backdrop };
+  }
+
   document.addEventListener("DOMContentLoaded", init);
 
   return { init };
 })();
-

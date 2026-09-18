@@ -1,19 +1,10 @@
-/*
-  app.js
-  ------
-  Shared utilities used across every page: currency formatting, toast
-  notifications, active-nav highlighting, mobile menu toggle, and the
-  first-time-user onboarding guard.
-*/
+
 
 const PulseUtils = (function () {
   function formatCurrency(amount) {
     const n = Math.round(Number(amount) || 0);
     return "Rp" + n.toLocaleString("id-ID");
   }
-
-  // Signed variant used by cards that need to show a leading minus for
-  // net-negative windows (e.g. "Rata Rata Transaksi": -Rp300.000).
   function formatCurrencySigned(amount) {
     const n = Math.round(Number(amount) || 0);
     const sign = n < 0 ? "-" : "";

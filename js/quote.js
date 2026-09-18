@@ -1,4 +1,3 @@
-// PulseFi — Quote section scroll-triggered entrance
 
 document.addEventListener('DOMContentLoaded', () => {
   const section = document.querySelector('.quote-section');

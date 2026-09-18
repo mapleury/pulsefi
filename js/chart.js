@@ -1,20 +1,7 @@
-/*
- chart.js
- --------
- Self-contained "Grafik Transaksi" widget. Two view modes share one
- mount point:
-   - "weekly"  -> bar chart, one bar per weekday, height = transaction
-                  count that day. Today's bar is highlighted.
-   - "monthly" -> line/area chart, one point per week-of-month (keeps
-                  a whole month legible instead of cramming 30 bars).
 
- This module never touches localStorage directly and never returns
- HTML strings — it only reads plain series data from PulseCalc and
- builds DOM nodes. The host page wires it up via PulseChart.create().
-*/
 
 const PulseChart = (function () {
-  const EASE_FRAMES = 2; // frames to wait before triggering the CSS transition
+  const EASE_FRAMES = 2;
   const MONTH_LABELS_LONG = [
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
     "Juli", "Agustus", "September", "Oktober", "November", "Desember",
@@ -24,8 +11,8 @@ const PulseChart = (function () {
     const { bodyEl, toggleEl, prevBtn, nextBtn } = config;
     let getTransactions = config.getTransactions || (() => []);
 
-    let mode = "weekly"; // "weekly" | "monthly"
-    let offset = 0; // 0 = current period, negative = further back
+    let mode = "weekly";
+    let offset = 0;
 
     const tooltip = document.createElement("div");
     tooltip.className = "chart-tooltip";
@@ -33,10 +20,6 @@ const PulseChart = (function () {
     tooltip.style.position = "fixed";
     document.body.appendChild(tooltip);
     bodyEl.style.position = bodyEl.style.position || "relative";
-
-    // Positioned with getBoundingClientRect() against the viewport and
-    // parented to <body>, so the card's `overflow: hidden` (needed for
-    // its rounded corners) never clips the tooltip.
     function showTooltip(anchorEl, text) {
       const anchorRect = anchorEl.getBoundingClientRect();
       tooltip.textContent = text;
@@ -52,8 +35,6 @@ const PulseChart = (function () {
     function clearChart() {
       bodyEl.innerHTML = "";
     }
-
-    // ---------------- weekly bar chart ----------------
 
     function renderWeekly() {
       const data = PulseCalc.weeklySeries(getTransactions(), offset);
@@ -100,8 +81,6 @@ const PulseChart = (function () {
       bodyEl.appendChild(container);
       updateNavButtons(data.isCurrent);
     }
-
-    // ---------------- monthly line chart ----------------
 
     function catmullRomToBezierPath(points) {
       if (points.length < 2) return "";
@@ -227,8 +206,6 @@ const PulseChart = (function () {
            wrap.append(svgWrap);
       bodyEl.appendChild(wrap);
       updateNavButtons(data.isCurrent);
-
-      // Draw-on animation for the line, once its real length is known.
       requestAnimationFrame(() => {
         const length = path.getTotalLength();
         path.style.strokeDasharray = String(length);

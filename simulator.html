@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kebiasaan & Pola Finansial — PulseFi</title>
-
-  <!-- Import Fonts -->
+  <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -43,7 +43,7 @@
 
   <style>
     :root {
-      /* Matching Dashboard Tokens */
+      
       --bg-page: #F6F7FB;
       --ink: #191729;
       --ink-soft: #57545F;
@@ -55,19 +55,19 @@
       --pulse-2: #0D0B12;
       --bar-active: #725FBA;
 
-      /* Check-in Modal Theme Colors */
+      
       --habit-dark: #1a192b;
       --habit-purple: #5c42a6;
       --habit-light: #f4f5f8;
       --habit-inactive: #e8def7;
 
-      /* Radii matching dashboard precisely */
+      
       --r-xl: 38px;
       --r-lg: 24px;
       --r-md: 18px;
       --r-pill: 999px;
       
-      /* Standard flat shadow, NO hover shadow */
+      
       --shadow-card: 0 1px 2px rgba(21, 19, 28, 0.03), 0 10px 24px -18px rgba(21, 19, 28, 0.18);
       --gap-outer: 20px;
     }
@@ -89,7 +89,43 @@
       padding: 24px;
     }
 
-    /* Sidebar Transitions */
+    @keyframes simulatorPageIn {
+      from {
+        opacity: 0;
+        filter: blur(10px);
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0);
+      }
+    }
+
+    .dash-wrap {
+      animation: simulatorPageIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .dash-wrap > .layout-grid {
+      opacity: 0;
+      animation: simulatorPageIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .dash-wrap > .layout-grid:nth-of-type(2) {
+      animation-delay: 0.12s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dash-wrap,
+      .dash-wrap > .layout-grid {
+        animation: none;
+        opacity: 1;
+        filter: none;
+        transform: none;
+      }
+    }
+
+    
     #sidebar { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-text, .logo-text, .user-name {
       transition: opacity 0.2s ease, max-width 0.4s ease, margin 0.4s ease;
@@ -104,13 +140,14 @@
     #sidebar.collapsed .nav-icon { margin-left: 0; margin-right: 0; }
     #sidebar.collapsed .nav-dot { left: 8px; }
     #sidebar.collapsed .user-profile-btn { padding-left: 0; padding-right: 0; justify-content: center; background: transparent; }
+
     #sidebar.collapsed #collapse-btn svg { transform: rotate(180deg); }
     .nav-dot { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, left 0.4s ease; }
     .nav-icon { stroke: #828282; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.3s ease, margin 0.4s ease; }
     .nav-item.active .nav-icon { transform: scale(1.15); stroke: #101010; }
     .nav-item:not(.active):hover .nav-icon { transform: scale(1.08); stroke: #4b5563; }
 
-    /* Mobile Sidebar Toggle */
+    
     .mobile-menu-btn {
       display: none;
       position: fixed;
@@ -129,7 +166,7 @@
       cursor: pointer;
     }
 
-    /* Main Content Wrapper */
+    
     .dash-wrap {
       max-width: 1200px;
       margin: 0 auto;
@@ -143,12 +180,12 @@
 
     .dash-greet-row { margin-bottom: 8px; }
     .dash-greet h1 {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 26px;
-      letter-spacing: -0.02em;
-      margin: 0 0 4px;
-      color: var(--ink);
+       font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -2px;
+  margin: 0 0 4px;
+  color: var(--ink);
     }
     
     .label-caps {
@@ -176,7 +213,7 @@
       box-shadow: var(--shadow-card);
       display: flex;
       flex-direction: column;
-      /* Ensure no hover shadow per request */
+      
       transition: transform 0.2s ease;
     }
 
@@ -196,8 +233,8 @@
       line-height: 1.4;
     }
 
-    /* --- Habit Graph (Modal Style) --- */
-    .habit-graph-card { min-height: 380px; }
+    
+    .habit-graph-card { min-height: 340px; }
     .days-container {
       display: flex;
       justify-content: space-between;
@@ -229,10 +266,11 @@
       background: var(--habit-dark); 
       color: var(--white); 
     }
-    .day-bar-wrap {
+     .day-bar-wrap {
       display: flex;
       align-items: flex-end;
-      height: 160px;
+      flex: 1 1 auto;
+      min-height: 140px;
       width: 100%;
     }
     .day-bar {
@@ -241,7 +279,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Snappy animation from modal */
+      
       transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease;
       background-color: var(--habit-inactive);
       height: 0px; 
@@ -255,7 +293,20 @@
     }
     .day-bar.has-check .check-icon-svg { opacity: 1; transform: scale(1); }
 
-    /* --- Checklist --- */
+    .graph-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .graph-toggle { display: flex; background: var(--bg-page); border-radius: 999px; padding: 4px; gap: 4px; flex-shrink: 0; }
+    .toggle-btn { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: all 0.2s ease; }
+    .toggle-btn.active { background: var(--ink); color: var(--white); }
+
+    .month-grid-wrap { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding-top: 12px; }
+    .month-grid-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; padding: 0 2px; }
+    .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .month-cell { aspect-ratio: 1 / 1; border-radius: 6px; background: var(--habit-inactive); transition: background-color 0.3s ease; }
+    .month-cell.level-mid { background: var(--habit-purple); }
+    .month-cell.level-full { background: var(--habit-dark); }
+    .month-cell.is-future { background: transparent; }
+
+    
     .checklist-list { display: flex; flex-direction: column; gap: 12px; flex-grow: 1;}
     .checklist-pill {
       display: flex;
@@ -269,7 +320,7 @@
       font-size: 15px;
       font-weight: 500;
       cursor: pointer;
-      /* Snappy pop effect */
+      
       transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease;
     }
     .checklist-pill:hover { transform: scale(0.98); }
@@ -282,7 +333,7 @@
       100% { transform: scale(1) rotate(0deg); }
     }
 
-    /* Dynamic themes for checklist items */
+    
     .checklist-pill.theme-dark.is-done { background: var(--habit-dark); color: var(--white); border-color: transparent; }
     .checklist-pill.theme-purple.is-done { background: var(--habit-purple); color: var(--white); border-color: transparent; }
     .checklist-pill.theme-light.is-done { background: var(--habit-light); color: var(--ink); border-color: rgba(21, 19, 28, 0.08); }
@@ -306,12 +357,12 @@
     .checklist-pill.theme-purple.is-done .checklist-check svg { stroke: var(--habit-purple); }
     .checklist-pill.theme-light.is-done .checklist-check svg { stroke: var(--white); }
 
-    /* --- Simulator --- */
-    .simulator-card { background: #e0e0e09a; gap: 8px; }
+    
+    .simulator-card { background: #e0e0e072; gap: 8px; }
     .simulator-columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
+      gap: 20px;
       margin-top: 12px;
     }
     .sim-fields { display: flex; flex-direction: column; gap: 14px; }
@@ -326,7 +377,7 @@
       background: var(--white);
       border: 1px solid transparent;
       border-radius: 16px;
-      padding: 14px 16px;
+      padding: 10px 16px;
       font-size: 14px;
       font-weight: 500;
       color: var(--ink);
@@ -362,7 +413,7 @@
     .btn-apply:hover { opacity: 0.9; }
     .btn-apply:active { transform: scale(0.98); }
 
-    /* --- Projection Result --- */
+    
     .projection-card {
       background: radial-gradient(120% 140% at 20% 0%, var(--pulse-1) 0%, var(--pulse-2) 70%);
       color: var(--white);
@@ -400,7 +451,7 @@
     }
     .projection-item strong.is-negative { color: #FF9D9D; }
 
-    /* --- Responsive Breakpoints --- */
+    
     @media (max-width: 980px) { 
       .layout-grid { grid-template-columns: 1fr; } 
       body { flex-direction: column; padding: 16px; gap: 16px;}
@@ -429,16 +480,71 @@
       .card { padding: 24px; border-radius: 32px; }
     }
     
-    /* --- Toast Notification --- */
+        
+    .user-profile-btn { position: relative; cursor: pointer; }
+    .profile-signout-menu {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100% + 10px);
+      background: #fff;
+      border: 1px solid #13111a56;
+      border-radius: 24px;
+      box-shadow: 0 12px 32px -10px rgba(16, 16, 16, 0.18), 0 2px 8px -2px rgba(16, 16, 16, 0.08);
+      padding: 6px;
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      z-index: 50;
+    }
+    .user-profile-btn.menu-open .profile-signout-menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    #sidebar.collapsed .profile-signout-menu {
+      left: 0;
+      right: auto;
+      width: 160px;
+    }
+    .profile-signout-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: transparent;
+      border: none;
+      color: #dc2626;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .profile-signout-item:hover { background: #fef2f2; }
+    .profile-signout-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    
+    
     .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 60; }
     .toast { background: var(--ink); color: var(--white); font-size: 14px; font-weight: 500; padding: 12px 20px; border-radius: 99px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .toast-visible { opacity: 1; transform: translateY(0); }
+
+    .section {
+      max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar Component -->
-  <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-[38px] shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
+  
+   <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
     <script>
       try {
         if (localStorage.getItem("pulsefi-sidebar-collapsed") === "true") {
@@ -446,81 +552,101 @@
         }
       } catch (e) {}
     </script>
-    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10 hidden md:flex">
+
+    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
       </svg>
     </button>
-    <button id="mobile-close-btn" class="absolute top-8 right-6 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-pulse-darkText md:hidden z-10">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-    </button>
-    
+
     <div class="mb-12 px-6 flex items-center h-8">
-      <svg class="ml-2 h-6 w-auto shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="#191729" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <img src="assets/pulsefi-logo.svg" alt="PulseFi" class="ml-2 h-6 w-auto object-contain shrink-0">
       <span class="logo-text ml-2 font-bold text-xl tracking-[-0.04em] text-pulse-darkText w-full max-w-[100px]">PulseFi</span>
     </div>
-    
+
     <nav class="flex flex-col gap-1 px-4 flex-grow" id="sidebar-nav">
+
       <a href="dashboard.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Dashboard</span>
       </a>
+
       <a href="transactions.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 01-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 12a2 2 0 000 4h4v-4h-4z"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Transaksi</span>
       </a>
+
       <a href="goals.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 3-.2-1.6-1.5-3-3-3s-2.8 1.4-3 3c-.2-1.6-1.5-3-3-3-1.7 0-3 1.3-3 3v4c0 4.4 5.6 9 9 9s9-4.6 9-9V8c0-1.7-1.3-3-3-3z"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
       </a>
+
+      <a href="insights.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
+        <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-0 scale-0"></div>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path></svg>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+      </a>
+
       <a href="simulator.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
-        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path></svg>
+        <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path d="M12 3v9h9"></path></svg>
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
       </a>
+
     </nav>
-    
     <div class="mt-auto px-4 w-full">
       <div class="user-profile-btn flex items-center w-full h-12 bg-pulse-active rounded-full px-2 border border-transparent">
-        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0 flex items-center justify-center">
-          <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+        <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden shrink-0">
+          <svg class="w-full h-full text-gray-500 bg-gray-200" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
         </div>
-        <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left" id="sidebar-username">User</span>
+        <span class="user-name ml-3 text-[13px] tracking-[-0.04em] font-semibold text-pulse-darkText w-full max-w-[100px] text-left" id="sidebar-user-name">Kamu</span>
       </div>
     </div>
+
   </aside>
 
-  <!-- Mobile Menu Button -->
+  
   <button class="mobile-menu-btn" id="mobile-menu-btn">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
   </button>
 
-  <main class="dash-wrap">
+  <main class="dash-wrap section">
     <div class="dash-greet-row">
       <div class="dash-greet">
         <h1>Kebiasaan</h1>
       </div>
     </div>
 
-    <!-- Row 1: Habit Tracker UI -->
+    
     <div class="layout-grid">
-      <!-- Habit Weekly Graph -->
+      
       <div class="card habit-graph-card">
-        <div>
-          <span class="label-caps">Intensitas</span>
-          <h2 class="card-title">Mingguan</h2>
-          <p class="card-subtitle">Semakin tinggi barnya, semakin konsisten kamu dalam minggu ini.</p>
+            <div class="graph-header-row">
+          <div>
+            <span class="label-caps">Intensitas</span>
+            <h2 class="card-title" id="graph-title">Mingguan</h2>
+            <p class="card-subtitle" id="graph-subtitle">Semakin tinggi barnya, semakin konsisten kamu dalam minggu ini.</p>
+          </div>
+          <div class="graph-toggle" id="graph-toggle">
+            <button class="toggle-btn active" data-mode="weekly" type="button">Mingguan</button>
+            <button class="toggle-btn" data-mode="monthly" type="button">Bulanan</button>
+          </div>
         </div>
-        
+
         <div class="days-container" id="days-container">
-          <!-- Populated via JS -->
+          
+        </div>
+
+        <div class="month-grid-wrap" id="month-grid-wrap" style="display:none;">
+          <div class="month-grid-labels" id="month-grid-labels"></div>
+          <div class="month-grid" id="month-grid"></div>
         </div>
       </div>
 
-      <!-- Today's Checklist -->
+      
       <div class="card">
         <div>
           <span class="label-caps">Aktivitas</span>
@@ -528,14 +654,14 @@
           <p class="card-subtitle">Ketuk kebiasaan yang berhasil kamu selesaikan.</p>
         </div>
         <div class="checklist-list" id="checklist-list">
-          <!-- Populated via JS -->
+          
         </div>
       </div>
     </div>
 
-    <!-- Row 2: Simulator -->
+    
     <div class="layout-grid">
-      <!-- What-if Simulator Form -->
+      
       <div class="card simulator-card">
         <span class="label-caps" style="color: var(--ink);">What-If Simulator</span>
         <h2 class="card-title" style="margin-top: 2px;">Projeksikan Dampak dari skenario baru.</h2>
@@ -585,7 +711,7 @@
         <button class="btn-apply" id="btn-apply-scenario">Terapkan Skenario</button>
       </div>
 
-      <!-- Projection Result -->
+      
       <div class="card projection-card">
         <div class="projection-icon-badge">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -619,7 +745,7 @@
 
   </main>
 
-  <!-- SVG Templates for Checkmarks -->
+  
   <template id="svg-check-default">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="20 6 9 17 4 12"></polyline>
@@ -637,7 +763,6 @@
   </template>
 
   <script>
-    // --- 1. Basic Utils ---
     const formatRp = (num) => "Rp" + Math.round(Number(num) || 0).toLocaleString("id-ID");
     const formatRpSigned = (num) => {
       const n = Math.round(Number(num) || 0);
@@ -663,8 +788,6 @@
         setTimeout(() => el.remove(), 300);
       }, 3000);
     }
-
-    // --- 2. Storage Mock (Simulating backend) ---
     const AppStorage = {
       read: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e) { return d; } },
       write: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
@@ -675,14 +798,11 @@
       getHabits: () => AppStorage.read("pulsefi_habits", []),
       saveHabits: (list) => AppStorage.write("pulsefi_habits", list),
     };
-
-    // --- 3. Habit Tracker Logic ---
     const THEMES = ['dark', 'purple', 'light'];
+        let graphMode = 'weekly';
     
     function initHabits() {
       let habits = AppStorage.getHabits();
-      
-      // Auto-generate some dummy habits if empty for demonstration
       if (habits.length === 0) {
         habits = [
           { id: "h1", title: "Menunda Jajan Kopi", status: "active", completedDates: [] },
@@ -697,13 +817,13 @@
 
     function refreshHabitsUI(habits, initialLoad = false) {
       const today = new Date();
-      const currentDayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1; // 0=Mon, 6=Sun
+      const currentDayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1;
       
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - currentDayIdx);
       
       const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-      const weekData = Array(7).fill(0); // Holds count of completed habits per day
+      const weekData = Array(7).fill(0);
 
       for (let i = 0; i <= currentDayIdx; i++) {
         let loopDate = new Date(startOfWeek);
@@ -714,31 +834,75 @@
         habits.forEach(h => {
           if (h.completedDates.includes(loopISO)) count++;
         });
-        
-        // Random past data for visual appeal if entirely empty (demo purpose)
-        if (count === 0 && i < currentDayIdx && Math.random() > 0.4) {
-          count = Math.floor(Math.random() * 3) + 1;
-        }
-        weekData[i] = count;
+              weekData[i] = count;
+      }
+      renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad, habits.length);
+      renderChecklist(habits, todayISO());
+      if (graphMode === 'monthly') renderMonthGrid(habits);
+    }
+
+        function renderMonthGrid(habits) {
+      const grid = document.getElementById('month-grid');
+      const labels = document.getElementById('month-grid-labels');
+      grid.innerHTML = '';
+      labels.innerHTML = '';
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDayIdx = (new Date(year, month, 1).getDay() + 6) % 7;
+
+      ['Sen','Sel','Rab','Kam','Jum','Sab','Min'].forEach(d => {
+        const l = document.createElement('span');
+        l.textContent = d;
+        labels.appendChild(l);
+      });
+
+      for (let i = 0; i < firstDayIdx; i++) {
+        const filler = document.createElement('div');
+        filler.className = 'month-cell is-future';
+        grid.appendChild(filler);
       }
 
-      renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad);
-      renderChecklist(habits, todayISO());
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = new Date(year, month, day);
+        const iso = cellDate.toISOString().slice(0, 10);
+        const isFuture = cellDate > now;
+        const cell = document.createElement('div');
+        cell.title = iso;
+
+        if (isFuture) {
+          cell.className = 'month-cell is-future';
+        } else {
+          let count = 0;
+          habits.forEach(h => { if (h.completedDates.includes(iso)) count++; });
+          const ratio = habits.length ? count / habits.length : 0;
+          let level = '';
+          if (ratio >= 1) level = 'level-full';
+          else if (ratio > 0) level = 'level-mid';
+          cell.className = `month-cell ${level}`;
+        }
+        grid.appendChild(cell);
+      }
     }
 
-    function getBarStyling(count, isToday) {
-      // Logic mapping to the check-in modal styling
+    function getBarStyling(count, total, isToday) {
       const checkWhite = document.getElementById('svg-checked-white').innerHTML;
       const checkBlack = document.getElementById('svg-checked-black').innerHTML;
-      
-      if(count >= 3) return { bg: 'var(--habit-dark)', check: checkWhite, height: isToday ? '120px' : '90px' };
-      if(count === 2) return { bg: 'var(--habit-purple)', check: checkWhite, height: isToday ? '110px' : '80px' };
-      if(count === 1) return { bg: 'var(--habit-light)', check: checkBlack, height: isToday ? '100px' : '70px' };
-      
-      return { bg: 'var(--habit-inactive)', check: '', height: isToday ? '55px' : '40px' };
+      const t = total || 1;
+      const ratio = Math.min(count / t, 1);
+
+      let bg, check;
+      if (ratio >= 1)      { bg = 'var(--habit-dark)';     check = checkWhite; }
+      else if (ratio >= 0.5) { bg = 'var(--habit-purple)';  check = checkWhite; }
+      else if (ratio > 0)    { bg = 'var(--habit-light)';   check = checkBlack; }
+      else                   { bg = 'var(--habit-inactive)'; check = ''; }
+      const height = count > 0 ? Math.round(18 + ratio * 82) + '%' : '8%';
+      return { bg, check, height };
     }
 
-    function renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad) {
+    function renderHabitGraph(dayLabels, weekData, currentDayIdx, initialLoad, totalHabits) {
       const container = document.getElementById('days-container');
       
       if (initialLoad || container.children.length === 0) {
@@ -779,11 +943,9 @@
         const count = weekData[index];
         const bar = document.getElementById(`bar-day-${index}`);
         const isToday = index === currentDayIdx;
-        const styleInfo = getBarStyling(count, isToday);
+        const styleInfo = getBarStyling(count, totalHabits, isToday);
         
         bar.style.backgroundColor = styleInfo.bg;
-        
-        // Update SVG checkmark carefully to maintain animation
         if (!bar.querySelector('.check-icon-svg') && count > 0) {
             bar.innerHTML = styleInfo.check;
         } else if (count === 0) {
@@ -850,8 +1012,6 @@
         container.appendChild(item);
       });
     }
-
-    // --- 4. Simulator Logic ---
     function initSimulator() {
       const txs = AppStorage.getTransactions();
       
@@ -869,7 +1029,6 @@
       });
 
       if (txs.length === 0) {
-        // Fallback demo data
         income = 12000000; fnb = 3500000; ent = 2000000; other = 1500000;
       }
 
@@ -919,15 +1078,11 @@
       
       document.getElementById('btn-apply-scenario').click();
     }
-
-    // --- 5. Boot Up ---
     document.addEventListener("DOMContentLoaded", () => {
-      // Sidebar interactions
       const sidebar = document.getElementById('sidebar');
       const collapseBtn = document.getElementById('collapse-btn');
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-      const mobileCloseBtn = document.getElementById('mobile-close-btn');
-
+     
       if (collapseBtn && sidebar) {
         collapseBtn.addEventListener('click', () => {
           const isCollapsed = sidebar.classList.toggle('collapsed');
@@ -937,21 +1092,99 @@
       if(mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener('click', () => sidebar.classList.add('mobile-open'));
       }
-      if(mobileCloseBtn && sidebar) {
-        mobileCloseBtn.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
-      }
 
-      // Ensure user session display is safe from iframe restrictions
+  
       const sessionUser = AppStorage.getSession();
-      const uEl = document.getElementById('sidebar-username');
+      const uEl = document.getElementById('sidebar-user-name');
       if (sessionUser) {
         if(uEl) uEl.textContent = sessionUser;
       } else {
-        if(uEl) uEl.textContent = 'Quaneisha'; // Default preview persona
+        if(uEl) uEl.textContent = 'Quaneisha';
       }
+
+      function handleSignOut() {
+        const confirmed = window.confirm('Keluar dari akun ini?');
+        if (!confirmed) return;
+        try { sessionStorage.removeItem('pulsefi_session_v1'); } catch (e) {}
+        window.location.href = 'login.html';
+      }
+
+      function ensureSignOutOverlay(profileBtn) {
+        if (!profileBtn || profileBtn.querySelector('.profile-signout-menu')) return;
+
+        const menu = document.createElement('div');
+        menu.className = 'profile-signout-menu';
+        menu.setAttribute('role', 'menu');
+
+        const signOutBtn = document.createElement('button');
+        signOutBtn.type = 'button';
+        signOutBtn.className = 'profile-signout-item';
+        signOutBtn.setAttribute('role', 'menuitem');
+        signOutBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Keluar</span>
+        `;
+
+        const closeMenu = () => profileBtn.classList.remove('menu-open');
+
+        signOutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeMenu();
+          handleSignOut();
+        });
+
+        menu.appendChild(signOutBtn);
+        profileBtn.appendChild(menu);
+
+        profileBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileBtn.classList.toggle('menu-open');
+        });
+
+        document.addEventListener('click', () => closeMenu());
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeMenu();
+        });
+      }
+
+      const profileBtn = sidebar ? sidebar.querySelector('.user-profile-btn') : null;
+      ensureSignOutOverlay(profileBtn);
 
       initHabits();
       initSimulator();
+
+            const graphToggle = document.getElementById('graph-toggle');
+      if (graphToggle) {
+        graphToggle.addEventListener('click', (e) => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn || btn.dataset.mode === graphMode) return;
+          graphMode = btn.dataset.mode;
+
+          document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === graphMode));
+
+          const weekEl = document.getElementById('days-container');
+          const monthEl = document.getElementById('month-grid-wrap');
+          const titleEl = document.getElementById('graph-title');
+          const subEl = document.getElementById('graph-subtitle');
+
+          if (graphMode === 'weekly') {
+            weekEl.style.display = 'flex';
+            monthEl.style.display = 'none';
+            titleEl.textContent = 'Mingguan';
+            subEl.textContent = 'Semakin tinggi barnya, semakin konsisten kamu dalam minggu ini.';
+          } else {
+            weekEl.style.display = 'none';
+            monthEl.style.display = 'flex';
+            titleEl.textContent = 'Bulanan';
+            subEl.textContent = 'Ungu jika cukup banyak kebiasaan selesai, hitam jika semua selesai.';
+            renderMonthGrid(AppStorage.getHabits());
+          }
+        });
+      }
     });
   </script>
 </body>

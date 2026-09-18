@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="css/insights.css">
 <link rel="stylesheet" href="css/toast.css">
+  <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -27,7 +28,7 @@
 </head>
 <body id="insights-page" class="bg-[#eef0f5] p-6 antialiased flex items-start gap-6">
 
-  <!-- Sidebar -->
+  
   <aside id="sidebar" class="w-[240px] h-[90vh] bg-white rounded-3xl shadow-soft-purple flex flex-col py-8 relative overflow-hidden shrink-0 sticky top-6">
   <script>
     try {
@@ -37,7 +38,7 @@
     } catch (e) {}
   </script>
 
-    <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10">
+   <button id="collapse-btn" class="absolute top-9 right-4 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pulse-darkText hover:shadow-md transition-all z-10" aria-label="Ciutkan sidebar">
       <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
       </svg>
@@ -78,13 +79,13 @@
         <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Tabungan</span>
       </a>
 
-      <a href="insights.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
+            <a href="insights.html" class="nav-item active group flex items-center px-4 py-3 rounded-2xl bg-pulse-active text-pulse-darkText font-bold transition-all duration-300 ease-in-out relative h-12">
         <div class="nav-dot absolute left-2 w-1.5 h-1.5 bg-pulse-darkText rounded-full opacity-100 scale-100"></div>
         <svg class="nav-icon shrink-0 w-5 h-5 mr-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" viewBox="0 0 24 24">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
           <path d="M22 4L12 14.01l-3-3"></path>
         </svg>
-        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
       </a>
 
       <a href="simulator.html" class="nav-item group flex items-center px-4 py-3 rounded-2xl text-pulse-inactiveText font-medium hover:bg-gray-50 transition-all duration-300 ease-in-out relative h-12">
@@ -93,7 +94,7 @@
           <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           <path d="M12 3v9h9"></path>
         </svg>
-        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Pola Finansial</span>
+        <span class="nav-text text-[15px] tracking-[-0.04em] w-full max-w-[150px]">Kebiasaan</span>
       </a>
     </nav>
 
@@ -110,7 +111,7 @@
 
   </aside>
 
-  <!-- Main content -->
+  
   <main class="flex-1 min-w-0">
     <div class="insights-wrap">
 
@@ -118,7 +119,7 @@
 
       <div class="pulse-twin-row">
 
-        <!-- Financial Pulse card -->
+        
         <div class="pulse-card">
           <div class="pulse-score">
             <span id="pulse-score">0</span><small>/100</small>
@@ -132,7 +133,7 @@
           </div>
         </div>
 
-        <!-- Financial Twin -->
+        
         <div class="twin-panel">
           <span class="twin-eyebrow ls-tight">Gambaran dirimu</span>
           <h2 class="twin-title" id="twin-title">Belum Terlihat Polanya</h2>
@@ -145,14 +146,14 @@
 
       <div class="two-col-bottom">
 
-        <!-- Pola yang terlihat -->
+        
         <div>
           <h2 class="col-title ls-tight">Pola yang terlihat</h2>
           <ul class="pattern-list" id="patterns-list"></ul>
           <p class="empty-state" id="patterns-empty" style="display: none;">Belum cukup data untuk membentuk insight.</p>
         </div>
 
-        <!-- Saatnya Bertindak -->
+        
         <div>
           <h2 class="col-title ls-tight">Saatnya Bertindak</h2>
           <ul class="action-list" id="actions-list"></ul>

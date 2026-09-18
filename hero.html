@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pulsefi</title>
   <link rel="icon" type="image/svg+xml" href="assets/browser-logo.svg">
-<!-- Tailwind CSS (CDN) -->
+
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script>
@@ -23,13 +23,13 @@
   };
 </script>
 
-<!-- Google Font -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
-<!-- Custom styles (keyframes, glassmorphism, precise hero layout) -->
+
 <link rel="stylesheet" href="css/hero.css">
 <link rel="stylesheet" href="css/stats.css">
 <link rel="stylesheet" href="css/features.css">
@@ -39,9 +39,7 @@
 </head>
 <body class="bg-white antialiased font-sans">
 
-  <!-- Floating pill nav — lives outside the hero, fixed, so it can slide
-       independently on top of every section. js/navbar.js toggles
-       .scrolled once past the hero, swapping it to dark-on-light. -->
+  
   <div class="floating-nav" id="floatingNav">
     <nav class="navbar-glass" aria-label="Navigasi utama">
       <ul>
@@ -58,13 +56,12 @@
   <div class="page-pad">
     <div class="hero-shell" id="home">
 
-      <!-- background curtain artwork -->
+      
       <img src="assets/hero-bg.svg" alt="" class="hero-bg" aria-hidden="true">
 
       <div class="hero-content">
 
-        <!-- ============ NAVBAR (logo + mobile burger only — the desktop
-             pill lives in .floating-nav above) ============ -->
+        
         <header class="hero-nav-row">
           <a href="#home" class="logo" aria-label="PulseFi Home">
             <img src="assets/pulsefi-logo-icon.svg" alt="PulseFi" class="logo-icon">
@@ -75,7 +72,7 @@
           </button>
         </header>
 
-        <!-- mobile dropdown menu -->
+        
         <nav class="mobile-menu" aria-label="Navigasi mobile">
           <a href="#home">Home</a>
           <a href="#tentang">Tentang</a>
@@ -84,10 +81,10 @@
           <a href="login.html" class="nav-cta">Mulai</a>
         </nav>
 
-        <!-- ============ HERO BODY ============ -->
+        
         <div class="hero-inner">
 
-          <!-- left: heading + CTA + user count -->
+          
           <div class="hero-copy">
             <h1 class="hero-title">
               Kebiasaan Baik, <br> Finansial Naik.
@@ -105,7 +102,7 @@
             </div>
           </div>
 
-          <!-- right: card stack + feature list -->
+          
           <div class="hero-visual">
 
             <div class="card-stack">
@@ -123,10 +120,7 @@
         </div>
       </div>
 
-      <!-- Frame overlay: a white matte with a notched window cut out,
-           painted the same white as the page background so it "erases"
-           the shell's square corners and leaves only the notched
-           window visible. Sits above absolutely everything else. -->
+      
       <img src="assets/hero-frame.svg" alt="" class="hero-frame" aria-hidden="true">
     </div>
   </div>

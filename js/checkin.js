@@ -1,31 +1,4 @@
-/*
- checkin.js
- ----------
- Wires the daily check-in modal to real data instead of hardcoded demo
- cards. Depends on storage.js (PulseStorage), calculation.js (PulseCalc,
- used indirectly via insights.js), insights.js (PulseInterventions) and
- auth.js (PulseAuth) already being loaded on the page. Runs itself on
- DOMContentLoaded — nothing else needs to call it.
 
- Two modes:
-   "checkin" -> the user already has active habits. Up to 3 of them
-                (highest streak first) are shown; clicking one and
-                hitting the arrow marks it done for today via
-                PulseStorage.checkInHabit.
-   "select"  -> the user has no active habits yet (brand-new account,
-                or all habits completed/deleted). Up to 3 habits are
-                suggested — built from PulseInterventions against the
-                user's real transactions/goals when there's enough
-                history, otherwise a generic starter set. Habits picked
-                here are created via PulseStorage.addHabit and
-                immediately checked in, since the copy asks which ones
-                the user has already been doing.
-
- The modal only appears once per calendar day: PulseStorage
- .hasBeenPromptedToday() gates whether it's injected at all, and
- PulseStorage.setLastCheckinPromptDate() is called the moment it's
- dismissed (finished or skipped), not only on completion.
-*/
 
 const PulseCheckin = (function () {
   const THEMES = ["dark", "purple", "light"];
@@ -49,9 +22,6 @@ const PulseCheckin = (function () {
     link.href = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap";
     document.head.appendChild(link);
   }
-
-  // Decide what to show: the user's own active habits (top 3 by streak),
-  // or up to 3 suggested starter habits if they don't have any yet.
   function buildCandidates() {
     const activeHabits = PulseStorage.getActiveHabits();
     if (activeHabits.length > 0) {
@@ -76,8 +46,8 @@ const PulseCheckin = (function () {
 
   function weekDates() {
     const today = new Date();
-    const rawDay = today.getDay(); // 0 = Sunday
-    const currentDayIndex = rawDay === 0 ? 6 : rawDay - 1; // Monday = 0
+    const rawDay = today.getDay();
+    const currentDayIndex = rawDay === 0 ? 6 : rawDay - 1;
     const monday = new Date(today);
     monday.setDate(today.getDate() - currentDayIndex);
     const labels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
@@ -151,7 +121,7 @@ const PulseCheckin = (function () {
 
   function render() {
     const { mode, items } = buildCandidates();
-    if (items.length === 0) return; // nothing to show today, don't block the dashboard
+    if (items.length === 0) return;
 
     ensureFont();
 
@@ -165,7 +135,7 @@ const PulseCheckin = (function () {
     items.forEach((item, i) => {
       const theme = THEMES[i % THEMES.length];
       const card = document.createElement("div");
-      card.className = "checkin-card rounded-2xl p-4 aspect-[4/5] cursor-pointer flex flex-col justify-between shadow-sm relative";
+      card.className = "checkin-card rounded-2xl p-4 aspect-[5/4] cursor-pointer flex flex-col justify-between shadow-sm relative";
       card.style.width = 100 / items.length + "%";
       card.style.backgroundColor = themeColor(theme);
       card.style.color = theme === "light" ? "#101010" : "#ffffff";
@@ -200,7 +170,6 @@ const PulseCheckin = (function () {
   }
 
   function goToSummary(mode, items, selected) {
-    // Persist the actual check-in before showing the summary.
     selected.forEach((i) => {
       const item = items[i];
       if (mode === "checkin") {
@@ -296,10 +265,19 @@ const PulseCheckin = (function () {
     setTimeout(() => overlay.remove(), 500);
   }
 
+  function isNewUser() {
+    return (
+      PulseStorage.getTransactions().length === 0 &&
+      PulseStorage.getGoals().length === 0 &&
+      PulseStorage.getHabits().length === 0
+    );
+  }
+
   function init() {
     if (typeof PulseStorage === "undefined") return;
     const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
-    if (!session) return; // no session — auth.js/dashboard.js already handle redirecting to login
+    if (!session) return;
+    if (isNewUser()) return;
     if (PulseStorage.hasBeenPromptedToday()) return;
     render();
   }

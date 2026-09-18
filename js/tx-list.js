@@ -1,11 +1,4 @@
-/*
- tx-list.js
- ----------
- Controller for the middle "transaction feed" column: search, type/
- category filters, sorting, week-grouped headers, and the edit/delete
- row actions. Listens for "pulsefi:tx-changed" (fired by tx-form.js)
- so it always reflects the latest data without polling.
-*/
+
 
 const PulseTxList = (function () {
   const state = {
@@ -23,9 +16,6 @@ const PulseTxList = (function () {
     d.setDate(d.getDate() + diff);
     return d;
   }
-
-  // Returns null for the current week (no header shown, matches the
-  // reference design), otherwise a human label for the group header.
   function weekGroupLabel(dateObj) {
     const thisWeekStart = startOfWeek(new Date());
     const txWeekStart = startOfWeek(dateObj);
@@ -94,15 +84,15 @@ const PulseTxList = (function () {
     typeSpan.className = "tx-meta-type";
     typeSpan.textContent = tx.type === "income" ? "Pemasukan" : "Pengeluaran";
 
-    const catSpan = document.createElement("span");
-    catSpan.className = "tx-meta-cat";
-    catSpan.textContent = tx.category;
+    const descSpan = document.createElement("span");
+    descSpan.className = "tx-meta-desc";
+    descSpan.textContent = tx.description && tx.description.trim() ? tx.description : tx.category;
 
     const dateSpan = document.createElement("span");
     dateSpan.className = "tx-meta-date";
     dateSpan.textContent = PulseUtils.formatDate(tx.date);
 
-    meta.append(typeSpan, dot(), catSpan, dot(), dateSpan);
+    meta.append(typeSpan, dot(), descSpan, dot(), dateSpan);
 
     const actions = document.createElement("div");
     actions.className = "tx-row-actions";

@@ -1,10 +1,5 @@
-// PulseFi — Hero interactions
-// Vanilla JS, no dependencies.
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Two independent burger/menu pairs can exist on the page: the
-  // decorative one inside the hero itself, and the one inside the
-  // fixed #siteNavbar mobile sticky bar. Wire up whichever are present.
   const pairs = [
     {
       burger: document.querySelector('.hero-nav-row .nav-burger'),
@@ -28,13 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const isOpen = menu.classList.toggle('is-open');
       burger.setAttribute('aria-expanded', String(isOpen));
     });
-
-    // Close the mobile menu after a link is tapped.
     menu.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', closeMenu);
     });
-
-    // Close on resize back to desktop width.
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) closeMenu();
     });
@@ -50,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const progress = scrollable > 0
         ? Math.min(Math.max(-rect.top / scrollable, 0), 1)
         : 0;
-      const scale = 1 - progress * 0.18; // shrinks up to 18%
+      const scale = 1 - progress * 0.18;
       shell.style.transform = `scale(${scale})`;
     };
     window.addEventListener('scroll', onHeroScroll, { passive: true });

@@ -1,4 +1,3 @@
-// PulseFi — Testimonial carousel: per-letter reveal, purple → dark settle, auto-rotate.
 
 document.addEventListener('DOMContentLoaded', () => {
   const quoteEl = document.getElementById('testimonialQuote');
@@ -62,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .join(' ');
 
-    const totalRevealTime = letterIndex * LETTER_STEP_MS + 500; // last letter's delay + its own animation duration
+    const totalRevealTime = letterIndex * LETTER_STEP_MS + 500;
     setTimeout(() => {
-      quoteEl.classList.add('is-settled'); // triggers the purple → dark color transition
-    }, totalRevealTime + 300); // brief pause before it settles
+      quoteEl.classList.add('is-settled');
+    }, totalRevealTime + 300);
   };
 
   const renderTestimonial = (index) => {

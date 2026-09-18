@@ -1,6 +1,4 @@
-/* =========================================================
-   PulseFi — "Mengapa PulseFi?" feature accordion
-   ========================================================= */
+
 
 .features-section {
   background: #ffffff;
@@ -12,7 +10,7 @@
   margin: 0 auto;
 }
 
-/* --- top: heading + intro paragraph --- */
+
 .features-top {
   display: flex;
   flex-wrap: wrap;
@@ -51,7 +49,7 @@
   color: rgba(20, 22, 26, 0.35);
 }
 
-/* --- accordion list --- */
+
 .features-list {
   display: flex;
   flex-direction: column;
@@ -81,13 +79,13 @@
   border-bottom: 1px solid rgba(20, 22, 26, 0.08);
 }
 
-/* background artwork, fades in only when active */
+
 .feature-item::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image: url('../assets/feature-bg.svg');
-  background-size: 100% 100%; /* stretch to match feature-bg.svg's 2290x624 art exactly, no crop/letterbox */
+  background-size: 100% 100%; 
   border-radius: 32px;
   opacity: 0;
   transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
@@ -149,7 +147,7 @@
   color: #14161a;
 }
 
-/* --- expand area: 0-height accordion trick, no JS height measuring needed --- */
+
 .feature-expand {
   position: relative;
   z-index: 1;
@@ -168,7 +166,7 @@
   min-height: 0;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(260px, 380px) 1fr; /* mirrors the parent's col2/col3 split exactly */
+  grid-template-columns: minmax(260px, 380px) 1fr; 
   column-gap: 32px;
   align-items: center;
   padding-bottom: 40px;
@@ -180,13 +178,13 @@
 .feature-item.active .feature-expand-inner {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.35s ease 0.15s; /* fades in slightly after the row starts growing */
+  transition: opacity 0.35s ease 0.15s; 
 }
 
 .feature-image {
   border-radius: 24px;
   overflow: hidden;
-  aspect-ratio: 602 / 307; /* matches feature-N.svg's real viewBox ratio */
+  aspect-ratio: 602 / 307; 
 }
 
 .feature-image img {
@@ -209,7 +207,7 @@
   font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.2;
-  font-size: clamp(1.1rem, 1.5vw, 1.3rem); /* was clamp(1.5rem, 2.4vw, 2.1rem) */
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem); 
   color: #14161a;
 }
 
@@ -222,9 +220,9 @@
 
 .feature-stat-number {
   font-family: 'Instrument Serif', serif;
-  font-weight: 700; /* was 400 */
+  font-weight: 700; 
   font-size: clamp(2.2rem, 3.2vw, 3rem);
-  color: #201842; /* was #14161a */
+  color: #201842; 
   line-height: 1;
   line-spacing: -0.02em;
   padding-bottom: 4px;
@@ -263,7 +261,7 @@
   }
 }
 
-/* --- responsive: collapse the reserved image column on small screens --- */
+
 @media (max-width: 860px) {
 .feature-item::before {
   display: none;

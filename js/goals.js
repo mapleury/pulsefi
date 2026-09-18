@@ -1,17 +1,4 @@
-/*
-  goals.js
-  --------
-  Page controller for goals.html ("Tabungan"). Owns three things:
 
-    1. PulseGoalStore — a thin adapter over PulseStorage's goal methods.
-       If a method isn't there (older storage.js), it falls back to
-       reading/writing the same localStorage key directly, so the page
-       works either way and keeps one source of truth.
-    2. The card grid — every card is rendered from real stored goals and
-       real PulseCalc projections. Nothing here is sample data.
-    3. The detail modal — per-goal projection, top-ups, editing and
-       deletion, all writing straight back through the store.
-*/
 
 const PulseGoalStore = (function () {
   const KEY = "pulsefi_goals_v1";
@@ -76,8 +63,6 @@ const PulseGoalStore = (function () {
   const els = {};
   let openGoalId = null;
 
-  // ---------- small helpers ----------
-
   function rupiah(amount) {
     if (typeof PulseUtils !== "undefined" && PulseUtils.formatCurrency) {
       return PulseUtils.formatCurrency(amount);
@@ -99,8 +84,6 @@ const PulseGoalStore = (function () {
   function notify(message, tone) {
     if (typeof PulseUtils !== "undefined" && PulseUtils.toast) PulseUtils.toast(message, tone);
   }
-
-  // Cards show the deadline the way the design does: 03/03/2045.
   function formatDeadline(value) {
     if (!value) return "Tanpa tenggat";
     const d = new Date(value);
@@ -118,12 +101,6 @@ const PulseGoalStore = (function () {
     d.setHours(0, 0, 0, 0);
     return d;
   }
-
-  // The line the design asks for: "100 Hari sebelum deadline, sisihkan
-  // Rp.30.000 perminggu." Days are counted from today to the deadline,
-  // the weekly figure is the remaining amount divided by the whole weeks
-  // left, rounded UP to the nearest Rp1.000 so the pace actually lands on
-  // the target rather than just under it.
   function paceCopy(goal, proj) {
     if (proj.remaining <= 0) {
       return "Target ini sudah <strong>tercapai penuh.</strong> Kerja bagus.";
@@ -174,12 +151,8 @@ const PulseGoalStore = (function () {
     };
   }
 
-  // ---------- rendering ----------
-
   function render() {
     const goals = PulseGoalStore.all();
-
-    // Wipe previously rendered cards, keep the form card in place.
     els.grid.querySelectorAll(".goal-card").forEach((card) => card.remove());
 
     els.empty.hidden = goals.length > 0;
@@ -187,8 +160,6 @@ const PulseGoalStore = (function () {
     goals.forEach((goal, i) => {
       els.grid.appendChild(buildCard(goal, i));
     });
-
-    // Let the cards paint at width 0 first so the fill animates across.
     requestAnimationFrame(() => {
       els.grid.querySelectorAll(".goal-fill[data-width]").forEach((fill) => {
         fill.style.width = fill.dataset.width + "%";
@@ -251,8 +222,6 @@ const PulseGoalStore = (function () {
     return card;
   }
 
-  // ---------- create ----------
-
   function handleCreate(e) {
     e.preventDefault();
 
@@ -283,8 +252,6 @@ const PulseGoalStore = (function () {
     render();
     window.dispatchEvent(new CustomEvent("pulsefi:goals-changed"));
   }
-
-  // ---------- modal ----------
 
   function openModal(id, focusTopup) {
     const goal = PulseGoalStore.find(id);
@@ -429,8 +396,6 @@ const PulseGoalStore = (function () {
     window.dispatchEvent(new CustomEvent("pulsefi:goals-changed"));
   }
 
-  // ---------- init ----------
-
   function cache() {
     els.grid = document.getElementById("goals-grid");
     els.empty = document.getElementById("goals-empty");
@@ -473,9 +438,6 @@ const PulseGoalStore = (function () {
     els.deleteConfirm.addEventListener("click", handleDelete);
 
     els.editToggle.addEventListener("click", () => setEditMode(els.editForm.hidden));
-
-    // The dark pill is "Selesai" while viewing and "Simpan Perubahan"
-    // while editing, so it always does the obvious thing.
     els.primary.addEventListener("click", () => {
       if (els.editForm.hidden) closeModal();
       else els.editForm.requestSubmit();
@@ -494,9 +456,6 @@ const PulseGoalStore = (function () {
       if (!els.deleteModal.hidden) closeDeleteConfirm();
       else closeModal();
     });
-
-    // Sidebar collapse, same behaviour as the other pages. Skipped when
-    // sidebar.js already wired it up.
     const collapseBtn = document.getElementById("collapse-btn");
     const sidebar = document.getElementById("sidebar");
     if (collapseBtn && sidebar && !collapseBtn.dataset.bound) {

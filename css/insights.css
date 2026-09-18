@@ -1,5 +1,4 @@
-/* ================= responsive: sidebar collapses via its own arrow button,
-   no separate off-canvas drawer/hamburger needed ================= */
+
 
 @media (max-width: 900px) {
   body {
@@ -15,14 +14,10 @@
   }
 
   #sidebar.collapsed {
-    width: 100%; /* the width-collapse trick doesn't make sense stacked full-width — just let content flow normally */
+    width: 100%; 
   }
 }
-/* =========================================================
-   PulseFi — Insights page ("Pola Finansial")
-   Self-contained: includes the sidebar's own styles (same rules as
-   dashboard.html's inline <style> block) plus this page's layout.
-   ========================================================= */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -42,14 +37,17 @@
 
 html, body {
   margin: 0;
-    padding: 0;
+  padding: 0;
   background: var(--bg-page);
   color: var(--ink);
   font-family: var(--font-sans);
 }
 
-/* Inter Medium, -7% tracking — used on headings/labels per spec.
-   Left at a gentler -1% on body copy so paragraphs stay readable. */
+body {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
 .ls-tight {
   font-weight: 500;
   letter-spacing: -0.07em;
@@ -60,7 +58,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ================= sidebar (same component as dashboard.html) ================= */
+
 
 #sidebar {
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,7 +110,7 @@ body {
   stroke: #4b5563;
 }
 
-/* ================= page shell ================= */
+
 
 .insights-wrap {
   max-width: 1180px;
@@ -143,7 +141,7 @@ body {
   color: var(--ink);
 }
 
-/* ================= top section: pulse card + twin ================= */
+
 
 .pulse-twin-row {
   display: grid;
@@ -297,7 +295,7 @@ body {
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ================= bottom section: insights + interventions ================= */
+
 
 .two-col-bottom {
   display: grid;
@@ -324,10 +322,10 @@ body {
 }
 
 .action-list li {
-  width: 100%; /* every <li> takes the full column width, so every pill matches regardless of how long its text is */
+  width: 100%; 
 }
 
-/* --- Pola yang terlihat --- */
+
 
 .pattern-card {
   position: relative;
@@ -371,7 +369,7 @@ body {
   max-width: 480px;
 }
 
-/* --- Saatnya Bertindak --- */
+
 
 .action-pill {
   display: flex;
@@ -383,7 +381,7 @@ body {
   background: var(--ink);
   color: #ffffff;
   border: none;
-  border-radius: 24px; /* was 999px — a true pill shape stretched to full width looks like a long capsule, not a card; this keeps it looking intentional at any width */
+  border-radius: 24px; 
   padding: 20px 26px;
   font-family: var(--font-sans);
   font-size: 14.5px;

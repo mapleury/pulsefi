@@ -1,12 +1,4 @@
-/*
- transactions.js
- ---------------
- Page bootstrapper for transactions.html. tx-form.js, tx-list.js and
- tx-insight.js each wire themselves up on DOMContentLoaded — this file
- only owns the one thing none of them should own: the Grafik Transaksi
- widget, since it doesn't belong to the form, the list, or the tip
- card individually.
-*/
+
 
 (function () {
   function init() {

@@ -1,20 +1,4 @@
-/*
- storage.js
- ----------
- The single place that touches localStorage. Every other file reads and
- writes app data through these functions instead of calling
- localStorage directly, so the storage format can change in one spot.
 
- Keys used:
-   pulsefi_transactions      -> array of transaction objects
-   pulsefi_goals              -> array of goal objects
-   pulsefi_profile            -> object, answers given during onboarding
-   pulsefi_habits              -> array of habit commitment objects
-   pulsefi_onboarding          -> "demo" | "own" | null (has the user finished onboarding?)
-   pulsefi_last_checkin_prompt -> "YYYY-MM-DD", last calendar day the daily
-                                    check-in modal was shown (so it only
-                                    interrupts the dashboard once per day)
-*/
 
 const PulseStorage = (function () {
   const KEYS = {
@@ -51,8 +35,6 @@ const PulseStorage = (function () {
     return (prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
   }
 
-  // ---------------- onboarding state ----------------
-
   function getOnboardingState() {
     return read(KEYS.onboarding, null);
   }
@@ -65,8 +47,6 @@ const PulseStorage = (function () {
     Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
   }
 
-  // ---------------- profile ----------------
-
   function getProfile() {
     return read(KEYS.profile, null);
   }
@@ -74,8 +54,6 @@ const PulseStorage = (function () {
   function saveProfile(profile) {
     return write(KEYS.profile, profile);
   }
-
-  // ---------------- transactions ----------------
 
   function getTransactions() {
     return read(KEYS.transactions, []);
@@ -141,8 +119,6 @@ const PulseStorage = (function () {
     saveTransactions(list);
   }
 
-  // ---------------- goals ----------------
-
   function getGoals() {
     return read(KEYS.goals, []);
   }
@@ -193,8 +169,6 @@ const PulseStorage = (function () {
     return list[idx];
   }
 
-  // ---------------- habits ----------------
-
   function getHabits() {
     return read(KEYS.habits, []);
   }
@@ -231,7 +205,7 @@ const PulseStorage = (function () {
     if (idx === -1) return null;
     const habit = list[idx];
     const today = PulseUtils.todayISO();
-    if (habit.completedDates.includes(today)) return habit; // already checked in today
+    if (habit.completedDates.includes(today)) return habit;
     habit.completedDates.push(today);
     habit.progress = Math.min(habit.target, habit.progress + 1);
     habit.streak += 1;
@@ -244,12 +218,6 @@ const PulseStorage = (function () {
     const list = getHabits().filter((h) => h.id !== id);
     saveHabits(list);
   }
-
-  // ---------------- daily check-in prompt ----------------
-  // Tracks whether the check-in modal has already been shown today,
-  // independent of which (if any) habits were actually checked off —
-  // dismissing it (finishing or skipping) is enough to silence it
-  // until tomorrow.
 
   function getLastCheckinPromptDate() {
     return read(KEYS.checkinPrompt, null);
