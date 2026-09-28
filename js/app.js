@@ -88,14 +88,16 @@ const PulseUtils = (function () {
       });
     }
 
-    let path = window.location.pathname;
-    if (!path.endsWith("/")) path += "/";
-    if (path === "/") path = "/dashboard/";
+    let curPath = window.location.pathname;
+    if (curPath.endsWith("/index.html")) curPath = curPath.replace("/index.html", "/");
+    if (!curPath.endsWith("/")) curPath += "/";
     
     document.querySelectorAll(".nav-links a").forEach((a) => {
-      let href = a.getAttribute("href");
-      if (href && !href.startsWith("/")) href = "../" + href;
-      if (href === path || href + "/" === path) a.classList.add("nav-active");
+      if (!a.href) return;
+      let navPath = new URL(a.href).pathname;
+      if (navPath.endsWith("/index.html")) navPath = navPath.replace("/index.html", "/");
+      if (!navPath.endsWith("/")) navPath += "/";
+      if (navPath === curPath) a.classList.add("nav-active");
     });
   }
 

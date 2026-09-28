@@ -225,9 +225,16 @@ const PulseSidebar = (function () {
       });
     }
 
-    const current = window.location.pathname.split("/").pop() || "/dashboard/";
+    let curPath = window.location.pathname;
+    if (curPath.endsWith("/index.html")) curPath = curPath.replace("/index.html", "/");
+    if (!curPath.endsWith("/")) curPath += "/";
+    
     document.querySelectorAll(".nav-item").forEach((item) => {
-      setActive(item, item.getAttribute("href") === current);
+      let navPath = new URL(item.href).pathname;
+      if (navPath.endsWith("/index.html")) navPath = navPath.replace("/index.html", "/");
+      if (!navPath.endsWith("/")) navPath += "/";
+      
+      setActive(item, navPath === curPath);
     });
 
 const nameEl = document.getElementById("sidebar-user-name");
