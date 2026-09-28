@@ -1095,9 +1095,16 @@
 
   
       const sessionUser = AppStorage.getSession();
+      let displayName = sessionUser;
+      try {
+        const accounts = JSON.parse(localStorage.getItem("pulsefi_accounts_v1")) || {};
+        if (accounts[sessionUser] && accounts[sessionUser].name) {
+           displayName = accounts[sessionUser].name;
+        }
+      } catch(e) {}
       const uEl = document.getElementById('sidebar-user-name');
       if (sessionUser) {
-        if(uEl) uEl.textContent = sessionUser;
+        if(uEl) uEl.textContent = displayName;
       } else {
         if(uEl) uEl.textContent = 'Quaneisha';
       }

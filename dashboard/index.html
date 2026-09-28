@@ -372,7 +372,12 @@
       const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
       if (session) {
         const account = typeof PulseAuth.getCurrentAccount === "function" ? PulseAuth.getCurrentAccount() : null;
-        const displayName = (account && account.name) ? account.name : session;
+        if (!account) {
+          PulseAuth.logout();
+          window.location.href = "../login/";
+          return;
+        }
+        const displayName = account.name || session;
         document.querySelectorAll('.user-name').forEach((el) => (el.textContent = displayName));
         const greetingEl = document.getElementById('greeting-name');
         if (greetingEl) greetingEl.textContent = displayName;

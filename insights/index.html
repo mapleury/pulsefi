@@ -230,7 +230,14 @@
   document.addEventListener("DOMContentLoaded", () => {
     const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
     if (session) {
-      document.querySelectorAll('.user-name').forEach((el) => (el.textContent = session));
+      const account = typeof PulseAuth.getCurrentAccount === "function" ? PulseAuth.getCurrentAccount() : null;
+      if (!account) {
+        PulseAuth.logout();
+        window.location.href = "../login/";
+        return;
+      }
+      const displayName = account.name || session;
+      document.querySelectorAll('.user-name').forEach((el) => (el.textContent = displayName));
     } else {
       window.location.href = "../login/";
     }
