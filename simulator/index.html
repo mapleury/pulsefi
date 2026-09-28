@@ -12,6 +12,11 @@
 
   
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../js/storage.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/calculation.js"></script>
+  <script src="../js/sidebar.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -788,28 +793,18 @@
         setTimeout(() => el.remove(), 300);
       }, 3000);
     }
-    const AppStorage = {
-      read: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e) { return d; } },
-      write: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-      getSession: () => {
-         try { return sessionStorage.getItem("pulsefi_session_v1"); } catch(e) { return null; }
-      },
-      getTransactions: () => AppStorage.read("pulsefi_transactions", []),
-      getHabits: () => AppStorage.read("pulsefi_habits", []),
-      saveHabits: (list) => AppStorage.write("pulsefi_habits", list),
-    };
     const THEMES = ['dark', 'purple', 'light'];
         let graphMode = 'weekly';
     
     function initHabits() {
-      let habits = AppStorage.getHabits();
+      let habits = PulseStorage.getHabits();
       if (habits.length === 0) {
         habits = [
           { id: "h1", title: "Menunda Jajan Kopi", status: "active", completedDates: [] },
           { id: "h2", title: "Menggunakan Transum", status: "active", completedDates: [] },
           { id: "h3", title: "Bawa Bekal Makan", status: "active", completedDates: [] }
         ];
-        AppStorage.saveHabits(habits);
+        PulseStorage.saveHabits(habits);
       }
       
       refreshHabitsUI(habits, true);
@@ -1002,7 +997,7 @@
              habit.completedDates = habit.completedDates.filter(d => d !== dateStr);
           }
           
-          AppStorage.saveHabits(habits);
+          PulseStorage.saveHabits(habits);
           
           setTimeout(() => {
              refreshHabitsUI(habits, false); 
@@ -1013,7 +1008,7 @@
       });
     }
     function initSimulator() {
-      const txs = AppStorage.getTransactions();
+      const txs = PulseStorage.getTransactions();
       
       let income = 0, fnb = 0, ent = 0, other = 0;
       
@@ -1094,7 +1089,7 @@
       }
 
   
-      const sessionUser = AppStorage.getSession();
+      const sessionUser = PulseAuth.getSession();
       let displayName = sessionUser;
       try {
         const accounts = JSON.parse(localStorage.getItem("pulsefi_accounts_v1")) || {};
@@ -1188,7 +1183,7 @@
             monthEl.style.display = 'flex';
             titleEl.textContent = 'Bulanan';
             subEl.textContent = 'Ungu jika cukup banyak kebiasaan selesai, hitam jika semua selesai.';
-            renderMonthGrid(AppStorage.getHabits());
+            renderMonthGrid(PulseStorage.getHabits());
           }
         });
       }

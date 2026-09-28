@@ -122,19 +122,6 @@ const PulseUtils = (function () {
     items.forEach((el) => observer.observe(el));
   }
 
-  function requiresOnboarding() {
-    const state = PulseStorage.getOnboardingState();
-    return !state;
-  }
-
-  function redirectIfNeedsOnboarding() {
-    if (requiresOnboarding()) {
-      window.location.href = "../#onboarding";
-      return true;
-    }
-    return false;
-  }
-
   document.addEventListener("DOMContentLoaded", () => {
     initNav();
     initScrollReveal();
@@ -151,7 +138,5 @@ const PulseUtils = (function () {
     animateNumber,
     initNav,
     initScrollReveal,
-    requiresOnboarding,
-    redirectIfNeedsOnboarding,
   };
 })();

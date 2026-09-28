@@ -24,10 +24,12 @@ const PulseAuth = (function () {
       return { ok: false, error: "Email ini sudah terdaftar. Coba login." };
     }
 
+    // Note: For prototype we use a very simple base64 "hash" as a placeholder 
+    // so it's not strictly plaintext in localstorage. A real app must use bcrypt.
     accounts[key] = {
       name: name.trim(),
       email: key,
-      password,
+      password: btoa(password),
       monthlyIncome,
       createdAt: Date.now(),
     };
@@ -45,7 +47,9 @@ const PulseAuth = (function () {
     const key = email.trim().toLowerCase();
     const account = accounts[key];
 
-    if (!account || account.password !== password) {
+    // Handle both plain text (old accounts) and base64 encoded (new accounts)
+    const isMatch = account.password === password || account.password === btoa(password);
+    if (!account || !isMatch) {
       return { ok: false, error: "Email atau password salah." };
     }
 

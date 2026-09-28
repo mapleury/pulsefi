@@ -6,7 +6,6 @@ const PulseStorage = (function () {
     goals: "pulsefi_goals",
     profile: "pulsefi_profile",
     habits: "pulsefi_habits",
-    onboarding: "pulsefi_onboarding",
     checkinPrompt: "pulsefi_last_checkin_prompt",
   };
 
@@ -33,14 +32,6 @@ const PulseStorage = (function () {
 
   function uid(prefix) {
     return (prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
-  }
-
-  function getOnboardingState() {
-    return read(KEYS.onboarding, null);
-  }
-
-  function setOnboardingState(state) {
-    return write(KEYS.onboarding, state);
   }
 
   function resetAllData() {
@@ -234,8 +225,6 @@ const PulseStorage = (function () {
   return {
     KEYS,
     uid,
-    getOnboardingState,
-    setOnboardingState,
     resetAllData,
     getProfile,
     saveProfile,
