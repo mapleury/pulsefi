@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Adjust Paths for GitHub Pages Subdirectory
+        run: |
+          cat << 'EOF' > fix_paths.py
+          import os, re
+          BASE = '/pulsefi'
+          for root, dirs, files in os.walk('.'):
+              if '.git' in root:
+                  continue
+              for f in files:
+                  path = os.path.join(root, f)
+                  if f.endswith('.html'):
+                      with open(path, 'r') as file: content = file.read()
+                      content = re.sub(r'href="/', f'href="{BASE}/', content)
+                      content = re.sub(r'src="/', f'src="{BASE}/', content)
+                      with open(path, 'w') as file: file.write(content)
+                  elif f.endswith('.js'):
+                      with open(path, 'r') as file: content = file.read()
+                      content = content.replace('window.location.href = "/dashboard/"', f'window.location.href = "{BASE}/dashboard/"')
+                      content = content.replace('window.location.href = "/"', f'window.location.href = "{BASE}/"')
+                      content = content.replace('window.location.href = "/#onboarding"', f'window.location.href = "{BASE}/#onboarding"')
+                      content = content.replace('if (path === "/") path = "/dashboard/";', f'if (path === "{BASE}/" || path === "{BASE}") path = "{BASE}/dashboard/";')
+                      with open(path, 'w') as file: file.write(content)
+          EOF
+          python3 fix_paths.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
