@@ -147,7 +147,7 @@ const PulseSidebar = (function () {
     }
 
     if (notCancelled) {
-      window.location.href = "/";
+      window.location.href = "../";
     }
   }
   function ensureSignOutOverlay(profileBtn) {

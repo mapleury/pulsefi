@@ -94,7 +94,7 @@ const PulseUtils = (function () {
     
     document.querySelectorAll(".nav-links a").forEach((a) => {
       let href = a.getAttribute("href");
-      if (href && !href.startsWith("/")) href = "/" + href;
+      if (href && !href.startsWith("/")) href = "../" + href;
       if (href === path || href + "/" === path) a.classList.add("nav-active");
     });
   }
@@ -127,7 +127,7 @@ const PulseUtils = (function () {
 
   function redirectIfNeedsOnboarding() {
     if (requiresOnboarding()) {
-      window.location.href = "/#onboarding";
+      window.location.href = "../#onboarding";
       return true;
     }
     return false;
