@@ -467,7 +467,9 @@ const PulseGoalStore = (function () {
   function applySession() {
     const session = typeof PulseAuth !== "undefined" ? PulseAuth.getSession() : null;
     if (!session) return;
-    document.querySelectorAll(".user-name").forEach((el) => (el.textContent = session));
+    const account = typeof PulseAuth.getCurrentAccount === "function" ? PulseAuth.getCurrentAccount() : null;
+    const displayName = (account && account.name) ? account.name : session;
+    document.querySelectorAll(".user-name").forEach((el) => (el.textContent = displayName));
   }
 
   function init() {
