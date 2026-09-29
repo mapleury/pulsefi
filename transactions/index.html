@@ -141,7 +141,12 @@
       <div class="tx-layout">
 
         <div class="tx-form-panel sticky-panel" data-reveal>
-          <h2 id="tx-form-title">Catat Transaksi</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 id="tx-form-title" class="m-0">Catat Transaksi</h2>
+            <button id="btn-nfc-scan" type="button" class="bg-pulse-active text-pulse-darkText px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-gray-200 transition">
+              Tap e-Money
+            </button>
+          </div>
           <form id="tx-form">
             <div class="type-toggle">
               <label><input type="radio" name="tx-type" value="expense" checked><span>Pengeluaran</span></label>
@@ -242,5 +247,6 @@
   <script src="../js/tx-list.js"></script>
   <script src="../js/tx-insight.js"></script>
   <script src="../js/transaction.js"></script>
+  <script src="../js/nfc-wallet.js"></script>
 </body>
 </html>
