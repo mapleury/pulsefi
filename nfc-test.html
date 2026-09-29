@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tes Web NFC e-Money</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    button { padding: 15px 30px; font-size: 18px; margin-top: 20px; background: #6a5cd0; color: white; border: none; border-radius: 8px; }
+    #log { margin-top: 20px; text-align: left; background: #f0f0f0; padding: 10px; border-radius: 5px; height: 300px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h2>Tes Sensor NFC Web</h2>
+  <p>Pastikan Anda membuka halaman ini di Google Chrome HP Android.</p>
+  <button id="scanBtn">Mulai Scan NFC</button>
+  <div id="log"></div>
+
+  <script>
+    const logDiv = document.getElementById('log');
+    const scanBtn = document.getElementById('scanBtn');
+
+    function log(msg) {
+      logDiv.innerHTML += `<div>=> ${msg}</div>`;
+    }
+
+    scanBtn.addEventListener('click', async () => {
+      try {
+        log("Meminta izin NFC...");
+        if (!('NDEFReader' in window)) {
+          log("❌ Browser ini tidak mendukung Web NFC API (Gunakan Chrome Android).");
+          return;
+        }
+
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        log("✅ Sensor NFC aktif! Silakan tempelkan kartu e-Money Anda ke punggung HP...");
+
+        ndef.addEventListener("readingerror", () => {
+          log("⚠️ Gagal membaca kartu. Kartu mungkin tidak menggunakan format NDEF yang didukung web.");
+        });
+
+        ndef.addEventListener("reading", ({ message, serialNumber }) => {
+          log(`🎉 Kartu Terdeteksi!`);
+          log(`Serial Number (UID): ${serialNumber}`);
+          log(`Jumlah Data (Records): ${message.records.length}`);
+          
+          for (const record of message.records) {
+             log(`Record Type: ${record.recordType}`);
+             // Tambahkan logika ekstraksi di sini jika formatnya diketahui
+          }
+        });
+
+      } catch (error) {
+        log(`❌ Error: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
